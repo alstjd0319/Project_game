@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace ParryRL
 {
     /// <summary>
-    /// 화면 하단 스킬바: Shift 이동 / A 공격 / S 방어 / D 스왑 (임시 아이콘).
+    /// 화면 하단 스킬바: Shift 이동 / A 공격 / S 방어 (임시 아이콘).
     /// 원형 쿨타임 + 남은 초, 게이지 코스트 배지(부족하면 빨강), 사용 불가 시 어둡게,
     /// 발동 시 튀어오름 / 실패 시 흔들림 / 쿨타임 끝나면 테두리 번쩍.
     /// </summary>
@@ -67,7 +67,7 @@ namespace ParryRL
             var bar = new GameObject("SkillBar", typeof(RectTransform)).GetComponent<RectTransform>();
             bar.SetParent(canvasRoot, false);
             float slotOuter = SlotSize + Border * 2f;
-            float width = slotOuter * 4f + Spacing * 3f;
+            float width = slotOuter * 3f + Spacing * 2f;
             UiKit.Place(bar, new Vector2(0.5f, 0f), new Vector2(0f, 26f), new Vector2(width, slotOuter + 42f));
 
             // 바닥 지형 위에 겹쳐도 슬롯이 묻히지 않도록 어두운 받침
@@ -79,7 +79,6 @@ namespace ParryRL
                 (PlayerAction.Move, "Shift", "≫"),
                 (PlayerAction.Attack, "A", "★"),
                 (PlayerAction.Defend, "S", "◈"),
-                (PlayerAction.Swap, "D", "↔"),
             };
             for (int i = 0; i < defs.Length; i++)
             {
@@ -99,14 +98,11 @@ namespace ParryRL
             _slots[PlayerAction.Move].state = MoveState;
             _slots[PlayerAction.Attack].state = AttackState;
             _slots[PlayerAction.Defend].state = DefendState;
-            _slots[PlayerAction.Swap].state = SwapState;
 
             _combat.ActionUsed += a => Pulse(a);
             _combat.ActionDenied += a => Deny(a);
             _defense.Activated += () => Pulse(PlayerAction.Defend);
             _defense.ActivateDenied += () => Deny(PlayerAction.Defend);
-            _party.SwapEntered += (_, _) => Pulse(PlayerAction.Swap);
-            _party.SwapDenied += () => Deny(PlayerAction.Swap);
         }
 
         private void Pulse(PlayerAction a) => _slots[a].pulse = 1f;
@@ -117,7 +113,7 @@ namespace ParryRL
         private SlotState MoveState() => new()
         {
             color = _party.Current.color,
-            name = _party.Current.kind == CharacterKind.Archer ? "이동 · 백스텝" : "이동 · 돌진",
+            name = "이동 · 돌진",
             cost = _combat.MoveSkillCost,
             affordable = _gauge.CanSpend(_combat.MoveSkillCost),
             cooldownLeft = _combat.MoveSkillCooldownLeft,
@@ -127,7 +123,7 @@ namespace ParryRL
         private SlotState AttackState() => new()
         {
             color = _party.Current.color,
-            name = _party.Current.kind == CharacterKind.Archer ? "일반공격 · 화살" : "일반공격 · 베기",
+            name = "일반공격 · 베기",
             cost = _combat.AttackSkillGaugeCost,
             affordable = _gauge.CanSpend(_combat.AttackSkillGaugeCost),
             blocked = _defense.State == DefenseState.Active,
@@ -156,15 +152,6 @@ namespace ParryRL
             }
             return s;
         }
-
-        private SlotState SwapState() => new()
-        {
-            color = _party.Other.color,
-            name = $"스왑 → {_party.Other.displayName}",
-            cost = _party.ManualSwapCost,
-            affordable = _gauge.CanSpend(_party.ManualSwapCost),
-            blocked = _defense.State == DefenseState.Active,
-        };
 
         // ───────────── 갱신 ─────────────
 

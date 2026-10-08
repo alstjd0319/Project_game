@@ -55,13 +55,6 @@ namespace ParryRL.Tests
                 heavy ? new Color(1f, 0.1f, 0.3f, 1f) : new Color(1f, 0.7f, 0.45f, 0.55f), heavy ? 20 : 10);
         }
 
-        private IEnumerator SwapToArcher()
-        {
-            _gauge.Add(10);
-            _party.TryManualSwap();
-            yield return new WaitForSeconds(0.5f);
-        }
-
         private static IEnumerator Capture(string name) => CaptureTests.Capture(name);
 
         // ───────────── 전사 ─────────────
@@ -103,32 +96,10 @@ namespace ParryRL.Tests
 
         // ───────────── 궁수 ─────────────
 
-        [UnityTest]
-        public IEnumerator 궁수_공격스킬()
-        {
-            yield return SwapToArcher();
-            Place(_melee, 8f);
-            _gauge.Add(3);
-            _combat.TryAttackSkill();
-            yield return new WaitForSeconds(0.2f);
-            yield return Capture("guide_archer_attack");
-        }
+        // ───────────── 방어 규칙 ─────────────
 
         [UnityTest]
-        public IEnumerator 궁수_백스텝()
-        {
-            yield return SwapToArcher();
-            Place(_melee, 3f);
-            _gauge.Add(1);
-            _combat.TryMoveSkill(); // 방향키 없으면 뒤로
-            yield return new WaitForSeconds(0.1f);
-            yield return Capture("guide_archer_backstep");
-        }
-
-        // ───────────── 교대 · 방어 규칙 ─────────────
-
-        [UnityTest]
-        public IEnumerator 강공격_막으면_스왑과_등장반격()
+        public IEnumerator 강공격_막으면_큰_반격()
         {
             Place(_melee, 6f);
             _defense.TryActivate();
@@ -136,16 +107,7 @@ namespace ParryRL.Tests
             float t = 0f;
             while (attack != null && t < 1f) { t += Time.unscaledDeltaTime; yield return null; }
             yield return new WaitForSecondsRealtime(0.35f);
-            yield return Capture("guide_heavy_swap");
-        }
-
-        [UnityTest]
-        public IEnumerator 수동스왑()
-        {
-            _gauge.Add(12);
-            _party.TryManualSwap();
-            yield return new WaitForSecondsRealtime(0.12f);
-            yield return Capture("guide_manual_swap");
+            yield return Capture("guide_heavy_parry");
         }
 
         [UnityTest]

@@ -40,7 +40,7 @@ namespace ParryRL.Tests
             while (augments.IsChoosing) augments.Choose(0);
             level.AddXp(18);
 
-            gauge.Add(5);            // 이동·공격 가능, 스왑(10) 부족
+            gauge.Add(5);            // 이동·공격 가능
             combat.TryAttackSkill(); // 공격 쿨타임
             defense.TryActivate();   // 헛스윙 쿨타임
             yield return new WaitForSeconds(0.55f);
@@ -117,32 +117,6 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 궁수_원거리_반격()
-        {
-            var defense = Object.FindAnyObjectByType<PlayerDefense>();
-            var party = defense.GetComponent<PlayerParty>();
-            defense.GetComponent<SkillGauge>().Add(10);
-            party.TryManualSwap();
-            yield return new WaitForSeconds(0.4f);
-
-            // 근접 몬스터를 9유닛 밖에 세우고, 그 몬스터가 보낸 공격을 회피 → 궁수 반격이 멀리 날아감
-            var melee = System.Linq.Enumerable.First(Object.FindObjectsByType<EnemyController>(), e => e.Kind == EnemyKind.Melee);
-            var pos = new Vector3(defense.transform.position.x + 9f, melee.transform.localScale.y * 0.5f, 0f);
-            melee.transform.position = pos;
-            melee.GetComponent<Rigidbody2D>().position = pos;
-            Physics2D.SyncTransforms();
-
-            defense.TryActivate();
-            Vector2 p = defense.transform.position;
-            EnemyAttack.Spawn(melee, AttackType.Normal, new Vector2(p.x + 1.2f, p.y), Vector2.left,
-                new Vector2(0.6f, 0.6f), 10f, 6f, new Color(1f, 0.7f, 0.45f, 0.55f), 10);
-
-            float t = 0f;
-            while (melee.HpRatio >= 1f && t < 3f) { t += Time.unscaledDeltaTime; yield return null; }
-            yield return new WaitForSecondsRealtime(0.12f);
-            yield return Capture("archer_range");
-        }
-        [UnityTest]
         public IEnumerator 패링_순간()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();
@@ -153,21 +127,6 @@ namespace ParryRL.Tests
             while (attack != null && t < 1f) { t += Time.unscaledDeltaTime; yield return null; }
             yield return new WaitForSecondsRealtime(0.04f);
             yield return Capture("parry_moment");
-        }
-
-        [UnityTest]
-        public IEnumerator 회피_순간()
-        {
-            var defense = Object.FindAnyObjectByType<PlayerDefense>();
-            defense.GetComponent<SkillGauge>().Add(10);
-            defense.GetComponent<PlayerParty>().TryManualSwap();
-            yield return new WaitForSeconds(0.45f);
-            defense.TryActivate();
-            var attack = SpawnAttack(defense, 1.4f, heavy: false);
-            float t = 0f;
-            while (attack != null && !attack.IsGhost && t < 1f) { t += Time.unscaledDeltaTime; yield return null; }
-            yield return new WaitForSecondsRealtime(0.07f);
-            yield return Capture("dodge_moment");
         }
 
         // ───────────── 몬스터 ─────────────
@@ -227,71 +186,6 @@ namespace ParryRL.Tests
             Physics2D.SyncTransforms();
         }
 
-        [UnityTest]
-        public IEnumerator 증강_등장충격파_기절()
-        {
-            var defense = Object.FindAnyObjectByType<PlayerDefense>();
-            var party = defense.GetComponent<PlayerParty>();
-            var gauge = defense.GetComponent<SkillGauge>();
-            defense.GetComponent<AugmentManager>().Grant(AugmentCatalog.Get("w_shockwave"));
-            gauge.Add(20);
-            party.TryManualSwap(); // 궁수
-            yield return new WaitForSeconds(0.45f);
-
-            // 기절 색이 보이도록 AI는 켜 두되 공격은 끈다
-            GameTuning.Current.enemyPassive = true;
-            var enemies = Object.FindObjectsByType<EnemyController>();
-            foreach (var e in enemies) e.enabled = true;
-            PlaceEnemy(System.Linq.Enumerable.First(enemies, e => e.Kind == EnemyKind.Melee), defense, 2f);
-            PlaceEnemy(System.Linq.Enumerable.First(enemies, e => e.Kind == EnemyKind.Ranged), defense, -2.2f);
-
-            party.TryManualSwap(); // 전사 등장 → 충격파
-            yield return new WaitForSecondsRealtime(0.1f);
-            yield return Capture("aug_shockwave");
-        }
-
-        [UnityTest]
-        public IEnumerator 증강_등장화살비()
-        {
-            var defense = Object.FindAnyObjectByType<PlayerDefense>();
-            var party = defense.GetComponent<PlayerParty>();
-            defense.GetComponent<AugmentManager>().Grant(AugmentCatalog.Get("a_arrow_rain"));
-            var enemies = Object.FindObjectsByType<EnemyController>();
-            PlaceEnemy(System.Linq.Enumerable.First(enemies, e => e.Kind == EnemyKind.Melee), defense, 5f);
-            PlaceEnemy(System.Linq.Enumerable.First(enemies, e => e.Kind == EnemyKind.Ranged), defense, 9f);
-            yield return new WaitForSeconds(0.3f);
-
-            defense.GetComponent<SkillGauge>().Add(10);
-            party.TryManualSwap(); // 궁수 등장 → 화살비
-            yield return new WaitForSeconds(0.28f);
-            yield return Capture("aug_arrow_rain");
-        }
-
-        [UnityTest]
-        public IEnumerator 증강_갈래화살_교대공명_데미지설명()
-        {
-            var defense = Object.FindAnyObjectByType<PlayerDefense>();
-            var augments = defense.GetComponent<AugmentManager>();
-            augments.Grant(AugmentCatalog.Get("a_split_arrow"));
-            augments.Grant(AugmentCatalog.Get("swap_resonance"));
-            var enemies = Object.FindObjectsByType<EnemyController>();
-            var melee = System.Linq.Enumerable.First(enemies, e => e.Kind == EnemyKind.Melee);
-            PlaceEnemy(melee, defense, 6f);
-            PlaceEnemy(System.Linq.Enumerable.First(enemies, e => e.Kind == EnemyKind.Ranged), defense, -7f);
-            yield return new WaitForSeconds(0.3f);
-
-            // 전사가 강공격 패링 → 궁수 등장(공명 시작) → 반격 + 갈래 화살 2발
-            defense.TryActivate();
-            Vector2 p = defense.transform.position;
-            EnemyAttack.Spawn(melee, AttackType.Heavy, new Vector2(p.x + 1.2f, p.y), Vector2.left,
-                new Vector2(0.9f, 0.9f), 8f, 6f, new Color(1f, 0.1f, 0.3f, 1f), 20);
-
-            float t = 0f;
-            while (melee.HpRatio >= 1f && t < 3f) { t += Time.unscaledDeltaTime; yield return null; }
-            yield return new WaitForSecondsRealtime(0.15f);
-            yield return Capture("aug_split_resonance");
-        }
-
         private static EnemyAttack SpawnAttack(PlayerDefense defense, float fromDx, bool heavy)
         {
             Vector2 p = defense.transform.position;
@@ -330,7 +224,7 @@ namespace ParryRL.Tests
             panel.GrantFromPanel(AugmentCatalog.Get("wide_window"));
             panel.GrantFromPanel(AugmentCatalog.Get("w_blood_parry"));
             panel.GrantFromPanel(AugmentCatalog.Get("w_blood_parry"));
-            panel.GrantFromPanel(AugmentCatalog.Get("a_split_arrow"));
+            panel.GrantFromPanel(AugmentCatalog.Get("w_close_strike"));
             yield return null;
             yield return Capture("tuning_augments");
             yield return Capture("tuning_augments_640x360", 640, 360);

@@ -1,16 +1,14 @@
 namespace ParryRL
 {
-    public enum CharacterKind { Warrior, Archer }
+    /// <summary>플레이어 캐릭터. 궁수는 폐기(2026-10-08) — 전사 하나뿐이지만 HitInfo 등이 참조해 남겨 둔다.</summary>
+    public enum CharacterKind { Warrior }
 
     public enum AttackType { Normal, Heavy }
-
-    /// <summary>HeavyParry: 강공격 방어 성공 / Defense: 일반 공격 방어 성공 (둘 다 자동 스왑) / Manual: 수동 스왑.</summary>
-    public enum SwapCause { HeavyParry, Defense, Manual }
 
     public enum DefenseState { Ready, Active, Cooldown }
 
     public enum EnemyKind { Melee, Ranged }
 
-    /// <summary>플레이어 입력 행동 4종 (스킬바 슬롯과 1:1).</summary>
-    public enum PlayerAction { Move, Attack, Defend, Swap }
+    /// <summary>플레이어 입력 행동 3종 (스킬바 슬롯과 1:1).</summary>
+    public enum PlayerAction { Move, Attack, Defend }
 }

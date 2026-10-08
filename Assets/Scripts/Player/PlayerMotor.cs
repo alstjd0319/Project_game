@@ -16,9 +16,6 @@ namespace ParryRL
         [SerializeField] private float dashDistance = 3f;
         [SerializeField] private float dashDuration = 0.15f;
 
-        [Header("회피 성공 후퇴 (Project_Game 방식 — 실시간으로 직접 이동하므로 시간이 멈춰도 움직인다)")]
-        [SerializeField, Tooltip("뒤로 젖혀지는 최대 각도")] private float backstepLeanAngle = 12f;
-
         [Header("공격 내딛기 (전사 베기 때 몸이 칼을 따라 살짝 나아간다 — 무적 아님)")]
         [SerializeField] private float lungeDistance = 0.45f;
         [SerializeField] private float lungeDuration = 0.12f;
@@ -28,8 +25,6 @@ namespace ParryRL
         public int Facing { get; private set; } = 1;
         public bool IsGrounded { get; private set; }
         public bool IsDashing => _dashTimer > 0f;
-        /// <summary>회피 성공 후퇴 중 — 무적이고 입력을 받지 않는다.</summary>
-        public bool IsBackstepping { get; private set; }
 
         /// <summary>이동 스킬 무적: 대시 중 + 끝난 뒤 여유 시간 (GameTuning).</summary>
         public bool IsDashInvulnerable =>
@@ -61,12 +56,6 @@ namespace ParryRL
         private float _lungeTimer;
         private int _lungeDir;
         private float _dropTimer;
-        private float _backstepStartTime;
-        private float _backstepStartX;
-        private float _backstepDistance;
-        private float _backstepDuration;
-        private int _backstepDir;
-        private readonly RaycastHit2D[] _wallHits = new RaycastHit2D[8];
         private readonly Collider2D[] _groundHits = new Collider2D[4];
 
         private void Awake()
@@ -82,13 +71,6 @@ namespace ParryRL
 
         private void Update()
         {
-            if (IsBackstepping)
-            {
-                TickBackstep();
-                _h = 0f;
-                return;
-            }
-
             if (GameManager.InputBlocked)
             {
                 _h = 0f;
@@ -120,12 +102,6 @@ namespace ParryRL
         {
             IsGrounded = CheckGround();
             if (IsGrounded && _rb.linearVelocity.y <= 0.01f) _jumpsLeft = maxJumps;
-
-            if (IsBackstepping)
-            {
-                _rb.linearVelocity = new Vector2(0f, _rb.linearVelocity.y);
-                return;
-            }
 
             if (_lungeTimer > 0f && !IsDashing)
             {
@@ -162,55 +138,6 @@ namespace ParryRL
             _rb.linearVelocity = new Vector2(vx, _rb.linearVelocity.y);
         }
 
-        /// <summary>
-        /// 회피 성공 후퇴: 시작 위치에서 ease-out으로 distance만큼 물러난다. timeScale이 0이어도 물리가 안 도니
-        /// 실시간(unscaledTime)으로 트랜스폼을 직접 옮긴다. 벽 앞에서는 멈춘다 (적은 트리거라 통과).
-        /// </summary>
-        public void Backstep(int dir, float distance, float duration)
-        {
-            _dashTimer = 0f;
-            _rb.gravityScale = _gravityScale;
-            _backstepDir = dir >= 0 ? 1 : -1;
-            _backstepDistance = ClampToWall(_backstepDir, distance);
-            _backstepDuration = Mathf.Max(0.01f, duration);
-            _backstepStartTime = Time.unscaledTime;
-            _backstepStartX = transform.position.x;
-            IsBackstepping = true;
-        }
-
-        private void TickBackstep()
-        {
-            float t = Mathf.Clamp01((Time.unscaledTime - _backstepStartTime) / _backstepDuration);
-            float eased = 1f - Mathf.Pow(1f - t, 3f);
-            var pos = new Vector3(_backstepStartX + _backstepDir * _backstepDistance * eased, transform.position.y, transform.position.z);
-            transform.position = pos;
-            _rb.position = pos;
-
-            // 이동 반대쪽으로 몸이 젖혀지는 회피 모션
-            float falloff = (1f - t) * (1f - t);
-            float lean = _backstepDir * backstepLeanAngle * Mathf.Sin(Mathf.Clamp01(t * 2f) * Mathf.PI * 0.5f) * falloff;
-            transform.rotation = Quaternion.Euler(0f, 0f, t >= 1f ? 0f : lean);
-
-            if (t >= 1f)
-            {
-                IsBackstepping = false;
-                Physics2D.SyncTransforms();
-            }
-        }
-
-        private float ClampToWall(int dir, float distance)
-        {
-            var filter = new ContactFilter2D { useTriggers = false };
-            int count = _collider.Cast(new Vector2(dir, 0f), filter, _wallHits, distance);
-            float allowed = distance;
-            for (int i = 0; i < count; i++)
-            {
-                if (Mathf.Abs(_wallHits[i].normal.x) < 0.5f) continue; // 바닥·천장
-                allowed = Mathf.Min(allowed, Mathf.Max(0f, _wallHits[i].distance));
-            }
-            return allowed;
-        }
-
         private bool CheckGround()
         {
             Vector2 size = transform.localScale;
@@ -231,7 +158,7 @@ namespace ParryRL
         /// <summary>서 있는 곳이 얇은 발판(PlatformEffector2D)이면 잠깐 충돌을 꺼서 아래로 내려간다.</summary>
         public bool TryDropThrough()
         {
-            if (!IsGrounded || IsBackstepping || _dropTimer > 0f) return false;
+            if (!IsGrounded || _dropTimer > 0f) return false;
             Vector2 size = transform.localScale;
             var center = new Vector2(transform.position.x, transform.position.y - size.y * 0.5f - 0.03f);
             var filter = new ContactFilter2D { useTriggers = false };
@@ -258,7 +185,7 @@ namespace ParryRL
         /// <summary>전사가 벨 때 칼을 따라 몸이 살짝 나아간다. 대시와 달리 무적이 아니고 중력도 그대로.</summary>
         public void Lunge(int dir)
         {
-            if (IsBackstepping || IsDashing) return;
+            if (IsDashing) return;
             _lungeDir = dir >= 0 ? 1 : -1;
             _lungeTimer = lungeDuration;
         }

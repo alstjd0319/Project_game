@@ -269,7 +269,7 @@ namespace ParryRL
             _hpText = UiKit.Text("HpText", hpBg, 22, TextAnchor.MiddleCenter);
             UiKit.Stretch(_hpText.rectTransform);
 
-            // 게이지 20칸 (10칸째 뒤에 구분 간격 → 수동 스왑 기준점)
+            // 게이지 20칸 (10칸째 뒤에 구분 간격)
             const float cell = 24f, gap = 4f, midGap = 12f;
             for (int i = 0; i < 20; i++)
             {

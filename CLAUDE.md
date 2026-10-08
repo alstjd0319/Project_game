@@ -36,6 +36,13 @@
   - 밀리면 보스 페이즈·몬스터 수부터 줄인다.
 - **미결정 사항** (임의로 확정하지 말 것): 3장 회피 판정 규칙 차별화(B안, 보류) · 다수전 공격 겹침 대책(보류 — 사용자가 "나중에 차차") · 스토리 세부(오누이·결말 톤) · 9장 TODO. 증강 수치는 전부 가안 (사용자가 플레이해 보고 조정 예정)
 
+## ⚠️ 궁수·스왑 시스템 폐기 (2026-10-08)
+
+- 사용자 결정: **궁수와 그에 딸린 시스템을 전부 폐기**하고 전사 단독으로 간다. 지운 것: 궁수 캐릭터, 스왑(강제·수동 D키·무적·등장기), 회피(백스텝·퍼펙트 회피 시간정지·바람개비), 화살 투사체(`PlayerProjectile`), 궁수 전용 증강 4개, 스왑 연계 증강(교대 공명·등장 충격파), 궁수 스프라이트·회피 효과음, 튜닝 패널의 궁수·회피 항목.
+- 남은 증강 6개: 공용(넓은 판정·연쇄 방어·강공격 사냥꾼), 전사(지척의 일격·피의 패링·돌진 베기).
+- **아래 `기획서.md`는 아직 두 캐릭터 기준 문장이 많다** — 위 폐기 결정이 우선이며, 기획서 갱신은 사용자 확인 후 한다. 코드에서 `CharacterKind`는 `Warrior` 하나, `PlayerParty`는 체력·피격 표시만 담당한다.
+- 지금 규칙: 패링 성공 → 같은 자리에서 근접 반격(강공격이면 더 큰 연출). 스왑이 없으니 "방어 성공 = 항상 스왑" 규칙도 사라졌다.
+
 ## 기준 문서
 
 - **[`기획서.md`](기획서.md)가 게임 규칙의 단일 기준**이다. 구현 전에 관련 장을 읽고, 규칙·수치가 바뀌면 기획서도 함께 갱신한다.
@@ -91,7 +98,7 @@ Assets/
   - **플레이어 딜은 반드시 `DamageCalc`로 계산한다** (기본 × 캐릭터 패시브 × (1 + 증강 보너스 합), 기획서 5.3). 새 공격도 `HitInfo`를 만들어 `MeleeStrike`/`PlayerProjectile`/`DamageCalc.Apply`에 넘길 것 — 직접 `TakeDamage(숫자)` 금지.
 - 딜을 넣는 스킬·증강은 기획서 2장 기준(게이지를 소모할 것, 게이지 1칸당 **기본** 딜 약 10~15)을 지킨다. 게이지 쓰는 딜을 추가하면 `AugmentTests`의 1칸당 효율 테스트에도 넣는다.
 - 그 외 오브젝트 고유 값(크기, 체력, 색, 사거리 등)은 `[SerializeField] private` 필드 + 기획서 가안값을 기본값으로. 필요하면 `[Header]`/`[Tooltip]`에 한국어 설명.
-- 조작키는 `Controls` 상수로만 참조 (기획서 4.5): ←/→ 이동, Space 점프(2단·고정 높이, ↓+Space 발판 내려가기), S 방어, A 일반공격, Shift 이동 스킬, D 수동 스왑, Enter 수락, ESC 일시정지, C 증강 목록, F1 튜닝 패널.
+- 조작키는 `Controls` 상수로만 참조 (기획서 4.5): ←/→ 이동, Space 점프(2단·고정 높이, ↓+Space 발판 내려가기), S 방어, A 일반공격, Shift 이동 스킬, Enter 수락, ESC 일시정지, C 증강 목록, F1 튜닝 패널.
 - 보조 창(증강 목록·튜닝 패널)은 평소 접혀 있고 키로 토글, 게임을 멈추지 않는다. 좌측(상태 패널 아래)과 우측에 나눠 서로 겹치지 않게 둔다.
 - 입력 처리 전 `GameManager.InputBlocked` 확인 (일시정지·게임오버).
 - Unity 6 API 사용: `Rigidbody2D.linearVelocity`, `FindAnyObjectByType` / `FindObjectsByType` (구 API 금지).
@@ -105,7 +112,7 @@ Assets/
 - **텔레그래프는 고정 속도**: 원거리 투사체는 거리와 무관하게 일정 속도로 이동. 예외 — 근접 베기는 예비 모션 길이가 반응시간이고 베기 자체는 한 번에 나간다 (느리게 뻗으면 어색하다는 피드백, 기획서 3.1).
 - **연출은 unscaled time**: 히트스탑이 `Time.timeScale = 0`을 쓰므로, 이펙트·흔들림·UI 애니메이션은 `Time.unscaledDeltaTime` / `WaitForSecondsRealtime`.
 - **화이트박스 단계**: 흰 네모 스프라이트 하나만 재사용하고 색상·크기로 구분. 외부 에셋 추가 금지 (5단계 전까지).
-  - 예외(2026-10-08, ParryRoguelike-main2 병합): 전사와 근접 몬스터는 도트 **애니메이션**(`Assets/Art/Characters/Warrior`, `Assets/Art/Enemies/Melee`)을 쓴다. 원본 시트는 `ArtSource/`, 프레임 자르기는 `Tools/sprites/process_sheets.ps1`. `PlayerSprite`/`EnemySprite`가 판정 네모 위에 그림을 그리고(판정은 그대로, F1 "판정 상자 보기"로 겹쳐 확인), 그림이 없는 궁수·원거리 몬스터는 아래 Project_Game 스프라이트를 쓴다. 공격 이펙트 그림(`Assets/Art/Fx`: 전사 반격·일반공격, 몬스터 베기)은 `AttackFxArt`/`FxClip`이 판정 박스 크기로 늘려 그린다 (그림 = 판정 범위). 전사는 벨 때 몸이 0.45유닛 내딛는다(`PlayerMotor.Lunge`, 무적 아님). 시간 정지 바람개비는 퍼펙트 회피 중에만 보인다. 빌더에서 `PlayerSprite`는 `PlayerDefense`를 붙인 **뒤에** 추가해야 한다 (RequireComponent로 방어 컴포넌트가 둘이 되는 버그).
+  - 예외(2026-10-08, ParryRoguelike-main2 병합): 전사와 근접 몬스터는 도트 **애니메이션**(`Assets/Art/Characters/Warrior`, `Assets/Art/Enemies/Melee`)을 쓴다. 원본 시트는 `ArtSource/`, 프레임 자르기는 `Tools/sprites/process_sheets.ps1`. `PlayerSprite`/`EnemySprite`가 판정 네모 위에 그림을 그리고(판정은 그대로, F1 "판정 상자 보기"로 겹쳐 확인), 그림이 없는 원거리 몬스터는 아래 Project_Game 스프라이트를 쓴다. 공격 이펙트 그림(`Assets/Art/Fx`: 전사 반격·일반공격, 몬스터 베기)은 `AttackFxArt`/`FxClip`이 판정 박스 크기로 늘려 그린다 (그림 = 판정 범위). 전사는 벨 때 몸이 0.45유닛 내딛는다(`PlayerMotor.Lunge`, 무적 아님). 빌더에서 `PlayerSprite`는 `PlayerDefense`를 붙인 **뒤에** 추가해야 한다 (RequireComponent로 방어 컴포넌트가 둘이 되는 버그).
   - 예외(2026-10-01, Project_Game 병합): 플레이어·근접/원거리 몬스터는 `Assets/Sprites/ParryPrototype` 도트 스프라이트, 방어 성공음은 `Assets/Audio/ParryPrototype` wav를 쓴다. 스프라이트는 `SpriteDrawMode.Sliced`+`size=(1,1)`로 몸 크기(스케일)에 맞춰 늘려 그리므로 판정-시각 일치가 유지된다. 스프라이트 필드를 비우면 흰 네모/합성음으로 돌아간다. 퍼펙트 방어(`GameTuning.perfectWindow` 0.08초)는 연출 전용(`SuccessEffects`)이며 판정·게이지는 일반 성공과 같다.
 
 ## 작업 흐름
@@ -122,7 +129,7 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 에디터가 이 프로젝트를 열고 있으면 스크립트가 알아서 `%TEMP%\ParryRL_verify` 사본에서 돌리고 캡처를 원본 `Captures/`로 복사한다. 로그는 `%TEMP%\ParryRL_logs\`.
 - 씬 구성(빌더)을 바꾸지 않았으면 `-SkipBuild`로 시간을 아낀다.
 
-- 규칙(판정·게이지·스왑 등)을 바꾸면 테스트를 추가·수정하고 통과를 확인한다. 새 PlayMode 테스트는 씬을 `yield return TestScene.LoadPrototype();`으로 연다 — 사용자의 `tuning.json`을 무시하고 기본값으로 돌리기 위함 (안 그러면 사용자가 패널로 값을 바꾸는 순간 테스트가 깨진다).
+- 규칙(판정·게이지 등)을 바꾸면 테스트를 추가·수정하고 통과를 확인한다. 새 PlayMode 테스트는 씬을 `yield return TestScene.LoadPrototype();`으로 연다 — 사용자의 `tuning.json`을 무시하고 기본값으로 돌리기 위함 (안 그러면 사용자가 패널로 값을 바꾸는 순간 테스트가 깨진다).
 - 로그에서 `error CS` / `warning CS` / 예외가 없는지 확인한다.
 - **UI 글자 폭은 해상도(캔버스 배율)에 따라 달라진다.** 작은 Game 뷰에서는 같은 글도 더 넓게 그려져 줄바꿈이 생긴다. 글이 들어가는 칸을 고정 높이로 두지 말고 `Text.preferredHeight`로 잡은 뒤, 캔버스 `scaleFactor`가 바뀌면 다시 배치한다. 목록처럼 길어질 수 있는 창은 높이 상한 + 스크롤. 캡처는 1920×1080 외에 작은 해상도(`Capture(name, 640, 360)`)로도 찍어 확인한다.
 - **화면에 보이는 변경(UI·연출)은 반드시 캡처로 확인한다.** `Assets/Tests/PlayMode/CaptureTests.cs`에 장면을 추가하면 테스트 실행 시 프로젝트 루트 `Captures/*.png`로 저장된다 (캔버스를 ScreenSpaceCamera로 바꿔 RenderTexture로 렌더). 이미지를 직접 열어보고 겹침·가림·대비 문제를 고친 뒤 보고한다. 캡처만 다시 찍을 땐 `-testFilter ParryRL.Tests.CaptureTests`.

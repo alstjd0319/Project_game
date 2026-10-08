@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ParryRL
 {
     /// <summary>플레이어 딜의 출처. 증강 보너스가 어디에 붙는지 가르는 기준.</summary>
-    public enum DamageSource { Counter, AttackSkill, SwapEntry, DashSlash }
+    public enum DamageSource { Counter, AttackSkill, DashSlash }
 
     /// <summary>
     /// 플레이어 공격 한 번의 정보. 발동 순간에 만들어 투사체·근접 박스가 들고 다니다가, 명중 순간 데미지를 계산한다.

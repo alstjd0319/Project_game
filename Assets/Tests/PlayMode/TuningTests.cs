@@ -205,7 +205,6 @@ namespace ParryRL.Tests
             Assert.AreEqual(0, gauge.Value);
             Assert.IsTrue(combat.TryAttackSkill(), "게이지 0이어도 공격 스킬");
             Assert.IsTrue(combat.TryMoveSkill(), "이동 스킬");
-            Assert.IsTrue(_party.TryManualSwap(), "수동 스왑(10칸)");
             Assert.AreEqual(0, gauge.Value, "줄지 않음");
             yield return new WaitForSeconds(1.1f); // 쿨타임
 

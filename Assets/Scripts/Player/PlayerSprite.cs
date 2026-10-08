@@ -65,7 +65,6 @@ namespace ParryRL
         {
             _defense.Activated += OnDefenseActivated;
             _party.Damaged += OnDamaged;
-            _party.SwapEntered += OnSwapEntered;
             if (_combat != null)
             {
                 _combat.DefenseSucceeded += OnDefenseSucceeded;
@@ -78,7 +77,6 @@ namespace ParryRL
         {
             _defense.Activated -= OnDefenseActivated;
             _party.Damaged -= OnDamaged;
-            _party.SwapEntered -= OnSwapEntered;
             if (_combat != null)
             {
                 _combat.DefenseSucceeded -= OnDefenseSucceeded;
@@ -109,7 +107,6 @@ namespace ParryRL
         }
 
         private void OnDamaged(int _) => PlayOnce("hit");
-        private void OnSwapEntered(CharacterKind kind, SwapCause cause) => PlayOnce("enter");
 
         private void PlayOnce(string clip)
         {

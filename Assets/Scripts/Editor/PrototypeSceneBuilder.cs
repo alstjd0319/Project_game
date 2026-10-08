@@ -78,8 +78,6 @@ namespace ParryRL.EditorTools
             var sfx = systems.AddComponent<Sfx>();
             SetOptional(sfx, "parryClip", LoadAsset<AudioClip>(AudioDir + "parry_normal_success.wav"));
             SetOptional(sfx, "perfectParryClip", LoadAsset<AudioClip>(AudioDir + "parry_success.wav"));
-            SetOptional(sfx, "dodgeClip", LoadAsset<AudioClip>(AudioDir + "dodge_success.wav"));
-            SetOptional(sfx, "perfectDodgeClip", LoadAsset<AudioClip>(AudioDir + "perfect_dodge_success.wav"));
             systems.AddComponent<Hud>();
 
             // ── 레벨 ──
@@ -114,11 +112,7 @@ namespace ParryRL.EditorTools
             player.AddComponent<SkillGauge>();
             var motor = player.AddComponent<PlayerMotor>();
             Set(motor, "eye", eye.transform);
-            var party = player.AddComponent<PlayerParty>();
-            SetOptional(party, "warriorSprite", LoadAsset<Sprite>(SpriteDir + "warrior.png"));
-            SetOptional(party, "warriorParrySprite", LoadAsset<Sprite>(SpriteDir + "warrior_parry.png"));
-            SetOptional(party, "archerSprite", LoadAsset<Sprite>(SpriteDir + "archer.png"));
-            SetOptional(party, "archerDodgeSprite", LoadAsset<Sprite>(SpriteDir + "archer_dodge.png"));
+            player.AddComponent<PlayerParty>();
             player.AddComponent<PlayerCombat>();
             player.AddComponent<PlayerDefense>();
             player.AddComponent<PlayerLevel>();
@@ -127,7 +121,6 @@ namespace ParryRL.EditorTools
 
             // PlayerSprite는 PlayerDefense를 RequireComponent하므로 반드시 PlayerDefense를 붙인 뒤에 추가한다 (아니면 방어 컴포넌트가 둘이 된다)
             // 도트 애니메이션 (판정 없음). 발끝 = 네모 바닥, 부모의 늘림(0.8×1.4)을 상쇄해 픽셀 비율 유지.
-            // 그림이 없는 캐릭터(궁수)는 PlayerParty의 스프라이트가 대신 보인다.
             var art = new GameObject("Art");
             art.transform.SetParent(player.transform, false);
             art.transform.localPosition = new Vector3(0f, -0.5f, 0f);
@@ -357,7 +350,7 @@ namespace ParryRL.EditorTools
             {
                 so.FindProperty("maxHp").intValue = 60;
                 so.FindProperty("moveSpeed").floatValue = 2.5f;
-                so.FindProperty("xpReward").intValue = 15; // 원거리는 스왑을 강요하는 까다로운 적
+                so.FindProperty("xpReward").intValue = 15; // 원거리는 까다로운 적
             }
             so.ApplyModifiedPropertiesWithoutUndo();
 

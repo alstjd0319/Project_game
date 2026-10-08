@@ -37,7 +37,7 @@ namespace ParryRL
     }
 
     /// <summary>
-    /// 패링/회피 판정 (기획서 8장 확정 알고리즘). 전사=패링, 궁수=회피 — 이름만 다르고 로직은 동일.
+    /// 패링 판정 (기획서 8장 확정 알고리즘). 궁수(회피)는 폐기됐다.
     /// 1. S 입력 → 활성(가안 0.3초). 2. 활성 중 적 히트박스가 허트박스에 닿으면 즉시 성공 + 활성 종료.
     /// 3. 아무것도 안 닿고 활성이 끝나면 헛스윙 → 쿨타임. 활성이 아닐 때 닿으면 그냥 피격(쿨타임 없음).
     /// 입력 버퍼: 활성이 끝난 직후 짧은 시간 안에 닿아도 성공으로 친다 (살짝 이른 입력 보정).
@@ -98,7 +98,7 @@ namespace ParryRL
         /// <summary>방어 버튼 입력. 준비 상태일 때만 활성으로 전환된다.</summary>
         public bool TryActivate()
         {
-            if (_party.IsDead || _motor.IsBackstepping) return false;
+            if (_party.IsDead) return false;
 
             float sinceHit = Time.time - _lastHitTime;
             if (sinceHit <= LateWindow) Report(new DefenseTiming(TimingKind.TooLate, sinceHit));
@@ -148,24 +148,16 @@ namespace ParryRL
 
                 // 방어 성공: 데미지 취소, 활성 즉시 종료 (헛스윙 쿨타임 없음)
                 SetState(DefenseState.Ready, 0f);
-                // 패링은 막아서 부수고, 회피는 몸을 통과시켜 흘려보낸다 (규칙은 같고 손맛이 다름)
-                attack.Resolve(_party.Current.kind == CharacterKind.Archer ? AttackResolution.PassThrough : AttackResolution.Shatter);
+                // 패링은 막아서 부순다
+                attack.Resolve(AttackResolution.Shatter);
                 _combat.OnDefenseSuccess(attack, timing.IsPerfect(GameTuning.Current.perfectWindow));
                 return;
             }
 
-            if (_motor.IsBackstepping || _motor.IsDashInvulnerable)
+            if (_motor.IsDashInvulnerable)
             {
                 // 이동 스킬 무적: 조용히 통과 (대시 잔상이 이미 "빠져나갔다"를 보여줌)
                 attack.Resolve(AttackResolution.PassThrough);
-                return;
-            }
-
-            if (_party.IsInvulnerable)
-            {
-                // 스왑 무적: 데미지 없이 무시
-                attack.Resolve(AttackResolution.PassThrough); // 무적: 판정 없이 통과
-                Hud.WorldText(transform.position + Vector3.up, "무적", new Color(0.8f, 0.9f, 1f), 0.9f);
                 return;
             }
 

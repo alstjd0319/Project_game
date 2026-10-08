@@ -12,7 +12,6 @@ namespace ParryRL
         public const KeyCode Down = KeyCode.DownArrow;
         public const KeyCode Defend = KeyCode.S;
         public const KeyCode AttackSkill = KeyCode.A;
-        public const KeyCode Swap = KeyCode.D;
         public const KeyCode MoveSkill = KeyCode.LeftShift;
         public const KeyCode Confirm = KeyCode.Return;
         public const KeyCode Pause = KeyCode.Escape;

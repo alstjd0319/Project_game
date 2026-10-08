@@ -53,16 +53,12 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 퍼펙트_회피는_세상이_멈추고_끝나면_시간이_복귀한다()
+        public IEnumerator 퍼펙트_패링은_히트스탑이_걸리고_끝나면_시간이_복귀한다()
         {
-            _party.Swap(SwapCause.Manual); // 궁수로
-            yield return new WaitForSecondsRealtime(0.4f);
-            Assert.AreEqual(CharacterKind.Archer, _party.Current.kind);
-
             Assert.IsTrue(_defense.TryActivate());
             SpawnAttack();
-            yield return new WaitForSecondsRealtime(0.1f);
-            Assert.AreEqual(0f, Time.timeScale, "퍼펙트 회피인데 세상이 멈추지 않음");
+            yield return new WaitForSecondsRealtime(0.06f);
+            Assert.AreEqual(0f, Time.timeScale, "퍼펙트 패링인데 히트스탑이 걸리지 않음");
 
             yield return new WaitForSecondsRealtime(1.2f);
             Assert.AreEqual(1f, Time.timeScale, 0.001f, "연출이 끝났는데 timeScale이 복귀하지 않음");
@@ -70,47 +66,17 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 도트_아트가_연결되고_방어_중에는_자세가_바뀐다()
+        public IEnumerator 원거리_몬스터는_도트_스프라이트_근접은_도트_애니메이션()
         {
-            var sr = _party.GetComponent<SpriteRenderer>();
-            Assert.AreEqual("warrior", sr.sprite.name);
-            Assert.AreEqual(SpriteDrawMode.Sliced, sr.drawMode);
-            Assert.AreEqual(Vector2.one, sr.size, "몸 크기(1×1 × 스케일)와 그림이 어긋남 — 판정-시각 일치 원칙");
+            var ranged = Object.FindObjectsByType<EnemyController>().First(e => e.Kind == EnemyKind.Ranged);
+            var rsr = ranged.GetComponent<SpriteRenderer>();
+            Assert.AreEqual("enemy_idle", rsr.sprite.name);
+            Assert.AreEqual(SpriteDrawMode.Sliced, rsr.drawMode);
+            Assert.AreEqual(Vector2.one, rsr.size, "몸 크기(1×1 × 스케일)와 그림이 어긋남 — 판정-시각 일치 원칙");
 
-            Assert.IsTrue(_defense.TryActivate());
+            var melee = Object.FindObjectsByType<EnemyController>().First(e => e.Kind == EnemyKind.Melee);
+            Assert.IsNotNull(melee.GetComponent<EnemySprite>());
             yield return null;
-            yield return null;
-            Assert.AreEqual("warrior_parry", sr.sprite.name);
-
-            var enemy = Object.FindObjectsByType<EnemyController>().First(e => e.Kind == EnemyKind.Ranged); // 근접은 도트 애니메이션(EnemySprite)
-            Assert.AreEqual("enemy_idle", enemy.GetComponent<SpriteRenderer>().sprite.name);
-        }
-
-        [UnityTest]
-        public IEnumerator 일반_회피는_시간을_멈추지_않고_뒤로_물러나며_그동안_무적이다()
-        {
-            _party.Swap(SwapCause.Manual);
-            yield return new WaitForSecondsRealtime(0.4f);
-            var motor = _defense.GetComponent<PlayerMotor>();
-            float startX = _defense.transform.position.x;
-
-            Assert.IsTrue(_defense.TryActivate());
-            yield return new WaitForSecondsRealtime(0.15f); // 0.08초 넘겨서 일반 회피
-            SpawnAttack();
-            yield return new WaitForSecondsRealtime(0.1f);
-
-            Assert.IsTrue(motor.IsBackstepping, "회피 성공 후 후퇴하지 않음");
-            Assert.AreEqual(1f, Time.timeScale, "일반 회피가 시간을 바꿈");
-            int hp = _party.Hp;
-            SpawnAttack();
-            yield return new WaitForSecondsRealtime(0.1f);
-            Assert.AreEqual(hp, _party.Hp, "후퇴 중 피격됨");
-            Assert.IsFalse(_defense.TryActivate(), "후퇴 중 입력을 받음");
-
-            yield return new WaitForSecondsRealtime(0.5f);
-            Assert.IsFalse(motor.IsBackstepping);
-            Assert.Less(_defense.transform.position.x, startX - 0.3f, "뒤(왼쪽)로 물러나지 않음");
-            Assert.AreEqual(Quaternion.identity, _defense.transform.rotation);
         }
 
         [UnityTest]

@@ -54,9 +54,6 @@ namespace ParryRL
         [SerializeField, Tooltip("기본 반격 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐")] private int counterDamage = 20;
         [SerializeField, Tooltip("전사 근접 반격 사거리 (플레이어 중심 기준)")] private float warriorCounterRange = 1.8f;
         [SerializeField] private float warriorCounterHeight = 1.6f;
-        [SerializeField] private float archerCounterSpeedNormal = 6f;
-        [SerializeField] private float archerCounterSpeedHeavy = 8f;
-        [SerializeField] private float archerCounterMaxDistance = 25f;
 
         [Header("일반공격 (A) — 게이지 없이 쿨타임만, 연타 방지용으로 약하게")]
         [SerializeField] private int attackSkillCost = 3;
@@ -64,8 +61,6 @@ namespace ParryRL
         [SerializeField] private float attackSkillCooldown = 0.35f;
         [SerializeField, Tooltip("기본 일반공격 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐")] private int attackSkillDamage = 15;
         [SerializeField] private Vector2 warriorSkillBox = new(2.4f, 1.6f);
-        [SerializeField] private float archerArrowSpeed = 16f;
-        [SerializeField] private float archerArrowRange = 12f;
 
         [Header("이동 스킬 (Shift) — 임시")]
         [SerializeField] private int moveSkillCost = 1;
@@ -118,7 +113,7 @@ namespace ParryRL
             _attackCd = Mathf.Max(0f, _attackCd - Time.deltaTime);
             _moveCd = Mathf.Max(0f, _moveCd - Time.deltaTime);
 
-            if (GameManager.InputBlocked || _party.IsDead || _motor.IsBackstepping) return;
+            if (GameManager.InputBlocked || _party.IsDead) return;
             if (Input.GetKeyDown(Controls.AttackSkill)) TryAttackSkill();
             if (Input.GetKeyDown(Controls.MoveSkill)) TryMoveSkill();
         }
@@ -133,43 +128,24 @@ namespace ParryRL
             // 공격이 날아온 방향 (소스가 이미 죽었으면 히트박스 진행 방향의 반대)
             float attackerX = source != null ? source.transform.position.x : transform.position.x - attack.Direction.x;
             string defenseName = _party.Current.defenseName;
-            CharacterKind defender = _party.Current.kind;
-            // 회피 후퇴 방향: 누르고 있는 방향키 쪽, 없으면 뒤쪽. 공격 쪽으로 몸을 돌리기 전에 읽는다.
-            float held = _motor.HorizontalInput;
-            int backDir = held != 0f ? (held > 0f ? 1 : -1) : -_motor.Facing;
 
-            // 공격해 온 쪽을 먼저 바라본다 — 스왑 등장기(화살비 등)도 이 방향 기준
+            // 공격해 온 쪽을 먼저 바라본다 — 반격 방향 기준
             _motor.FaceTowards(attackerX);
             _gauge.Add(heavy ? heavySuccessGain : normalSuccessGain);
-            DefenseSucceeded?.Invoke(new DefenseSuccess(defender, heavy, attack, perfect));
+            DefenseSucceeded?.Invoke(new DefenseSuccess(_party.Current.kind, heavy, attack, perfect));
 
-            // 타격감: 막은 캐릭터 기준 (곧 스왑되므로 스왑 전에 판단). 강공격은 한 층 더 크게.
-            if (defender == CharacterKind.Archer) PlayDodgeFeel(hitPoint, heavy, attack.Direction, perfect);
-            else PlayParryFeel(hitPoint, heavy, perfect);
+            // 타격감: 강공격은 한 층 더 크게.
+            PlayParryFeel(hitPoint, heavy, perfect);
+            if (perfect) _effects.PlayPerfect(hitPoint);
 
-            // 막는 자세를 연출이 끝날 때까지 유지 (방어 활성은 성공 즉시 끝나므로 따로 붙잡는다)
-            bool dodged = defender == CharacterKind.Archer;
-            float poseSeconds = dodged ? _effects.DodgeDuration(perfect) : (perfect ? 0.55f : 0.25f);
-            _party.HoldDefensePose(defender, poseSeconds);
-            if (dodged)
-            {
-                _motor.Backstep(backDir, _effects.DodgeDistance(perfect), poseSeconds);
-                _effects.PlayBackstepTrail(poseSeconds, backDir);
-            }
-            if (perfect) _effects.PlayPerfect(defender, hitPoint, attack.Direction);
-
-            // 어떤 공격이든 방어에 성공하면 스왑 (Project_Game 방식): 스왑(→ 등장기 → 교대 공명 시작) →
-            // 새로 등장한 캐릭터가 등장과 동시에 반격 "펑!" (기획서 5.2 처리 순서). 강공격은 연출과 반격이 한 층 더 크다.
-            // (회피 후퇴가 끝나길 기다렸다 베는 안은 후퇴로 적과 멀어져 전사 근접 반격이 닿지 않아 쓰지 않는다)
-            _party.Swap(heavy ? SwapCause.HeavyParry : SwapCause.Defense);
             if (heavy)
             {
-                Hud.Popup($"강공격 {defenseName}!  →  {_party.Current.displayName} 등장", new Color(1f, 0.85f, 0.3f), true);
+                Hud.Popup($"강공격 {defenseName}!", new Color(1f, 0.85f, 0.3f), true);
                 Fx.Flash(transform.position, 1.5f, 4f, _party.Current.color, 0.2f);
             }
             else
             {
-                Hud.Popup($"{defenseName}!  →  {_party.Current.displayName} 등장", Color.white, false);
+                Hud.Popup($"{defenseName}!", Color.white, false);
             }
             Counter(source, attackerX, heavy);
         }
@@ -185,19 +161,6 @@ namespace ParryRL
             if (heavy) Hud.ScreenFlash(new Color(1f, 1f, 1f, 0.35f));
         }
 
-        /// <summary>
-        /// 회피 = "스친다": 공격이 몸을 통과해 지나가고(판정은 꺼짐), 시간이 느려지고(슬로우모션 위주),
-        /// 바람 가르는 "휙", 몸이 잠깐 반투명 + 잔상 + 공격 방향으로 스치는 줄기. 파편·충격파 없음.
-        /// (화이트박스 단계 연출 — 에셋을 입힐 때 다시 손본다)
-        /// </summary>
-        private void PlayDodgeFeel(Vector2 hitPoint, bool heavy, Vector2 attackDirection, bool perfect)
-        {
-            Sfx.Play(perfect ? SfxId.PerfectDodge : heavy ? SfxId.HeavyDodge : SfxId.Dodge);
-            // 일반 회피는 시간을 멈추거나 늦추지 않는다 — 가볍게 물러나기만 한다 (퍼펙트만 시간 정지, SuccessEffects)
-            if (CameraRig.Instance != null) CameraRig.Instance.Shake(heavy ? 0.14f : 0.05f, heavy ? 0.2f : 0.1f);
-            if (heavy) Hud.ScreenFlash(new Color(0.75f, 1f, 0.9f, 0.18f));
-        }
-
         private void Counter(EnemyController target, float attackerX, bool heavy)
         {
             _motor.FaceTowards(target != null ? target.transform.position.x : attackerX);
@@ -206,23 +169,12 @@ namespace ParryRL
             Color color = _party.Current.color;
             var hit = NewHit(DamageSource.Counter, heavy);
 
-            if (_party.Current.kind == CharacterKind.Warrior)
-            {
-                // 근접 반격: 사거리 1.8 박스. 보이는 박스 = 판정 박스. 밖에 있는 적은 못 때린다.
-                var center = new Vector2(pos.x + dir * warriorCounterRange * 0.5f, pos.y);
-                var boxColor = new Color(color.r, color.g, color.b, 0.6f);
-                MeleeStrike.Spawn(center, new Vector2(warriorCounterRange, warriorCounterHeight), boxColor, counterDamage, hit,
-                    art: GameAssets.AttackFx != null ? GameAssets.AttackFx.warriorCounter : null, facing: dir);
-                _motor.Lunge(dir);
-            }
-            else
-            {
-                // 원거리 반격: 투사체가 목표에 도달하는 순간 데미지
-                Vector2 toTarget = target != null ? (Vector2)target.transform.position - pos : new Vector2(dir, 0f);
-                PlayerProjectile.Spawn(pos + new Vector2(dir * 0.4f, 0f), toTarget, target, true,
-                    heavy ? archerCounterSpeedHeavy : archerCounterSpeedNormal, archerCounterMaxDistance,
-                    counterDamage, hit, Color.Lerp(color, Color.white, 0.4f), heavy ? new Vector2(0.7f, 0.3f) : new Vector2(0.5f, 0.2f));
-            }
+            // 근접 반격: 사거리 1.8 박스. 보이는 박스 = 판정 박스. 밖에 있는 적은 못 때린다.
+            var center = new Vector2(pos.x + dir * warriorCounterRange * 0.5f, pos.y);
+            var boxColor = new Color(color.r, color.g, color.b, 0.6f);
+            MeleeStrike.Spawn(center, new Vector2(warriorCounterRange, warriorCounterHeight), boxColor, counterDamage, hit,
+                art: GameAssets.AttackFx != null ? GameAssets.AttackFx.warriorCounter : null, facing: dir);
+            _motor.Lunge(dir);
             CounterFired?.Invoke(new CounterShot(hit, pos, target, dir));
         }
 
@@ -249,20 +201,11 @@ namespace ParryRL
             Color color = _party.Current.color;
             var hit = NewHit(DamageSource.AttackSkill, false);
 
-            if (_party.Current.kind == CharacterKind.Warrior)
-            {
-                var center = new Vector2(pos.x + dir * warriorSkillBox.x * 0.5f, pos.y);
-                int hits = MeleeStrike.Spawn(center, warriorSkillBox, new Color(color.r, color.g, color.b, 0.45f), attackSkillDamage, hit,
-                    art: GameAssets.AttackFx != null ? GameAssets.AttackFx.warriorAttack : null, facing: dir);
-                if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
-                _motor.Lunge(dir);
-            }
-            else
-            {
-                PlayerProjectile.Spawn(pos + new Vector2(dir * 0.4f, 0f), new Vector2(dir, 0f), null, false,
-                    archerArrowSpeed, archerArrowRange, attackSkillDamage, hit,
-                    Color.Lerp(color, Color.white, 0.2f), hit.Pierce ? new Vector2(1.1f, 0.22f) : new Vector2(0.8f, 0.18f));
-            }
+            var center = new Vector2(pos.x + dir * warriorSkillBox.x * 0.5f, pos.y);
+            int hits = MeleeStrike.Spawn(center, warriorSkillBox, new Color(color.r, color.g, color.b, 0.45f), attackSkillDamage, hit,
+                art: GameAssets.AttackFx != null ? GameAssets.AttackFx.warriorAttack : null, facing: dir);
+            if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
+            _motor.Lunge(dir);
             return true;
         }
 
@@ -282,9 +225,7 @@ namespace ParryRL
             _moveCd = moveSkillCooldown;
             var kind = _party.Current.kind;
             float h = _motor.HorizontalInput;
-            int dir;
-            if (h != 0f) dir = h > 0f ? 1 : -1;
-            else dir = kind == CharacterKind.Warrior ? _motor.Facing : -_motor.Facing; // 궁수: 백스텝
+            int dir = h != 0f ? (h > 0f ? 1 : -1) : _motor.Facing;
 
             _motor.Dash(dir, _mods != null ? _mods.DashDistanceBonus(kind) : 0f);
             Sfx.Play(SfxId.Dash);

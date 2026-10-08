@@ -25,7 +25,7 @@ namespace ParryRL
 
         private static readonly string[] TabNames = { "타격감", "판정", "캐릭터", "적", "연습", "증강" };
         public const int AugmentTab = 5;
-        private static readonly string[] ProfileNames = { "일반 패링", "강공격 패링", "일반 회피", "강공격 회피", "피격", "스킬 적중" };
+        private static readonly string[] ProfileNames = { "일반 패링", "강공격 패링", "피격", "스킬 적중" };
         private const int ProfilesPerRow = 3;
 
         // ───────────── 행 ─────────────
@@ -123,15 +123,12 @@ namespace ParryRL
         private HitFeelProfile SelectedProfile => _profile switch
         {
             1 => T.heavyParry,
-            2 => T.normalDodge,
-            3 => T.heavyDodge,
-            4 => T.playerHurt,
-            5 => T.skillHit,
+            2 => T.playerHurt,
+            3 => T.skillHit,
             _ => T.normalParry,
         };
 
-        private bool SelectedIsDodge => _profile is 2 or 3;
-        private bool SelectedIsHeavy => _profile is 1 or 3;
+        private bool SelectedIsHeavy => _profile == 1;
 
         public bool IsVisible => _root.activeSelf;
 
@@ -349,15 +346,11 @@ namespace ParryRL
             AddSlider("공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.warriorAttackMultiplier, v => T.warriorAttackMultiplier = v);
             AddSlider("받는 피해 감소", 0f, 0.8f, 0.05f, "0%", () => T.warriorDamageReduction, v => T.warriorDamageReduction = v);
             AddSlider("이동 속도", 2f, 10f, 0.25f, "0.00", () => T.warriorMoveSpeed, v => T.warriorMoveSpeed = v);
-            Header("궁수 — 날쌤");
-            AddSlider("공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.archerAttackMultiplier, v => T.archerAttackMultiplier = v);
-            AddSlider("받는 피해 감소", 0f, 0.8f, 0.05f, "0%", () => T.archerDamageReduction, v => T.archerDamageReduction = v);
-            AddSlider("이동 속도", 2f, 10f, 0.25f, "0.00", () => T.archerMoveSpeed, v => T.archerMoveSpeed = v);
             Space(10f);
             var note = UiKit.Text("Note", Page, 17, TextAnchor.UpperLeft, outline: false);
             note.color = new Color(1f, 1f, 1f, 0.5f);
             note.horizontalOverflow = HorizontalWrapMode.Wrap;
-            note.text = "공격력 배율은 반격과 일반공격에 곱해진다.\n체력은 공유 — 맞는 순간 나와 있는 캐릭터의 피해 감소가 적용된다.\n강공격을 막고 스왑하면, 반격은 새로 등장한 캐릭터의 공격력으로 들어간다.";
+            note.text = "공격력 배율은 반격과 일반공격에 곱해진다.\n받는 피해 감소는 맞는 순간 적용된다.";
             UiKit.Place(note.rectTransform, new Vector2(0f, 1f), new Vector2(8f, _y), new Vector2(Width - 60f, 84f));
             Space(88f);
         }
@@ -424,7 +417,6 @@ namespace ParryRL
 
             AddAugmentGroup(AugmentOwner.Common, "공용", new Color(0.3f, 0.33f, 0.42f));
             AddAugmentGroup(AugmentOwner.Warrior, "전사", new Color(0.5f, 0.2f, 0.18f));
-            AddAugmentGroup(AugmentOwner.Archer, "궁수", new Color(0.16f, 0.4f, 0.24f));
         }
 
         /// <summary>그룹 이름은 왼쪽 칸에 — 제목 줄을 따로 두면 12개가 한 화면(높이 상한)에 안 들어간다.</summary>
@@ -598,22 +590,12 @@ namespace ParryRL
             Sfx.Play(_profile switch
             {
                 1 => SfxId.HeavyParry,
-                2 => SfxId.Dodge,
-                3 => SfxId.HeavyDodge,
-                4 => SfxId.Hurt,
-                5 => SfxId.EnemyHit,
+                2 => SfxId.Hurt,
+                3 => SfxId.EnemyHit,
                 _ => SfxId.Parry,
             });
             if (_defense == null) return;
 
-            if (SelectedIsDodge)
-            {
-                // 회피 미리보기: 반투명 + 오른쪽에서 온 공격이 스쳐 지나가는 줄기
-                Vector2 pos = _defense.transform.position;
-                if (_party != null) _party.PlayDodgeGhost(heavy ? 0.45f : 0.3f);
-                Fx.Streaks(pos, Vector2.left, new Color(0.85f, 1f, 0.95f, 0.8f), heavy ? 12 : 7);
-            }
-            else
             {
                 Vector2 pos = _defense.transform.position + Vector3.right * 0.8f;
                 Fx.Flash(pos, heavy ? 1.2f : 0.7f, heavy ? 3.2f : 1.8f, Color.white, heavy ? 0.16f : 0.1f);

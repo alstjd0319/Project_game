@@ -18,7 +18,6 @@ namespace ParryRL
         private static GameTuning T => GameTuning.Current;
 
         public void ParrySuccess(bool heavy) => Play(heavy ? T.heavyParry : T.normalParry);
-        public void DodgeSuccess(bool heavy) => Play(heavy ? T.heavyDodge : T.normalDodge);
         public void PlayerHurt() => Play(T.playerHurt);
         public void SkillHit() => Play(T.skillHit);
 

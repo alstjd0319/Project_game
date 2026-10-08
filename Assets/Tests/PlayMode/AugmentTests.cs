@@ -6,7 +6,7 @@ using UnityEngine.TestTools;
 
 namespace ParryRL.Tests
 {
-    /// <summary>증강 12개 효과와 "이번 판 보정" 층 (기획서 5.1~5.3).</summary>
+    /// <summary>증강 6개 효과와 "이번 판 보정" 층 (기획서 5.1~5.3).</summary>
     public class AugmentTests
     {
         private PlayerDefense _defense;
@@ -63,17 +63,8 @@ namespace ParryRL.Tests
         {
             Assert.IsTrue(_defense.TryActivate());
             SpawnAttack(type, source, fromDx);
-            // 성공하면 스왑(무적 0.3초) + 회피 후퇴(최대 ~0.7초)가 끝나야 다음 방어를 받는다
-            yield return new WaitForSecondsRealtime(0.9f);
-        }
-
-        /// <summary>게이지 10칸으로 수동 스왑하고 스왑 무적이 끝날 때까지 기다린다.</summary>
-        private IEnumerator SwapTo(CharacterKind kind)
-        {
-            if (_party.Current.kind == kind) yield break;
-            _gauge.Add(10);
-            Assert.IsTrue(_party.TryManualSwap());
-            yield return new WaitForSeconds(0.4f);
+            // 성공 연출(히트스탑·슬로우)이 끝나고 쿨타임 없이 다음 방어를 받을 수 있을 때까지
+            yield return new WaitForSecondsRealtime(0.6f);
         }
 
         // ───────────── 구조 ─────────────
@@ -81,11 +72,10 @@ namespace ParryRL.Tests
         [UnityTest]
         public IEnumerator 목록의_모든_증강은_효과가_구현되어_있다()
         {
-            Assert.AreEqual(12, AugmentCatalog.All.Count);
-            Assert.AreEqual(4, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Common));
-            Assert.AreEqual(4, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Warrior));
-            Assert.AreEqual(4, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Archer));
-            Assert.AreEqual(12, AugmentCatalog.All.Select(a => a.Id).Distinct().Count(), "id 중복 없음");
+            Assert.AreEqual(6, AugmentCatalog.All.Count);
+            Assert.AreEqual(3, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Common));
+            Assert.AreEqual(3, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Warrior));
+            Assert.AreEqual(6, AugmentCatalog.All.Select(a => a.Id).Distinct().Count(), "id 중복 없음");
             foreach (var def in AugmentCatalog.All)
             {
                 Assert.IsTrue(def.IsImplemented, def.Name);
@@ -106,14 +96,11 @@ namespace ParryRL.Tests
         [UnityTest]
         public IEnumerator 증강보너스는_더하고_캐릭터패시브에만_곱한다()
         {
-            // 전사 반격 20 × 패시브 1.5 × (1 + 지척 0.5 + 공명 0.3) = 54 (전부 곱하면 58.5)
+            // 전사 반격 20 × 패시브 1.5 × (1 + 지척 0.5) = 45 (보너스가 둘 이상이면 더하고, 전부 곱하지 않는다)
             Grant("w_close_strike");
-            Grant("swap_resonance");
-            _party.Swap(SwapCause.Manual);
-            _party.Swap(SwapCause.Manual); // 전사로 돌아옴 → 공명 시작
             Place(_melee, 1.3f);
             var hit = HitInfo.Create(DamageSource.Counter, CharacterKind.Warrior, PlayerPos);
-            Assert.AreEqual(54, DamageCalc.Compute(20, hit, _melee));
+            Assert.AreEqual(45, DamageCalc.Compute(20, hit, _melee));
             yield return null;
         }
 
@@ -157,45 +144,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(5, _gauge.Value);
         }
 
-        [UnityTest]
-        public IEnumerator 교대공명_스왑직후_반격만_강해지고_3초뒤엔_원래대로()
-        {
-            Grant("swap_resonance");
-            Place(_melee, 6f);
-            yield return Defend(AttackType.Heavy, _melee); // 전사 패링 → 궁수 등장 → 반격
-            yield return new WaitForSeconds(1.5f);
-            Assert.AreEqual(1f - 26f / 100f, _melee.HpRatio, 1e-4f, "20 × (1 + 0.3) = 26");
-
-            yield return new WaitForSeconds(2f); // 스왑 후 3초 지남
-            var resonance = _defense.GetComponent<SwapResonanceAugment>();
-            Assert.IsFalse(resonance.IsActive, "3초가 지나면 공명 끝");
-
-            // 어떤 방어든 스왑을 일으키므로, 새 방어 성공이 공명을 다시 시작한다
-            Place(_melee, 6f);
-            yield return Defend(AttackType.Normal, _melee);
-            Assert.IsTrue(resonance.IsActive, "방어 성공 스왑으로 공명 재시작");
-        }
-
         // ───────────── 전사 ─────────────
-
-        [UnityTest]
-        public IEnumerator 등장충격파_주변적에게_피해와_기절()
-        {
-            Grant("w_shockwave");
-            yield return SwapTo(CharacterKind.Archer);
-            Place(_melee, 2f);  // 2.5 안
-            Place(_ranged, 4f); // 2.5 밖 (가장자리 3.55)
-
-            _gauge.Add(10);
-            Assert.IsTrue(_party.TryManualSwap()); // 전사 등장
-            Assert.AreEqual(1f - 22f / 100f, _melee.HpRatio, 1e-4f, "15 × 전사 1.5 = 22.5 → 22");
-            Assert.IsTrue(_melee.IsStunned);
-            Assert.AreEqual(1f, _ranged.HpRatio, "범위 밖");
-            Assert.IsFalse(_ranged.IsStunned);
-
-            yield return new WaitForSeconds(0.9f);
-            Assert.IsFalse(_melee.IsStunned, "0.8초 뒤 풀림");
-        }
 
         [UnityTest]
         public IEnumerator 기절하면_예비모션중인_공격이_취소된다()
@@ -217,21 +166,18 @@ namespace ParryRL.Tests
         public IEnumerator 지척의일격_바짝붙은_적에게만_반격50퍼센트()
         {
             Grant("w_close_strike");
-            // 전사 반격은 궁수가 회피해 전사가 등장할 때 나간다
-            yield return SwapTo(CharacterKind.Archer);
             Place(_melee, 1.3f); // 가까운 가장자리 0.8
             yield return Defend(AttackType.Normal, _melee, 1.0f);
             Assert.AreEqual(1f - 45f / 100f, _melee.HpRatio, 1e-4f, "20 × 1.5 × (1 + 0.5) = 45");
 
             float before = _melee.HpRatio;
-            yield return SwapTo(CharacterKind.Archer);
             Place(_melee, 2.2f); // 가까운 가장자리 1.7 — 반격 박스(1.8) 안이지만 1.2 밖
             yield return Defend(AttackType.Normal, _melee, 1.0f);
             Assert.AreEqual(before - 0.30f, _melee.HpRatio, 1e-4f, "보너스 없이 30");
         }
 
         [UnityTest]
-        public IEnumerator 피의패링_전사_패링시_회복_강공격6()
+        public IEnumerator 피의패링_패링시_회복_강공격6()
         {
             Grant("w_blood_parry");
             SpawnAttack(AttackType.Normal, null, 1.2f);
@@ -241,22 +187,12 @@ namespace ParryRL.Tests
             yield return Defend(AttackType.Normal);
             Assert.AreEqual(95, _party.Hp, "+2");
 
-            yield return SwapTo(CharacterKind.Warrior); // 방어 성공으로 궁수가 됐으니 다시 전사로
             yield return Defend(AttackType.Heavy);
             Assert.AreEqual(100, _party.Hp, "+6 (최대 체력까지만)");
-            Assert.AreEqual(CharacterKind.Archer, _party.Current.kind);
-
-            SpawnAttack(AttackType.Normal, null, 1.2f); // 스왑 무적 끝난 뒤 궁수 피격
-            yield return new WaitForSeconds(0.4f);
-            SpawnAttack(AttackType.Normal, null, 1.2f);
-            yield return new WaitForSecondsRealtime(0.3f);
-            int hp = _party.Hp;
-            yield return Defend(AttackType.Normal);
-            Assert.AreEqual(hp, _party.Hp, "궁수 회피는 회복 없음");
         }
 
         [UnityTest]
-        public IEnumerator 돌진베기_지나간_적에게_1번만_피해_궁수는_없음()
+        public IEnumerator 돌진베기_지나간_적에게_1번만_피해()
         {
             Grant("w_dash_slash");
             Place(_melee, 1.8f);
@@ -265,69 +201,7 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(0.4f);
             Assert.AreEqual(1f - 22f / 100f, _melee.HpRatio, 1e-4f, "15 × 1.5 = 22 — 한 번만");
             Assert.Greater(PlayerPos.x, _melee.transform.position.x, "적을 뚫고 지나감");
-
-            yield return SwapTo(CharacterKind.Archer);
-            float before = _melee.HpRatio;
-            Place(_melee, -1.8f); // 백스텝 방향
-            yield return new WaitForSeconds(1f); // 이동 스킬 쿨타임
-            Assert.IsTrue(_combat.TryMoveSkill());
-            yield return new WaitForSeconds(0.4f);
-            Assert.AreEqual(before, _melee.HpRatio, "궁수 이동 스킬엔 피해 없음");
         }
 
-        // ───────────── 궁수 ─────────────
-
-        [UnityTest]
-        public IEnumerator 등장화살비_가까운적에게_5발_거리보너스()
-        {
-            Grant("a_arrow_rain");
-            Place(_melee, 8f); // 거리 배율 최대 (맞을 때마다 넉백으로 밀려도 그대로)
-            _gauge.Add(10);
-            Assert.IsTrue(_party.TryManualSwap()); // 궁수 등장
-            yield return new WaitForSeconds(1.5f);
-            Assert.AreEqual(1f - 30f / 100f, _melee.HpRatio, 1e-4f, "6 × 5발");
-            Assert.AreEqual(1f, _ranged.HpRatio, "12 밖의 적은 노리지 않음");
-        }
-
-        [UnityTest]
-        public IEnumerator 갈래화살_다른적을_노리고_혼자면_부채꼴로_빗나감()
-        {
-            Grant("a_split_arrow");
-            Place(_melee, 6f);
-            Place(_ranged, -9f); // 반대편 — 같은 줄에 두면 추가 화살이 앞 적에 먼저 맞는다
-            yield return Defend(AttackType.Normal, _melee);
-            yield return new WaitForSeconds(2f);
-
-            Assert.AreEqual(1f - 20f / 100f, _melee.HpRatio, 1e-4f, "본 화살 20");
-            Assert.AreEqual(1f - 10f / 60f, _ranged.HpRatio, 1e-4f, "추가 화살 10 (50%)");
-        }
-
-        [UnityTest]
-        public IEnumerator 거리유지_궁수_백스텝_거리가_늘어난다()
-        {
-            Grant("a_keep_distance");
-            yield return SwapTo(CharacterKind.Archer);
-            float x0 = PlayerPos.x;
-            _gauge.Add(1);
-            Assert.IsTrue(_combat.TryMoveSkill());
-            yield return new WaitForSeconds(0.3f);
-            Assert.That(x0 - PlayerPos.x, Is.InRange(4.3f, 5.2f), "백스텝 3 + 1.5 (고정 스텝 오차 포함)");
-        }
-
-        [UnityTest]
-        public IEnumerator 관통화살_줄선_적을_뚫고_뚫을때마다_20퍼센트()
-        {
-            Grant("a_pierce");
-            yield return SwapTo(CharacterKind.Archer);
-            _defense.GetComponent<PlayerMotor>().SetFacing(1f);
-            Place(_melee, 3f);
-            Place(_ranged, 6f);
-            _gauge.Add(3);
-            Assert.IsTrue(_combat.TryAttackSkill());
-            yield return new WaitForSeconds(0.8f);
-
-            Assert.AreEqual(1f - 15f / 100f, _melee.HpRatio, 1e-4f, "첫 적: 15 × 거리 3(×1.0) = 15");
-            Assert.AreEqual(1f - 18f / 60f, _ranged.HpRatio, 1e-4f, "둘째 적: 15 × (1 + 0.2) = 18");
-        }
     }
 }

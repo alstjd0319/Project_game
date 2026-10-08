@@ -115,7 +115,6 @@ namespace ParryRL
             Color ownerColor = def.Owner switch
             {
                 AugmentOwner.Warrior => new Color(0.95f, 0.38f, 0.32f),
-                AugmentOwner.Archer => new Color(0.32f, 0.85f, 0.48f),
                 _ => new Color(0.6f, 0.62f, 0.7f),
             };
             card.ownerTag.color = ownerColor;

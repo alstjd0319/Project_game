@@ -28,7 +28,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사는_그림으로_보이고_판정네모는_숨는다_궁수는_애니메이션_없이_스프라이트()
+        public IEnumerator 전사는_그림으로_보이고_판정네모는_숨는다()
         {
             Assert.IsTrue(_sprite.IsShowingArt, "전사는 도트 그림");
             Assert.IsFalse(_box.enabled, "판정 네모는 숨김");
@@ -40,12 +40,6 @@ namespace ParryRL.Tests
             Assert.Less(_box.color.a, 0.5f, "겹쳐 볼 때는 반투명");
             Assert.Greater(_box.sortingOrder, _sprite.ArtRenderer.sortingOrder, "그림보다 위에");
             GameTuning.Current.showHitboxes = false;
-
-            _party.Swap(SwapCause.Manual);
-            yield return null;
-            Assert.IsFalse(_sprite.IsShowingArt, "궁수는 애니메이션이 없어 PlayerParty 스프라이트로 표시");
-            Assert.IsTrue(_box.enabled);
-            Assert.AreEqual("", _sprite.Clip);
         }
 
         [UnityTest]
@@ -83,18 +77,14 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 궁수가_방어에_성공하면_등장한_전사의_반격_그림()
+        public IEnumerator 패링에_성공하면_반격_그림()
         {
-            // 방어 성공은 항상 스왑 — 전사의 반격 그림은 궁수가 막아서 전사가 등장할 때 나온다
-            _party.Swap(SwapCause.Manual);
-            yield return new WaitForSeconds(0.4f); // 스왑 무적 종료
             _defense.TryActivate();
             Vector2 p = _defense.transform.position;
             var attack = EnemyAttack.Spawn(null, AttackType.Normal, new Vector2(p.x + 1.2f, p.y), Vector2.left,
                 new Vector2(0.6f, 0.6f), 10f, 6f, Color.white, 10);
             float t = 0f;
-            // 회피는 공격을 흘려보내(IsGhost) 사라지지 않으므로, 판정이 끝나는 순간까지만 기다린다
-            while (attack != null && !attack.IsGhost && t < 1f) { t += Time.unscaledDeltaTime; yield return null; }
+            while (attack != null && t < 1f) { t += Time.unscaledDeltaTime; yield return null; }
             yield return null;
             Assert.AreEqual("counter", _sprite.Clip, "막자마자 반격 베기");
 
@@ -105,7 +95,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 공격스킬_피격_교대등장은_한번_재생()
+        public IEnumerator 공격스킬_피격은_한번_재생()
         {
             _sprite.GetComponent<SkillGauge>().Add(3);
             Assert.IsTrue(_combat.TryAttackSkill());
@@ -117,12 +107,6 @@ namespace ParryRL.Tests
             _party.TakeDamage(1);
             yield return null;
             Assert.AreEqual("hit", _sprite.Clip, "새 동작이 들어오면 덮어쓴다");
-
-            _party.Swap(SwapCause.Manual);
-            yield return null;
-            _party.Swap(SwapCause.Manual); // 다시 전사로
-            yield return null;
-            Assert.AreEqual("enter", _sprite.Clip, "교대로 들어올 때 등장 그림");
 
             yield return new WaitForSeconds(0.5f);
             Assert.AreEqual("idle", _sprite.Clip);
@@ -249,10 +233,7 @@ namespace ParryRL.Tests
             Object.Destroy(clip.gameObject);
             yield return null;
 
-            // 반격: 방어 성공은 항상 스왑이라 전사의 반격 베기는 궁수가 막을 때 나온다 — 왼쪽에서 온 공격을 피하면 왼쪽으로 베기 그림
-            _party.Swap(SwapCause.Manual);
-            yield return new WaitForSeconds(0.4f); // 스왑 무적 종료
-            p = _sprite.transform.position;
+            // 반격: 왼쪽에서 온 공격을 막으면 왼쪽으로 베기 그림
             _defense.TryActivate();
             EnemyAttack.Spawn(null, AttackType.Normal, new Vector2(p.x - 1.2f, p.y), Vector2.right,
                 new Vector2(0.6f, 0.6f), 10f, 6f, Color.white, 10);

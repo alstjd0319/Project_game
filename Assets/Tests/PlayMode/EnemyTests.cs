@@ -116,40 +116,19 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 근접베기를_패링하면_부서지고_등장한_궁수_반격이_닿는다()
+        public IEnumerator 근접베기를_패링하면_부서지고_전사_반격이_닿는다()
         {
             _melee.enabled = true;
             Place(_melee, 2f);
             EnemyAttack slash = null;
             yield return WaitForAttack(a => slash = a);
             Assert.IsTrue(_defense.TryActivate());
-            yield return new WaitForSecondsRealtime(1.2f);
+            yield return new WaitForSecondsRealtime(0.45f);
 
             Assert.AreEqual(100, _party.Hp);
             Assert.AreEqual(1, _gauge.Value, "패링 성공");
             Assert.IsTrue(slash == null, "패링하면 베기가 부서짐");
-            Assert.AreEqual(CharacterKind.Archer, _party.Current.kind, "방어 성공 → 궁수 등장");
-            Assert.AreEqual(0.8f, _melee.HpRatio, 1e-4f, "등장한 궁수의 반격 — 가까우니 거리 보너스 없이 20");
-        }
-
-        [UnityTest]
-        public IEnumerator 근접베기를_회피하면_제자리에서_흐려진다()
-        {
-            _gauge.Add(10);
-            Assert.IsTrue(_party.TryManualSwap());
-            yield return new WaitForSeconds(0.4f);
-            _melee.enabled = true;
-            Place(_melee, 2f);
-            EnemyAttack slash = null;
-            yield return WaitForAttack(a => slash = a);
-            Assert.IsTrue(_defense.TryActivate());
-            float t = 0f;
-            while (slash != null && !slash.IsGhost && t < 1f) { t += Time.unscaledDeltaTime; yield return null; }
-            Assert.IsTrue(slash != null && slash.IsGhost, "회피 → 판정 꺼진 채 흐려짐");
-            float x = slash.transform.position.x;
-            yield return new WaitForSeconds(0.1f);
-            if (slash != null) Assert.AreEqual(x, slash.transform.position.x, 1e-4f, "투사체처럼 날아가지 않음");
-            Assert.AreEqual(100, _party.Hp);
+            Assert.AreEqual(0.7f, _melee.HpRatio, 1e-4f, "바짝 붙은 근접 몬스터라 전사 반격(사거리 1.8)이 닿는다 — 30");
         }
 
         [UnityTest]

@@ -11,7 +11,6 @@ namespace ParryRL
         Hurt,
         Whiff,
         DefendStart,
-        Swap,
         EnemyHit,
         EnemyDie,
         Skill,
@@ -23,10 +22,7 @@ namespace ParryRL
         LevelUp,
         UiMove,
         UiConfirm,
-        Dodge,
-        HeavyDodge,
         PerfectParry,
-        PerfectDodge,
     }
 
     /// <summary>
@@ -46,8 +42,6 @@ namespace ParryRL
         [Header("에셋 효과음 (비워두면 코드 합성음 사용)")]
         [SerializeField] private AudioClip parryClip;
         [SerializeField] private AudioClip perfectParryClip;
-        [SerializeField] private AudioClip dodgeClip;
-        [SerializeField] private AudioClip perfectDodgeClip;
 
         private AudioSource _source;
         private readonly Dictionary<SfxId, AudioClip> _clips = new();
@@ -66,9 +60,7 @@ namespace ParryRL
         private void ApplyAssetClips()
         {
             if (parryClip != null) _clips[SfxId.Parry] = parryClip;
-            if (dodgeClip != null) _clips[SfxId.Dodge] = dodgeClip;
             _clips[SfxId.PerfectParry] = perfectParryClip != null ? perfectParryClip : _clips[SfxId.HeavyParry];
-            _clips[SfxId.PerfectDodge] = perfectDodgeClip != null ? perfectDodgeClip : _clips[SfxId.HeavyDodge];
         }
 
         public static void Play(SfxId id, float volume = 1f)
@@ -100,10 +92,6 @@ namespace ParryRL
 
             _clips[SfxId.DefendStart] = Make("defend", 0.08f, (t, w, l) =>
                 Env(t, 45f) * (0.25f * Sin(900f, t) + 0.2f * w));
-
-            _clips[SfxId.Swap] = Make("swap", 0.32f, (t, w, l) =>
-                Env(t, 7f) * 0.45f * (Sin(Sweep(380f, 1300f, t, 0.25f), t) + 0.5f * Sin(Sweep(760f, 2600f, t, 0.25f), t))
-                + Env(t, 30f) * 0.4f * w);
 
             _clips[SfxId.EnemyHit] = Make("enemyHit", 0.18f, (t, w, l) =>
                 Env(t, 22f) * (0.9f * Sin(Sweep(180f, 70f, t, 0.15f), t) + 0.9f * l) + Env(t, 90f) * 0.4f * w);
@@ -138,16 +126,6 @@ namespace ParryRL
                 float tail = i == 3 ? Env(local, 5f) : Env(local, 14f);
                 return 0.3f * tail * (Sin(LevelUpNotes[i], t) + 0.4f * Sin(LevelUpNotes[i] * 2f, t));
             });
-
-            // 회피: 금속성 "팅" 대신 바람을 가르는 "휙" — 필터 노이즈가 부풀었다 빠지고, 위로 쓸려 올라가는 옅은 음
-            _clips[SfxId.Dodge] = Make("dodge", 0.3f, (t, w, l) =>
-                Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 0.3f)) * (0.55f * l + 0.18f * w)
-                + Env(t, 9f) * 0.12f * Sin(Sweep(500f, 1400f, t, 0.3f), t));
-
-            _clips[SfxId.HeavyDodge] = Make("heavyDodge", 0.5f, (t, w, l) =>
-                Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 0.5f)) * (0.7f * l + 0.2f * w)
-                + Env(t, 5f) * 0.14f * Sin(Sweep(380f, 1600f, t, 0.5f), t)
-                + Env(t, 6f) * 0.35f * Sin(Sweep(110f, 70f, t, 0.5f), t));
 
             _clips[SfxId.UiMove] = Make("uiMove", 0.05f, (t, w, l) =>
                 Env(t, 70f) * 0.25f * Sin(950f, t));

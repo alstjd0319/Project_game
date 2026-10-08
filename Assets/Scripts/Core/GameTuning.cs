@@ -26,9 +26,6 @@ namespace ParryRL
         // ── 타격감 ──
         public HitFeelProfile normalParry = new() { hitStop = 0.04f, slowMotion = 0.08f, slowScale = 0.3f, shake = 0.18f, shakeDuration = 0.15f };
         public HitFeelProfile heavyParry = new() { hitStop = 0.06f, slowMotion = 0.12f, slowScale = 0.15f, shake = 0.42f, shakeDuration = 0.3f };
-        // 회피(궁수)는 "막는다"가 아니라 "스친다" — 딱 멈추는 히트스탑보다 시간이 느려지는 슬로우모션 위주
-        public HitFeelProfile normalDodge = new() { hitStop = 0f, slowMotion = 0.16f, slowScale = 0.35f, shake = 0.05f, shakeDuration = 0.1f };
-        public HitFeelProfile heavyDodge = new() { hitStop = 0.02f, slowMotion = 0.26f, slowScale = 0.2f, shake = 0.14f, shakeDuration = 0.2f };
         public HitFeelProfile playerHurt = new() { hitStop = 0.03f, slowMotion = 0f, slowScale = 1f, shake = 0.25f, shakeDuration = 0.18f };
         public HitFeelProfile skillHit = new() { hitStop = 0.025f, slowMotion = 0f, slowScale = 1f, shake = 0.1f, shakeDuration = 0.1f };
 
@@ -51,22 +48,19 @@ namespace ParryRL
         public float warriorAttackMultiplier = 1.5f;
         [Tooltip("전사: 방어력 — 전사로 맞을 때 받는 피해 감소 비율 (0.3 = 30% 감소)")]
         public float warriorDamageReduction = 0.3f;
-        public float archerAttackMultiplier = 1f;
-        public float archerDamageReduction = 0f;
 
         [Tooltip("걷기 속도 (유닛/초) — 궁수가 더 날쌤")]
         public float warriorMoveSpeed = 5f;
-        public float archerMoveSpeed = 6.5f;
 
 
         public float AttackMultiplier(CharacterKind kind) =>
-            kind == CharacterKind.Warrior ? warriorAttackMultiplier : archerAttackMultiplier;
+            warriorAttackMultiplier;
 
         public float DamageReduction(CharacterKind kind) =>
-            Mathf.Clamp01(kind == CharacterKind.Warrior ? warriorDamageReduction : archerDamageReduction);
+            Mathf.Clamp01(warriorDamageReduction);
 
         public float MoveSpeed(CharacterKind kind) =>
-            Mathf.Max(0.5f, kind == CharacterKind.Warrior ? warriorMoveSpeed : archerMoveSpeed);
+            Mathf.Max(0.5f, warriorMoveSpeed);
 
         // ── 적 ──
         [Tooltip("근접 / 원거리 각각 동시에 유지할 몬스터 수 (F1 몬스터 탭)")]
