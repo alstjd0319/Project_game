@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54ce9b1eb53558846845249f17f15186, type: 3}
+  m_Name: AttackFx
+  m_EditorClassIdentifier: ParryRL::ParryRL.AttackFxArt
+  enemySlash:
+    frames:
+    - {fileID: 21300000, guid: 6cd8cf2063a10da4cb8e494ea130ee86, type: 3}
+    - {fileID: 21300000, guid: bd1248099c5479b479ec20b9ef8f12ce, type: 3}
+    - {fileID: 21300000, guid: a8abc4dfe623e2343831f103cebb3e48, type: 3}
+    - {fileID: 21300000, guid: a42ccbe619b73be47b938e443248b6d7, type: 3}
+    fps: 20
+  enemyHeavySlash:
+    frames:
+    - {fileID: 21300000, guid: c36d184f489271d4eb7f1a10d6d1d1fd, type: 3}
+    - {fileID: 21300000, guid: 32b065649b45d2943b50e35a297967ee, type: 3}
+    - {fileID: 21300000, guid: d162f0371a859354fa6c72a2b87ee1a9, type: 3}
+    - {fileID: 21300000, guid: a796dd109c9dd5f42a241c350cefe941, type: 3}
+    fps: 20
+  warriorCounter:
+    frames:
+    - {fileID: 21300000, guid: 69f6789dfcdfd204193d24c29b217aca, type: 3}
+    - {fileID: 21300000, guid: 008cf1f5706659f4ba6fdedce549dd8f, type: 3}
+    - {fileID: 21300000, guid: c993bccd6ac5f754fa156b71117cbf8d, type: 3}
+    - {fileID: 21300000, guid: fc4c989dc54eb2642bd3e8d3c43dec4a, type: 3}
+    fps: 14
+  warriorAttack:
+    frames:
+    - {fileID: 21300000, guid: 72d08261505e21c4cb9764cd8843463d, type: 3}
+    - {fileID: 21300000, guid: 45f395725f0ebfd4cbb40a0b4abab262, type: 3}
+    - {fileID: 21300000, guid: 8df3cd76948a27642bba37ef316340a2, type: 3}
+    - {fileID: 21300000, guid: d28ff914a9091234ca9224e8aef57f36, type: 3}
+    fps: 14

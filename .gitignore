@@ -1,0 +1,43 @@
+# Unity가 다시 만드는 캐시·임시 파일
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+
+# IDE가 만드는 프로젝트 파일 (Unity가 다시 생성)
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# 빌드·크래시 산출물
+*.apk
+*.aab
+*.unitypackage
+sysinfo.txt
+crashlytics-buildtype.txt
+
+# Unity Recorder 녹화 영상 — 용량이 커서 저장소에 넣지 않는다 (로컬에만 보관)
+/[Rr]ecordings/
+
+# OS
+.DS_Store
+Thumbs.db

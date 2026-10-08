@@ -1,0 +1,68 @@
+{
+    "normalParry": {
+        "hitStop": 0.03999999910593033,
+        "slowMotion": 0.07999999821186066,
+        "slowScale": 0.30000001192092896,
+        "shake": 0.18000000715255737,
+        "shakeDuration": 0.15000000596046448
+    },
+    "heavyParry": {
+        "hitStop": 0.05999999865889549,
+        "slowMotion": 0.11999999731779099,
+        "slowScale": 0.15000000596046448,
+        "shake": 0.41999998688697815,
+        "shakeDuration": 0.30000001192092896
+    },
+    "normalDodge": {
+        "hitStop": 0.0,
+        "slowMotion": 0.1599999964237213,
+        "slowScale": 0.3499999940395355,
+        "shake": 0.05000000074505806,
+        "shakeDuration": 0.10000000149011612
+    },
+    "heavyDodge": {
+        "hitStop": 0.019999999552965164,
+        "slowMotion": 0.25999999046325684,
+        "slowScale": 0.20000000298023224,
+        "shake": 0.14000000059604645,
+        "shakeDuration": 0.20000000298023224
+    },
+    "playerHurt": {
+        "hitStop": 0.029999999329447746,
+        "slowMotion": 0.0,
+        "slowScale": 1.0,
+        "shake": 0.25,
+        "shakeDuration": 0.18000000715255737
+    },
+    "skillHit": {
+        "hitStop": 0.02500000037252903,
+        "slowMotion": 0.0,
+        "slowScale": 1.0,
+        "shake": 0.10000000149011612,
+        "shakeDuration": 0.10000000149011612
+    },
+    "defenseActiveTime": 0.30000001192092896,
+    "whiffCooldown": 1.0,
+    "inputBufferEnabled": false,
+    "inputBuffer": 0.05999999865889549,
+    "showTiming": true,
+    "perfectWindow": 0.07999999821186066,
+    "dashInvulnerable": true,
+    "dashInvulnerableExtra": 0.0,
+    "warriorAttackMultiplier": 1.5,
+    "warriorDamageReduction": 0.30000001192092896,
+    "archerAttackMultiplier": 1.0,
+    "archerDamageReduction": 0.0,
+    "warriorMoveSpeed": 5.0,
+    "archerMoveSpeed": 6.5,
+    "enemiesPerKind": 1,
+    "meleeNormalReaction": 0.4000000059604645,
+    "meleeHeavyReaction": 0.8999999761581421,
+    "heavyChance": 0.30000001192092896,
+    "attackIntervalMin": 1.399999976158142,
+    "attackIntervalMax": 2.4000000953674316,
+    "normalWindup": 0.2199999988079071,
+    "heavyWindup": 0.44999998807907104,
+    "rangedNormalSpeed": 8.0,
+    "rangedHeavySpeed": 5.0
+}

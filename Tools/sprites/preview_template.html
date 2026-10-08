@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>%TITLE% 도트 애니메이션</title>
+<style>
+  body { margin: 0; padding: 20px; background: #5a6070; color: #fff; font-family: "Malgun Gothic", sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  h2 { font-size: 16px; }
+  p.note { margin: 0 0 18px; color: #dde; font-size: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; margin-bottom: 26px; }
+  .cell { display: flex; flex-direction: column; gap: 6px; }
+  .cell b { font-size: 15px; }
+  .cell span { font-size: 12px; color: #ccd; }
+  .anim, .strip { image-rendering: pixelated; outline: 1px dashed rgba(255,255,255,.18); }
+  .anim { background-repeat: no-repeat; }
+  .ground { height: 2px; background: #9aa; }
+  @keyframes play { to { background-position-x: var(--end); } }
+</style>
+</head>
+<body>
+<h1>%TITLE% 도트 애니메이션 (Tools/sprites/process_sheets.ps1 결과)</h1>
+<p class="note">ChatGPT 시트를 자르고 삿갓 중심·땅 높이로 정렬, 삿갓 폭으로 크기를 맞춘 뒤 색을 6개(회색 5 + 빨강)로 줄인 결과. 손 보정 없음.</p>
+<h2>1080p 게임 화면 실제 크기 (2배)</h2>
+<div class="row">%ANIM2%</div>
+<h2>확대 (6배)</h2>
+<div class="row">%ANIM6%</div>
+<h2>프레임 낱장 (4배)</h2>
+%STRIPS%
+</body>
+</html>

@@ -1,0 +1,5 @@
+﻿<Solution>
+  <Project Path="ParryRL.csproj" />
+  <Project Path="ParryRL.Tests.csproj" />
+  <Project Path="ParryRL.Editor.csproj" />
+</Solution>
