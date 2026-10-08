@@ -209,7 +209,11 @@ namespace ParryRL
                 source = art.parry;
                 frame = Mathf.Clamp(art.parryImpactFrame, 0, source.frames.Length - 1);
             }
-            else if (_defense.State == DefenseState.Active && !art.parry.IsEmpty)
+            else if (OneShotFrame(art, out source, out frame))
+            {
+                clip = _oneShot; // 막은 직후엔 활성이 남아 있어도 반격 그림이 우선 (새로 방어를 누르면 _oneShot이 지워진다)
+            }
+            else if (_defense.State == DefenseState.Active && !_defense.SucceededThisActive && !art.parry.IsEmpty)
             {
                 // 활성 시간(+버퍼)에 맞춰 한 번 재생 — 그림 길이와 판정 길이가 어긋나지 않게
                 clip = "parry";
@@ -217,10 +221,6 @@ namespace ParryRL
                 int n = source.frames.Length;
                 float duration = Mathf.Max(0.01f, _defense.ActiveDuration);
                 frame = Mathf.Min(n - 1, (int)(_parryTime / duration * n));
-            }
-            else if (OneShotFrame(art, out source, out frame))
-            {
-                clip = _oneShot;
             }
             else if (!_motor.IsGrounded)
             {

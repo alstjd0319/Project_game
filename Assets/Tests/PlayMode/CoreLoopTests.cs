@@ -61,7 +61,9 @@ namespace ParryRL.Tests
 
             Assert.AreEqual(100, _party.Hp, "성공 시 데미지 없음");
             Assert.AreEqual(1, _gauge.Value, "일반 성공 +1칸");
-            Assert.AreEqual(DefenseState.Ready, _defense.State, "성공하면 활성 즉시 종료, 헛스윙 쿨타임 없음");
+            Assert.AreEqual(DefenseState.Active, _defense.State, "성공해도 활성은 끝까지 유지 (연속 패링)");
+            yield return new WaitForSecondsRealtime(0.5f);
+            Assert.AreEqual(DefenseState.Ready, _defense.State, "창이 끝나면 헛스윙 쿨타임 없이 바로 준비");
             Assert.AreEqual(CharacterKind.Warrior, _party.Current.kind);
         }
 
@@ -260,6 +262,55 @@ namespace ParryRL.Tests
             Assert.AreEqual(100, _party.Hp, "반대편에서 온 공격도 패링");
             Assert.AreEqual(2, _gauge.Value);
             Assert.AreEqual(1, motor.Facing);
+        }
+
+        [UnityTest]
+        public IEnumerator 연속_패링_한_번의_창_안에서_여러_공격을_모두_막는다()
+        {
+            Assert.IsTrue(_defense.TryActivate());
+            SpawnAttack(AttackType.Normal, null, 1.2f);
+            yield return new WaitForSecondsRealtime(0.12f);
+            SpawnAttack(AttackType.Normal, null, -1.2f); // 같은 활성 창 안에서 반대쪽 공격
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            Assert.AreEqual(100, _party.Hp, "두 번째 공격도 막음");
+            Assert.AreEqual(2, _gauge.Value, "성공마다 게이지 +1");
+        }
+
+        [UnityTest]
+        public IEnumerator 연속_패링_막은_직후_다시_누르면_창이_새로_열린다_헛스윙이면_쿨타임()
+        {
+            Assert.IsTrue(_defense.TryActivate());
+            SpawnAttack(AttackType.Normal, null, 1.2f);
+            yield return new WaitForSecondsRealtime(0.2f);
+            Assert.AreEqual(1, _gauge.Value);
+
+            Assert.IsTrue(_defense.TryActivate(), "막은 직후 재입력 허용");
+            yield return new WaitForSecondsRealtime(0.2f);
+            SpawnAttack(AttackType.Normal, null, 1.2f); // 첫 입력의 창은 이미 끝났을 시점 — 새 창이 막는다
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.AreEqual(100, _party.Hp);
+            Assert.AreEqual(2, _gauge.Value);
+
+            yield return new WaitForSecondsRealtime(0.5f);
+            Assert.IsTrue(_defense.TryActivate());
+            yield return new WaitForSecondsRealtime(0.5f); // 아무것도 안 막은 새 입력은 헛스윙
+            Assert.AreEqual(DefenseState.Cooldown, _defense.State);
+        }
+
+        [UnityTest]
+        public IEnumerator 공격이_동시에_겹쳐_닿아도_둘다_패링된다()
+        {
+            Assert.IsTrue(_defense.TryActivate());
+            // 같은 프레임에 양쪽에서 동시에 + 같은 쪽에서 겹쳐서 하나 더 (일반 둘 · 강공격 하나)
+            SpawnAttack(AttackType.Normal, null, 1.2f);
+            SpawnAttack(AttackType.Normal, null, -1.2f);
+            SpawnAttack(AttackType.Heavy, null, 1.2f);
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            Assert.AreEqual(100, _party.Hp, "겹친 공격이 전부 패링됨");
+            Assert.AreEqual(1 + 1 + 3, _gauge.Value, "성공마다 게이지 (일반 +1 ×2, 강공격 +3)");
+            Assert.AreEqual(0, System.Linq.Enumerable.Count(Object.FindObjectsByType<EnemyAttack>(), a => !a.IsGhost));
         }
     }
 }

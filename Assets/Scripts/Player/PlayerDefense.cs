@@ -68,6 +68,10 @@ namespace ParryRL
         private RunModifiers _mods;
         private float _pressTime = float.NegativeInfinity;
         private float _lastHitTime = float.NegativeInfinity;
+        /// <summary>이번 활성 중 한 번 이상 막았다 — 활성은 끝까지 유지돼 연속 패링이 되고, 끝날 때 헛스윙이 아니다.</summary>
+        private bool _succeeded;
+        /// <summary>이번 활성 중 이미 막았다 (그림은 막는 자세 대신 평소 자세로 돌아간다).</summary>
+        public bool SucceededThisActive => _succeeded;
 
         private void Awake()
         {
@@ -83,7 +87,11 @@ namespace ParryRL
             {
                 case DefenseState.Active:
                     Timer -= Time.deltaTime;
-                    if (Timer <= 0f) Whiff();
+                    if (Timer <= 0f)
+                    {
+                        if (_succeeded) SetState(DefenseState.Ready, 0f); // 막은 적이 있으면 헛스윙 아님
+                        else Whiff();
+                    }
                     break;
                 case DefenseState.Cooldown:
                     Timer -= Time.deltaTime;
@@ -103,12 +111,15 @@ namespace ParryRL
             float sinceHit = Time.time - _lastHitTime;
             if (sinceHit <= LateWindow) Report(new DefenseTiming(TimingKind.TooLate, sinceHit));
 
-            if (State != DefenseState.Ready)
+            // 막은 직후 활성이 남아 있을 때 다시 누르면 판정 창을 새로 연다 (연속 패링)
+            bool renew = State == DefenseState.Active && _succeeded;
+            if (State != DefenseState.Ready && !renew)
             {
                 ActivateDenied?.Invoke();
                 return false;
             }
 
+            _succeeded = false;
             ActiveDuration = ActiveTime + GameTuning.Current.InputBufferOrZero;
             SetState(DefenseState.Active, ActiveDuration);
             _pressTime = Time.time;
@@ -146,8 +157,10 @@ namespace ParryRL
                     : new DefenseTiming(TimingKind.InWindow, sincePress);
                 Report(timing);
 
-                // 방어 성공: 데미지 취소, 활성 즉시 종료 (헛스윙 쿨타임 없음)
-                SetState(DefenseState.Ready, 0f);
+                // 방어 성공: 데미지 취소. 활성은 끝까지 유지돼 같은 창 안의 다음 공격도 막는다 (연속 패링) — 헛스윙 쿨타임 없음.
+                // 전환(스왑)이 없으니 성공해도 다음 판정이 이어져야 한다. 이동 잠금만 풀어 바로 움직일 수 있게 한다.
+                _succeeded = true;
+                _motor.MovementLocked = false;
                 // 패링은 막아서 부순다
                 attack.Resolve(AttackResolution.Shatter);
                 _combat.OnDefenseSuccess(attack, timing.IsPerfect(GameTuning.Current.perfectWindow));

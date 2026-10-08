@@ -13,20 +13,6 @@
         "shake": 0.41999998688697815,
         "shakeDuration": 0.30000001192092896
     },
-    "normalDodge": {
-        "hitStop": 0.0,
-        "slowMotion": 0.1599999964237213,
-        "slowScale": 0.3499999940395355,
-        "shake": 0.05000000074505806,
-        "shakeDuration": 0.10000000149011612
-    },
-    "heavyDodge": {
-        "hitStop": 0.019999999552965164,
-        "slowMotion": 0.25999999046325684,
-        "slowScale": 0.20000000298023224,
-        "shake": 0.14000000059604645,
-        "shakeDuration": 0.20000000298023224
-    },
     "playerHurt": {
         "hitStop": 0.029999999329447746,
         "slowMotion": 0.0,
@@ -51,13 +37,10 @@
     "dashInvulnerableExtra": 0.0,
     "warriorAttackMultiplier": 1.5,
     "warriorDamageReduction": 0.30000001192092896,
-    "archerAttackMultiplier": 1.0,
-    "archerDamageReduction": 0.0,
     "warriorMoveSpeed": 5.0,
-    "archerMoveSpeed": 6.5,
     "enemiesPerKind": 1,
-    "meleeNormalReaction": 0.4000000059604645,
-    "meleeHeavyReaction": 0.8999999761581421,
+    "meleeNormalReaction": 0.6499999761581421,
+    "meleeHeavyReaction": 1.2000000476837158,
     "heavyChance": 0.30000001192092896,
     "attackIntervalMin": 1.399999976158142,
     "attackIntervalMax": 2.4000000953674316,

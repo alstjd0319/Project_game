@@ -66,8 +66,8 @@ namespace ParryRL
         [Tooltip("근접 / 원거리 각각 동시에 유지할 몬스터 수 (F1 몬스터 탭)")]
         public int enemiesPerKind = 1;
         // 근접 반응시간 = 근접 예비 모션 길이. 베기는 예비 모션이 끝나면 한 번에 나가므로 (기획서 3.1)
-        public float meleeNormalReaction = 0.4f;
-        public float meleeHeavyReaction = 0.9f;
+        public float meleeNormalReaction = 0.65f;
+        public float meleeHeavyReaction = 1.2f;
         public float heavyChance = 0.3f;
         public float attackIntervalMin = 1.4f;
         public float attackIntervalMax = 2.4f;

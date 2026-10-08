@@ -31,7 +31,7 @@ namespace ParryRL.Tests
             _ranged = enemies.First(e => e.Kind == EnemyKind.Ranged);
             Place(_melee, 15f);
             Place(_ranged, -15f);
-            T.heavyChance = 0f; // 기본은 일반 공격만 (반응시간 0.4초 기준 검사)
+            T.heavyChance = 0f; // 기본은 일반 공격만 (반응시간 기준 검사)
             yield return new WaitForSeconds(0.3f); // 착지
         }
 
@@ -97,7 +97,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 근접베기_반응시간은_예비모션_0점4초()
+        public IEnumerator 근접베기_반응시간은_예비모션_길이()
         {
             _melee.enabled = true;
             Place(_melee, 2f);
@@ -112,7 +112,7 @@ namespace ParryRL.Tests
             Assert.Less(_party.Hp, 100, "사거리 끝에 선 플레이어에게 닿는다");
             Assert.LessOrEqual(Time.time - spawned, 0.08f, "베기가 나오면 거의 바로 닿는다");
             Assert.That(Time.time - windupStart, Is.InRange(T.meleeNormalReaction - 0.03f, T.meleeNormalReaction + 0.1f),
-                "예비 모션 시작부터 맞기까지 ≈ 반응시간 0.4초");
+                "예비 모션 시작부터 맞기까지 ≈ 반응시간");
         }
 
         [UnityTest]
