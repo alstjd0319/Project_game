@@ -28,9 +28,9 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사는_그림으로_보이고_판정네모는_숨는다()
+        public IEnumerator 플레이어는_그림으로_보이고_판정네모는_숨는다()
         {
-            Assert.IsTrue(_sprite.IsShowingArt, "전사는 도트 그림");
+            Assert.IsTrue(_sprite.IsShowingArt, "플레이어는 도트 그림");
             Assert.IsFalse(_box.enabled, "판정 네모는 숨김");
             Assert.AreEqual("idle", _sprite.Clip);
 
@@ -101,7 +101,7 @@ namespace ParryRL.Tests
             Assert.IsTrue(_combat.TryAttackSkill());
             yield return null;
             Assert.AreEqual("attack", _sprite.Clip);
-            Assert.AreEqual(_sprite.ArtFor(CharacterKind.Warrior).attackHitFrame, _sprite.Frame,
+            Assert.AreEqual(_sprite.ArtFor(CharacterKind.Player).attackHitFrame, _sprite.Frame,
                 "판정이 누르는 순간 생기므로 칼을 뻗은 장면부터 (판정-시각 일치)");
 
             _party.TakeDamage(1);
@@ -122,7 +122,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(0f, Time.timeScale, "게임오버");
 
             yield return new WaitForSecondsRealtime(1.2f);
-            var art = _sprite.ArtFor(CharacterKind.Warrior);
+            var art = _sprite.ArtFor(CharacterKind.Player);
             Assert.AreEqual(art.death.frames.Length - 1, _sprite.Frame, "쓰러진 장면에서 멈춤");
         }
 
@@ -217,13 +217,13 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사_공격스킬과_반격은_그림이고_판정박스와_같은_크기()
+        public IEnumerator 플레이어_공격스킬과_반격은_그림이고_판정박스와_같은_크기()
         {
             _sprite.GetComponent<SkillGauge>().Add(3);
             Assert.IsTrue(_combat.TryAttackSkill());
             var clip = Object.FindAnyObjectByType<FxClip>();
             Assert.IsNotNull(clip, "공격 스킬 그림");
-            Assert.AreSame(GameAssets.AttackFx.warriorAttack.frames[0], clip.Renderer.sprite);
+            Assert.AreSame(GameAssets.AttackFx.meleeAttack.frames[0], clip.Renderer.sprite);
             Assert.IsNull(GameObject.Find("MeleeStrike"), "판정 네모는 안 보임");
             Vector2 p = _sprite.transform.position;
             int facing = _sprite.GetComponent<PlayerMotor>().Facing;
@@ -241,7 +241,7 @@ namespace ParryRL.Tests
             float t = 0f;
             while (counter == null && t < 1f) { counter = Object.FindAnyObjectByType<FxClip>(); t += Time.unscaledDeltaTime; yield return null; }
             Assert.IsNotNull(counter, "반격 그림");
-            Assert.AreSame(GameAssets.AttackFx.warriorCounter.frames[0], counter.Renderer.sprite);
+            Assert.AreSame(GameAssets.AttackFx.meleeCounter.frames[0], counter.Renderer.sprite);
             Assert.IsTrue(counter.Renderer.flipX, "왼쪽으로 반격");
             Assert.AreEqual(1.8f, counter.Renderer.bounds.size.x, 0.01f, "반격 판정 가로 1.8");
             Assert.AreEqual(1.6f, counter.Renderer.bounds.size.y, 0.01f);

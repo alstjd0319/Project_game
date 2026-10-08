@@ -57,10 +57,10 @@ namespace ParryRL.Tests
 
         private static IEnumerator Capture(string name) => CaptureTests.Capture(name);
 
-        // ───────────── 전사 ─────────────
+        // ───────────── 플레이어 ─────────────
 
         [UnityTest]
-        public IEnumerator 전사_패링반격()
+        public IEnumerator 플레이어_패링반격()
         {
             Place(_melee, 1.6f);
             _defense.TryActivate();
@@ -72,7 +72,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사_공격스킬()
+        public IEnumerator 플레이어_공격스킬()
         {
             Place(_melee, 1.8f);
             _gauge.Add(3);
@@ -82,7 +82,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사_돌진_무적()
+        public IEnumerator 플레이어_돌진_무적()
         {
             _gauge.Add(1);
             var attack = SpawnAttack(AttackType.Normal, _melee, 2.2f, 6f);

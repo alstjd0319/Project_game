@@ -6,7 +6,7 @@ namespace ParryRL
     [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
     public class PlayerMotor : MonoBehaviour
     {
-        // 걷기 속도는 캐릭터별 — GameTuning (F1 캐릭터 탭). 궁수가 전사보다 빠르다.
+        // 걷기 속도는 캐릭터별 — GameTuning (F1 캐릭터 탭). 궁수가 플레이어보다 빠르다.
 
         [Header("점프 (2단, 누르는 시간과 무관한 고정 높이 — 공중에서 한 번 더 누르면 그 자리에서 다시 솟는다)")]
         [SerializeField] private float jumpVelocity = 7f;
@@ -16,7 +16,7 @@ namespace ParryRL
         [SerializeField] private float dashDistance = 3f;
         [SerializeField] private float dashDuration = 0.15f;
 
-        [Header("공격 내딛기 (전사 베기 때 몸이 칼을 따라 살짝 나아간다 — 무적 아님)")]
+        [Header("공격 내딛기 (플레이어 베기 때 몸이 칼을 따라 살짝 나아간다 — 무적 아님)")]
         [SerializeField] private float lungeDistance = 0.45f;
         [SerializeField] private float lungeDuration = 0.12f;
 
@@ -33,7 +33,7 @@ namespace ParryRL
         private float _dashEndTime = float.NegativeInfinity;
 
         /// <summary>지금 나와 있는 캐릭터의 걷기 속도.</summary>
-        public float MoveSpeed => _party != null ? GameTuning.Current.MoveSpeed(_party.Current.kind) : GameTuning.Current.warriorMoveSpeed;
+        public float MoveSpeed => _party != null ? GameTuning.Current.MoveSpeed(_party.Current.kind) : GameTuning.Current.playerMoveSpeed;
 
         /// <summary>방어 모션(제자리) 중에는 걷기 입력을 막는다.</summary>
         public bool MovementLocked { get; set; }
@@ -182,7 +182,7 @@ namespace ParryRL
             _dropCollider = null;
         }
 
-        /// <summary>전사가 벨 때 칼을 따라 몸이 살짝 나아간다. 대시와 달리 무적이 아니고 중력도 그대로.</summary>
+        /// <summary>플레이어가 벨 때 칼을 따라 몸이 살짝 나아간다. 대시와 달리 무적이 아니고 중력도 그대로.</summary>
         public void Lunge(int dir)
         {
             if (IsDashing) return;

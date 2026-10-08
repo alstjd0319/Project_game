@@ -3,7 +3,7 @@ using System;
 namespace ParryRL
 {
     /// <summary>증강을 쓸 수 있는 캐릭터. 두 캐릭터의 증강 풀은 방향이 겹치지 않게 설계한다 (기획서 2장·5장).</summary>
-    public enum AugmentOwner { Common, Warrior }
+    public enum AugmentOwner { Common, Player }
 
     public enum AugmentCategory { Defense, Counter, Gauge, Skill, Mobility }
 
@@ -26,7 +26,7 @@ namespace ParryRL
 
         public string OwnerLabel => Owner switch
         {
-            AugmentOwner.Warrior => "전사",
+            AugmentOwner.Player => "플레이어",
             _ => "공용",
         };
 

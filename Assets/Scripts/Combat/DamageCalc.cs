@@ -21,6 +21,8 @@ namespace ParryRL
         public Vector2 FiredFrom;
         /// <summary>적을 뚫고 지나감 (증강 "관통 화살").</summary>
         public bool Pierce;
+        /// <summary>원거리 무기로 쏜 공격 (공격력 배율이 근접과 다름).</summary>
+        public bool Ranged;
         /// <summary>관통 순번 — 첫 적 0, 두 번째 적 1, …</summary>
         public int PierceIndex;
 
@@ -49,7 +51,7 @@ namespace ParryRL
             var t = GameTuning.Current;
             Notes.Clear();
 
-            float passive = t.AttackMultiplier(hit.Kind);
+            float passive = hit.Ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(hit.Kind);
 
             float bonus = RunModifiers.Instance != null ? RunModifiers.Instance.DamageBonus(hit, target, Notes) : 0f;
             note = Notes.Count > 0 ? string.Join(" · ", Notes) : null;

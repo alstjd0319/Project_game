@@ -64,7 +64,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(DefenseState.Active, _defense.State, "성공해도 활성은 끝까지 유지 (연속 패링)");
             yield return new WaitForSecondsRealtime(0.5f);
             Assert.AreEqual(DefenseState.Ready, _defense.State, "창이 끝나면 헛스윙 쿨타임 없이 바로 준비");
-            Assert.AreEqual(CharacterKind.Warrior, _party.Current.kind);
+            Assert.AreEqual(CharacterKind.Player, _party.Current.kind);
         }
 
         [UnityTest]
@@ -73,7 +73,7 @@ namespace ParryRL.Tests
             SpawnAttack(AttackType.Normal, null);
             yield return new WaitForSecondsRealtime(0.25f);
 
-            Assert.AreEqual(93, _party.Hp, "전사 방어 패시브: 10 → 7");
+            Assert.AreEqual(93, _party.Hp, "플레이어 방어 패시브: 10 → 7");
             Assert.AreEqual(0, _gauge.Value);
             Assert.AreEqual(DefenseState.Ready, _defense.State);
         }
@@ -96,7 +96,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 강공격_성공_게이지3_전사가_그대로_반격()
+        public IEnumerator 강공격_성공_게이지3_플레이어가_그대로_반격()
         {
             Place(_melee, 1.5f);
             Assert.IsTrue(_defense.TryActivate());
@@ -105,17 +105,17 @@ namespace ParryRL.Tests
 
             Assert.AreEqual(3, _gauge.Value, "강공격 성공 +3칸");
             Assert.AreEqual(100, _party.Hp);
-            Assert.AreEqual(0.7f, _melee.HpRatio, 1e-4f, "전사 반격 20 × 1.5 = 30");
+            Assert.AreEqual(0.7f, _melee.HpRatio, 1e-4f, "플레이어 반격 20 × 1.5 = 30");
         }
 
         [UnityTest]
-        public IEnumerator 전사_반격은_사거리_1점8_안쪽만()
+        public IEnumerator 플레이어_반격은_사거리_1점8_안쪽만()
         {
             Place(_melee, 1.5f);
             Assert.IsTrue(_defense.TryActivate());
             SpawnAttack(AttackType.Normal, _melee, 1.2f);
             yield return new WaitForSecondsRealtime(0.4f);
-            Assert.AreEqual(0.7f, _melee.HpRatio, 1e-4f, "사거리 안: 반격 20 × 전사 공격력 1.5 = 30 명중");
+            Assert.AreEqual(0.7f, _melee.HpRatio, 1e-4f, "사거리 안: 반격 20 × 플레이어 공격력 1.5 = 30 명중");
 
             yield return new WaitForSecondsRealtime(0.6f);
             Place(_melee, 3.5f);
@@ -139,15 +139,15 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사는_받는_피해가_30퍼센트_줄어든다()
+        public IEnumerator 플레이어는_받는_피해가_30퍼센트_줄어든다()
         {
             SpawnAttack(AttackType.Heavy, null);
             yield return new WaitForSecondsRealtime(0.25f);
-            Assert.AreEqual(86, _party.Hp, "전사: 강공격 20 → 30% 감소 → 14");
+            Assert.AreEqual(86, _party.Hp, "플레이어: 강공격 20 → 30% 감소 → 14");
         }
 
         [UnityTest]
-        public IEnumerator 전사_공격_스킬은_공격력_배율이_적용된다()
+        public IEnumerator 플레이어_공격_스킬은_공격력_배율이_적용된다()
         {
             Place(_melee, 1.5f);
             _gauge.Add(3);
@@ -187,7 +187,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(100, _party.Hp, "대시 중 피격 무시");
             Assert.IsTrue(attack == null || attack.IsGhost, "공격은 판정 없이 통과");
             Assert.AreEqual(0, _gauge.Value, "무적 통과는 방어 성공이 아님 — 게이지 없음");
-            Assert.AreEqual(CharacterKind.Warrior, _party.Current.kind, "강공격이어도 캐릭터는 그대로");
+            Assert.AreEqual(CharacterKind.Player, _party.Current.kind, "강공격이어도 캐릭터는 그대로");
         }
 
         [UnityTest]
@@ -198,7 +198,7 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(0.35f); // 대시(0.15초) 종료 후
             SpawnAttack(AttackType.Normal, null, 0.72f);
             yield return new WaitForSecondsRealtime(0.2f);
-            Assert.AreEqual(93, _party.Hp, "대시 끝난 뒤엔 정상 피격 (전사 방어 패시브 적용)");
+            Assert.AreEqual(93, _party.Hp, "대시 끝난 뒤엔 정상 피격 (플레이어 방어 패시브 적용)");
         }
         [UnityTest]
         public IEnumerator 스킬은_게이지가_있어야_발동()
@@ -311,6 +311,68 @@ namespace ParryRL.Tests
             Assert.AreEqual(100, _party.Hp, "겹친 공격이 전부 패링됨");
             Assert.AreEqual(1 + 1 + 3, _gauge.Value, "성공마다 게이지 (일반 +1 ×2, 강공격 +3)");
             Assert.AreEqual(0, System.Linq.Enumerable.Count(Object.FindObjectsByType<EnemyAttack>(), a => !a.IsGhost));
+        }
+
+        [UnityTest]
+        public IEnumerator Q로_무기를_바꾸면_쿨타임_0점5초_게이지_소모_없음()
+        {
+            Assert.AreEqual(WeaponMode.Melee, _combat.Weapon);
+            WeaponMode changed = WeaponMode.Melee;
+            _combat.WeaponChanged += w => changed = w;
+
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            Assert.AreEqual(WeaponMode.Ranged, _combat.Weapon);
+            Assert.AreEqual(WeaponMode.Ranged, changed);
+            Assert.AreEqual(0, _gauge.Value, "전환은 게이지를 쓰지 않음");
+            Assert.IsFalse(_combat.TrySwitchWeapon(), "쿨타임 중");
+
+            yield return new WaitForSeconds(0.55f);
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            Assert.AreEqual(WeaponMode.Melee, _combat.Weapon, "다시 누르면 근접");
+        }
+
+        [UnityTest]
+        public IEnumerator 방어_활성_중에는_무기를_못_바꾼다()
+        {
+            Assert.IsTrue(_defense.TryActivate());
+            Assert.IsFalse(_combat.TrySwitchWeapon());
+            Assert.AreEqual(WeaponMode.Melee, _combat.Weapon);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 원거리_무기_일반공격은_화살_근접과_다른_스킬()
+        {
+            TestScene.SetAttackSkillFree(true);
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            Assert.AreEqual(12, _combat.AttackSkillBaseDamage, "원거리 일반공격 기본 12");
+            Assert.AreEqual(0.45f, _combat.AttackSkillCooldown, 1e-4f, "원거리 쿨타임 0.45");
+
+            _melee.transform.position = new Vector3(PlayerPos.x + 5f * _defense.GetComponent<PlayerMotor>().Facing, _melee.transform.position.y, 0f);
+            _melee.GetComponent<Rigidbody2D>().position = _melee.transform.position;
+            Physics2D.SyncTransforms();
+            Assert.IsTrue(_combat.TryAttackSkill());
+            yield return null;
+            Assert.IsNotNull(Object.FindAnyObjectByType<PlayerProjectile>(), "화살이 나감 (근접 박스 판정이 아님)");
+            Assert.AreEqual(1f, _melee.HpRatio, "근접 박스는 5칸 밖 적에게 닿지 않는다 — 화살은 날아가는 중");
+
+            yield return new WaitForSeconds(0.8f);
+            Assert.AreEqual(1f - 12f / 100f, _melee.HpRatio, 1e-4f, "화살 12 × 원거리 배율 1.0 (근접 배율 1.5가 적용되면 18)");
+        }
+
+        [UnityTest]
+        public IEnumerator 원거리_무기로_패링하면_반격도_화살이다()
+        {
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            Place(_melee, 6f); // 근접 반격 사거리(1.8) 밖 — 화살만 닿는다
+            Assert.IsTrue(_defense.TryActivate());
+            SpawnAttack(AttackType.Normal, _melee, 1.2f);
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.AreEqual(100, _party.Hp);
+            Assert.IsNotNull(Object.FindAnyObjectByType<PlayerProjectile>(), "반격 화살");
+
+            yield return new WaitForSeconds(1.5f);
+            Assert.AreEqual(0.8f, _melee.HpRatio, 1e-4f, "반격 20 × 원거리 배율 1.0");
         }
     }
 }

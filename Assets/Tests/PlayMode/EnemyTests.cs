@@ -116,7 +116,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 근접베기를_패링하면_부서지고_전사_반격이_닿는다()
+        public IEnumerator 근접베기를_패링하면_부서지고_플레이어_반격이_닿는다()
         {
             _melee.enabled = true;
             Place(_melee, 2f);
@@ -128,7 +128,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(100, _party.Hp);
             Assert.AreEqual(1, _gauge.Value, "패링 성공");
             Assert.IsTrue(slash == null, "패링하면 베기가 부서짐");
-            Assert.AreEqual(0.7f, _melee.HpRatio, 1e-4f, "바짝 붙은 근접 몬스터라 전사 반격(사거리 1.8)이 닿는다 — 30");
+            Assert.AreEqual(0.7f, _melee.HpRatio, 1e-4f, "바짝 붙은 근접 몬스터라 플레이어 반격(사거리 1.8)이 닿는다 — 30");
         }
 
         [UnityTest]

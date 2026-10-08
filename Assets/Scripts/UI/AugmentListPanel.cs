@@ -137,7 +137,7 @@ namespace ParryRL
             // 획득 순서를 유지하면서 같은 증강끼리 묶기
             var order = new List<AugmentDefinition>();
             var stacks = new Dictionary<AugmentDefinition, int>();
-            int common = 0, warrior = 0;
+            int common = 0, player = 0;
             foreach (var def in acquired)
             {
                 if (!stacks.ContainsKey(def))
@@ -148,13 +148,13 @@ namespace ParryRL
                 stacks[def]++;
                 switch (def.Owner)
                 {
-                    case AugmentOwner.Warrior: warrior++; break;
+                    case AugmentOwner.Player: player++; break;
                     default: common++; break;
                 }
             }
 
             _title.text = $"획득한 증강 ({acquired.Count})  <size=18><color=#999999>C로 닫기</color></size>";
-            _summary.text = $"공용 {common}  ·  <color=#F26152>전사 {warrior}</color>";
+            _summary.text = $"공용 {common}  ·  <color=#F26152>플레이어 {player}</color>";
             _empty.enabled = order.Count == 0;
 
             float y = 0f;
@@ -236,7 +236,7 @@ namespace ParryRL
 
         private static Color OwnerColor(AugmentOwner owner) => owner switch
         {
-            AugmentOwner.Warrior => new Color(0.95f, 0.38f, 0.32f),
+            AugmentOwner.Player => new Color(0.95f, 0.38f, 0.32f),
             _ => new Color(0.6f, 0.62f, 0.7f),
         };
     }

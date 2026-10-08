@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ParryRL
 {
     /// <summary>
-    /// 전사 · 돌진 베기 — 전사의 돌진(이동 스킬)이 지나간 적에게 피해 15 (한 번의 돌진에 적마다 1번).
+    /// 플레이어 · 돌진 베기 — 플레이어의 돌진(이동 스킬)이 지나간 적에게 피해 15 (한 번의 돌진에 적마다 1번).
     /// 판정 = 돌진 중인 플레이어 몸 네모 그대로 (적은 트리거라 몸이 통과한다).
     /// 게이지 1칸 · 쿨타임 1초 → 1칸당 기본 15 (기획서 2장 상한).
     /// </summary>
@@ -21,10 +21,10 @@ namespace ParryRL
 
         private void OnMoveSkill(CharacterKind kind, int dir)
         {
-            if (kind != CharacterKind.Warrior) return;
+            if (kind != CharacterKind.Player) return;
             _active = true;
             _hitThisDash.Clear();
-            _hit = HitInfo.Create(DamageSource.DashSlash, CharacterKind.Warrior, Pos);
+            _hit = HitInfo.Create(DamageSource.DashSlash, CharacterKind.Player, Pos);
             Sweep(); // 이미 겹쳐 있는 적도 벤다
         }
 

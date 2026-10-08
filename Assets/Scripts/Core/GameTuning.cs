@@ -44,23 +44,28 @@ namespace ParryRL
         public float dashInvulnerableExtra = 0f;
 
         // ── 캐릭터 패시브 (기획서 4.1/4.2) ──
-        [Tooltip("전사: 사거리가 짧은 대신 강한 공격 — 반격·공격 스킬 데미지 배율")]
-        public float warriorAttackMultiplier = 1.5f;
-        [Tooltip("전사: 방어력 — 전사로 맞을 때 받는 피해 감소 비율 (0.3 = 30% 감소)")]
-        public float warriorDamageReduction = 0.3f;
+        [Tooltip("플레이어: 사거리가 짧은 대신 강한 공격 — 반격·공격 스킬 데미지 배율")]
+        public float playerAttackMultiplier = 1.5f;
+        [Tooltip("플레이어: 방어력 — 플레이어로 맞을 때 받는 피해 감소 비율 (0.3 = 30% 감소)")]
+        public float playerDamageReduction = 0.3f;
 
         [Tooltip("걷기 속도 (유닛/초) — 궁수가 더 날쌤")]
-        public float warriorMoveSpeed = 5f;
+        public float playerMoveSpeed = 5f;
+
+        [Tooltip("원거리 무기: 반격·일반공격 데미지 배율 (근접은 playerAttackMultiplier)")]
+        public float rangedAttackMultiplier = 1f;
+        [Tooltip("무기 전환 쿨타임 (초, 게이지 소모 없음)")]
+        public float weaponSwitchCooldown = 0.5f;
 
 
         public float AttackMultiplier(CharacterKind kind) =>
-            warriorAttackMultiplier;
+            playerAttackMultiplier;
 
         public float DamageReduction(CharacterKind kind) =>
-            Mathf.Clamp01(warriorDamageReduction);
+            Mathf.Clamp01(playerDamageReduction);
 
         public float MoveSpeed(CharacterKind kind) =>
-            Mathf.Max(0.5f, warriorMoveSpeed);
+            Mathf.Max(0.5f, playerMoveSpeed);
 
         // ── 적 ──
         [Tooltip("근접 / 원거리 각각 동시에 유지할 몬스터 수 (F1 몬스터 탭)")]

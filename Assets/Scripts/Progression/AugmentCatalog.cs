@@ -22,14 +22,14 @@ namespace ParryRL
                 Effect = typeof(HeavyHunterAugment),
                 Description = "강공격을 막으면 게이지가 2칸 더 찬다 (3 → 5칸)." },
 
-            // ── 전사: 가까이 · 세게 · 단단하게 ──
-            new() { Id = "w_close_strike", Name = "지척의 일격", Owner = AugmentOwner.Warrior, Category = AugmentCategory.Counter,
+            // ── 플레이어: 가까이 · 세게 · 단단하게 ──
+            new() { Id = "w_close_strike", Name = "지척의 일격", Owner = AugmentOwner.Player, Category = AugmentCategory.Counter,
                 Effect = typeof(CloseStrikeAugment),
                 Description = "바짝 붙은 적(1.2 이내)에게 반격하면 데미지 +50%." },
-            new() { Id = "w_blood_parry", Name = "피의 패링", Owner = AugmentOwner.Warrior, Category = AugmentCategory.Defense, MaxStacks = 2,
+            new() { Id = "w_blood_parry", Name = "피의 패링", Owner = AugmentOwner.Player, Category = AugmentCategory.Defense, MaxStacks = 2,
                 Effect = typeof(BloodParryAugment),
                 Description = "패링에 성공하면 체력 +2 (강공격 +6)." },
-            new() { Id = "w_dash_slash", Name = "돌진 베기", Owner = AugmentOwner.Warrior, Category = AugmentCategory.Mobility,
+            new() { Id = "w_dash_slash", Name = "돌진 베기", Owner = AugmentOwner.Player, Category = AugmentCategory.Mobility,
                 Effect = typeof(DashSlashAugment),
                 Description = "돌진(이동 스킬)으로 지나간 적에게 피해 15 (적마다 1번)." },
         };

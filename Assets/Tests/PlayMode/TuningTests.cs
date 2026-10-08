@@ -74,7 +74,7 @@ namespace ParryRL.Tests
 
             SpawnAttack(0.72f);
             yield return new WaitForSecondsRealtime(0.2f);
-            Assert.AreEqual(93, _party.Hp); // 전사 방어 패시브
+            Assert.AreEqual(93, _party.Hp); // 플레이어 방어 패시브
             Assert.AreEqual(TimingKind.TooEarly, _timings.Last().Kind, "헛스윙 쿨타임 중 피격 = 너무 일찍 누름");
         }
 
@@ -95,7 +95,7 @@ namespace ParryRL.Tests
         {
             SpawnAttack(0.72f);
             yield return new WaitForSecondsRealtime(0.15f);
-            Assert.AreEqual(93, _party.Hp); // 전사 방어 패시브
+            Assert.AreEqual(93, _party.Hp); // 플레이어 방어 패시브
 
             _defense.TryActivate();
             Assert.AreEqual(TimingKind.TooLate, _timings.Last().Kind);

@@ -80,7 +80,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사_일반공격은_칼을_따라_살짝_내딛는다_무적은_아니다()
+        public IEnumerator 플레이어_일반공격은_칼을_따라_살짝_내딛는다_무적은_아니다()
         {
             var motor = _defense.GetComponent<PlayerMotor>();
             TestScene.SetAttackSkillFree(true);

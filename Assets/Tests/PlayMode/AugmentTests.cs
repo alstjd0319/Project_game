@@ -74,7 +74,7 @@ namespace ParryRL.Tests
         {
             Assert.AreEqual(6, AugmentCatalog.All.Count);
             Assert.AreEqual(3, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Common));
-            Assert.AreEqual(3, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Warrior));
+            Assert.AreEqual(3, AugmentCatalog.All.Count(a => a.Owner == AugmentOwner.Player));
             Assert.AreEqual(6, AugmentCatalog.All.Select(a => a.Id).Distinct().Count(), "id 중복 없음");
             foreach (var def in AugmentCatalog.All)
             {
@@ -96,10 +96,10 @@ namespace ParryRL.Tests
         [UnityTest]
         public IEnumerator 증강보너스는_더하고_캐릭터패시브에만_곱한다()
         {
-            // 전사 반격 20 × 패시브 1.5 × (1 + 지척 0.5) = 45 (보너스가 둘 이상이면 더하고, 전부 곱하지 않는다)
+            // 플레이어 반격 20 × 패시브 1.5 × (1 + 지척 0.5) = 45 (보너스가 둘 이상이면 더하고, 전부 곱하지 않는다)
             Grant("w_close_strike");
             Place(_melee, 1.3f);
-            var hit = HitInfo.Create(DamageSource.Counter, CharacterKind.Warrior, PlayerPos);
+            var hit = HitInfo.Create(DamageSource.Counter, CharacterKind.Player, PlayerPos);
             Assert.AreEqual(45, DamageCalc.Compute(20, hit, _melee));
             yield return null;
         }
@@ -144,7 +144,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(5, _gauge.Value);
         }
 
-        // ───────────── 전사 ─────────────
+        // ───────────── 플레이어 ─────────────
 
         [UnityTest]
         public IEnumerator 기절하면_예비모션중인_공격이_취소된다()

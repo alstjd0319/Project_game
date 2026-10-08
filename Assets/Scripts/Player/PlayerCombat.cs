@@ -52,28 +52,45 @@ namespace ParryRL
 
         [Header("반격")]
         [SerializeField, Tooltip("기본 반격 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐")] private int counterDamage = 20;
-        [SerializeField, Tooltip("전사 근접 반격 사거리 (플레이어 중심 기준)")] private float warriorCounterRange = 1.8f;
-        [SerializeField] private float warriorCounterHeight = 1.6f;
+        [SerializeField, Tooltip("플레이어 근접 반격 사거리 (플레이어 중심 기준)")] private float meleeCounterRange = 1.8f;
+        [SerializeField] private float meleeCounterHeight = 1.6f;
 
         [Header("일반공격 (A) — 게이지 없이 쿨타임만, 연타 방지용으로 약하게")]
         [SerializeField] private int attackSkillCost = 3;
         [SerializeField, Tooltip("켜면 A 공격 스킬이 게이지를 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool attackSkillFree = true;
         [SerializeField] private float attackSkillCooldown = 0.35f;
         [SerializeField, Tooltip("기본 일반공격 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐")] private int attackSkillDamage = 15;
-        [SerializeField] private Vector2 warriorSkillBox = new(2.4f, 1.6f);
+        [SerializeField] private Vector2 meleeSkillBox = new(2.4f, 1.6f);
+
+        [Header("원거리 무기 (Q로 전환) — 일반공격과 반격이 화살로 바뀐다")]
+        [SerializeField, Tooltip("원거리 일반공격 기본 데미지 (근접 15보다 낮게 — 대신 멀리서 안전하게)")] private int arrowDamage = 12;
+        [SerializeField] private float arrowCooldown = 0.45f;
+        [SerializeField] private float arrowSpeed = 16f;
+        [SerializeField] private float arrowRange = 12f;
+        [SerializeField, Tooltip("원거리 반격 화살 속도 (일반 / 강공격) — 목표를 따라가는 유도")] private float counterArrowSpeedNormal = 8f;
+        [SerializeField] private float counterArrowSpeedHeavy = 11f;
+        [SerializeField] private float counterArrowMaxDistance = 25f;
 
         [Header("이동 스킬 (Shift) — 임시")]
         [SerializeField] private int moveSkillCost = 1;
         [SerializeField, Tooltip("기획서 4.4 — 0.1초에서 1초로 변경 (게이지 1칸당 딜 효율 관리)")] private float moveSkillCooldown = 1f;
 
+        /// <summary>지금 들고 있는 무기 (Q로 전환).</summary>
+        public WeaponMode Weapon { get; private set; } = WeaponMode.Melee;
+        public bool IsRanged => Weapon == WeaponMode.Ranged;
+        public float WeaponCooldownLeft => _weaponCd;
+        public float WeaponCooldown => GameTuning.Current.weaponSwitchCooldown;
+        /// <summary>무기를 바꿨을 때 (새 무기).</summary>
+        public event Action<WeaponMode> WeaponChanged;
         public int AttackSkillCost => attackSkillCost;
         /// <summary>실제로 소모하는 게이지 (공짜 설정이면 0).</summary>
         public int AttackSkillGaugeCost => attackSkillFree ? 0 : attackSkillCost;
-        public int AttackSkillBaseDamage => attackSkillDamage;
+        public int AttackSkillBaseDamage => IsRanged ? arrowDamage : attackSkillDamage;
         public int CounterBaseDamage => counterDamage;
-        public float WarriorCounterRange => warriorCounterRange;
+        public float MeleeCounterRange => meleeCounterRange;
         public int MoveSkillCost => moveSkillCost;
-        public float AttackSkillCooldown => attackSkillCooldown;
+        /// <summary>지금 무기의 일반공격 쿨타임 / 기본 데미지.</summary>
+        public float AttackSkillCooldown => IsRanged ? arrowCooldown : attackSkillCooldown;
         public float AttackSkillCooldownLeft => _attackCd;
         public float MoveSkillCooldown => moveSkillCooldown;
         public float MoveSkillCooldownLeft => _moveCd;
@@ -96,6 +113,7 @@ namespace ParryRL
         private SuccessEffects _effects;
         private float _attackCd;
         private float _moveCd;
+        private float _weaponCd;
 
         private void Awake()
         {
@@ -112,10 +130,12 @@ namespace ParryRL
         {
             _attackCd = Mathf.Max(0f, _attackCd - Time.deltaTime);
             _moveCd = Mathf.Max(0f, _moveCd - Time.deltaTime);
+            _weaponCd = Mathf.Max(0f, _weaponCd - Time.deltaTime);
 
             if (GameManager.InputBlocked || _party.IsDead) return;
             if (Input.GetKeyDown(Controls.AttackSkill)) TryAttackSkill();
             if (Input.GetKeyDown(Controls.MoveSkill)) TryMoveSkill();
+            if (Input.GetKeyDown(Controls.Weapon)) TrySwitchWeapon();
         }
 
         // ───────────── 방어 성공 ─────────────
@@ -166,15 +186,26 @@ namespace ParryRL
             _motor.FaceTowards(target != null ? target.transform.position.x : attackerX);
             int dir = _motor.Facing;
             Vector2 pos = transform.position;
-            Color color = _party.Current.color;
+            Color color = WeaponColor;
             var hit = NewHit(DamageSource.Counter, heavy);
 
-            // 근접 반격: 사거리 1.8 박스. 보이는 박스 = 판정 박스. 밖에 있는 적은 못 때린다.
-            var center = new Vector2(pos.x + dir * warriorCounterRange * 0.5f, pos.y);
-            var boxColor = new Color(color.r, color.g, color.b, 0.6f);
-            MeleeStrike.Spawn(center, new Vector2(warriorCounterRange, warriorCounterHeight), boxColor, counterDamage, hit,
-                art: GameAssets.AttackFx != null ? GameAssets.AttackFx.warriorCounter : null, facing: dir);
-            _motor.Lunge(dir);
+            if (IsRanged)
+            {
+                // 원거리 반격: 목표를 따라가는 화살. 목표에 닿는 순간 데미지 (사거리 제한 없음 — 대신 근접보다 약하다)
+                Vector2 toTarget = target != null ? (Vector2)target.transform.position - pos : new Vector2(dir, 0f);
+                PlayerProjectile.Spawn(pos + new Vector2(dir * 0.4f, 0f), toTarget, target, true,
+                    heavy ? counterArrowSpeedHeavy : counterArrowSpeedNormal, counterArrowMaxDistance,
+                    counterDamage, hit, Color.Lerp(color, Color.white, 0.4f), heavy ? new Vector2(0.7f, 0.3f) : new Vector2(0.5f, 0.2f));
+            }
+            else
+            {
+                // 근접 반격: 사거리 1.8 박스. 보이는 박스 = 판정 박스. 밖에 있는 적은 못 때린다.
+                var center = new Vector2(pos.x + dir * meleeCounterRange * 0.5f, pos.y);
+                var boxColor = new Color(color.r, color.g, color.b, 0.6f);
+                MeleeStrike.Spawn(center, new Vector2(meleeCounterRange, meleeCounterHeight), boxColor, counterDamage, hit,
+                    art: GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeCounter : null, facing: dir);
+                _motor.Lunge(dir);
+            }
             CounterFired?.Invoke(new CounterShot(hit, pos, target, dir));
         }
 
@@ -193,21 +224,55 @@ namespace ParryRL
                 return false;
             }
 
-            _attackCd = attackSkillCooldown;
+            _attackCd = AttackSkillCooldown;
             ActionUsed?.Invoke(PlayerAction.Attack);
             Sfx.Play(SfxId.Skill);
             int dir = _motor.Facing;
             Vector2 pos = transform.position;
-            Color color = _party.Current.color;
+            Color color = WeaponColor;
             var hit = NewHit(DamageSource.AttackSkill, false);
 
-            var center = new Vector2(pos.x + dir * warriorSkillBox.x * 0.5f, pos.y);
-            int hits = MeleeStrike.Spawn(center, warriorSkillBox, new Color(color.r, color.g, color.b, 0.45f), attackSkillDamage, hit,
-                art: GameAssets.AttackFx != null ? GameAssets.AttackFx.warriorAttack : null, facing: dir);
-            if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
-            _motor.Lunge(dir);
+            if (IsRanged)
+            {
+                // 화살: 앞쪽으로 직진 (유도 없음)
+                PlayerProjectile.Spawn(pos + new Vector2(dir * 0.4f, 0f), new Vector2(dir, 0f), null, false,
+                    arrowSpeed, arrowRange, arrowDamage, hit,
+                    Color.Lerp(color, Color.white, 0.2f), hit.Pierce ? new Vector2(1.1f, 0.22f) : new Vector2(0.8f, 0.18f));
+            }
+            else
+            {
+                var center = new Vector2(pos.x + dir * meleeSkillBox.x * 0.5f, pos.y);
+                int hits = MeleeStrike.Spawn(center, meleeSkillBox, new Color(color.r, color.g, color.b, 0.45f), attackSkillDamage, hit,
+                    art: GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeAttack : null, facing: dir);
+                if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
+                _motor.Lunge(dir);
+            }
             return true;
         }
+
+        /// <summary>Q: 근접 ↔ 원거리. 방어 활성 중이거나 쿨타임이면 안 된다. 게이지는 쓰지 않는다.</summary>
+        public bool TrySwitchWeapon()
+        {
+            if (_party.IsDead) return false;
+            if (_weaponCd > 0f || _defense.State == DefenseState.Active)
+            {
+                ActionDenied?.Invoke(PlayerAction.Weapon);
+                return false;
+            }
+            Weapon = IsRanged ? WeaponMode.Melee : WeaponMode.Ranged;
+            _weaponCd = WeaponCooldown;
+            Sfx.Play(SfxId.UiConfirm, 0.8f);
+            Color c = WeaponColor;
+            Fx.Ring(transform.position, c, 0.6f, 2.2f, 0.1f, 0.25f);
+            Fx.Sparks(transform.position, c, 8, 6f, 0.14f, 0.3f);
+            Hud.WorldText(transform.position + Vector3.up * 1.2f, IsRanged ? "원거리" : "근접", c, 0.95f);
+            ActionUsed?.Invoke(PlayerAction.Weapon);
+            WeaponChanged?.Invoke(Weapon);
+            return true;
+        }
+
+        /// <summary>무기를 나타내는 색 (스킬창·상태창): 근접 붉은색 / 원거리 초록색.</summary>
+        public Color WeaponColor => IsRanged ? new Color(0.32f, 0.85f, 0.48f) : _party.Current.color;
 
         public bool TryMoveSkill()
         {
@@ -238,6 +303,7 @@ namespace ParryRL
         private HitInfo NewHit(DamageSource source, bool heavy)
         {
             var hit = HitInfo.Create(source, _party.Current.kind, transform.position, heavy);
+            hit.Ranged = IsRanged;
             if (_mods != null) _mods.PrepareHit(ref hit);
             return hit;
         }

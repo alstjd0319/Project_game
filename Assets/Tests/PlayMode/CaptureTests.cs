@@ -49,6 +49,25 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 원거리_무기_스킬창_변환()
+        {
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            var combat = defense.GetComponent<PlayerCombat>();
+            TestScene.SetAttackSkillFree(true);
+            var melee = Object.FindObjectsByType<EnemyController>()[0];
+            melee.transform.position = new Vector3(defense.transform.position.x + 6f, melee.transform.localScale.y * 0.5f, 0f);
+            melee.GetComponent<Rigidbody2D>().position = melee.transform.position;
+            yield return new WaitForSeconds(0.3f);
+            yield return Capture("weapon_melee_skillbar");
+
+            combat.TrySwitchWeapon();
+            yield return new WaitForSeconds(0.15f);
+            combat.TryAttackSkill();
+            yield return new WaitForSeconds(0.12f);
+            yield return Capture("weapon_ranged_skillbar");
+        }
+
+        [UnityTest]
         public IEnumerator 증강_선택창()
         {
             var level = Object.FindAnyObjectByType<PlayerLevel>();
@@ -104,7 +123,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 전사_피격_방어패시브와_캐릭터탭()
+        public IEnumerator 플레이어_피격_방어패시브와_캐릭터탭()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();
             TuningPanel.Instance.SetVisible(true);

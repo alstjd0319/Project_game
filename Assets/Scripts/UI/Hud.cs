@@ -140,8 +140,10 @@ namespace ParryRL
                 _hpFill.rectTransform.anchorMax = new Vector2((float)_party.Hp / _party.MaxHp, 1f);
                 _hpText.text = $"HP {_party.Hp} / {_party.MaxHp}";
                 var cur = _party.Current;
-                _characterText.text = $"{cur.displayName}  <size=22>[{cur.defenseName}]{PassiveLabel(cur.kind)}</size>";
-                _characterText.color = cur.color;
+                _combat ??= FindAnyObjectByType<PlayerCombat>();
+                bool ranged = _combat != null && _combat.IsRanged;
+                _characterText.text = $"{cur.displayName}  <size=22>[{cur.defenseName}] {(ranged ? "원거리" : "근접")}{PassiveLabel(cur.kind, ranged)}</size>";
+                _characterText.color = _combat != null ? _combat.WeaponColor : cur.color;
             }
 
             if (_gauge != null)
@@ -177,17 +179,19 @@ namespace ParryRL
         }
 
         /// <summary>기본값(배율 1, 감소 0)이 아닌 패시브만 표시. 예: "  공격 ×1.5 · 받는 피해 -30%" / "  이속 +30%"</summary>
-        private static string PassiveLabel(CharacterKind kind)
+        private PlayerCombat _combat;
+
+        private static string PassiveLabel(CharacterKind kind, bool ranged)
         {
             var t = GameTuning.Current;
-            float atk = t.AttackMultiplier(kind);
+            float atk = ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(kind);
             float red = t.DamageReduction(kind);
             var parts = new List<string>();
             if (!Mathf.Approximately(atk, 1f)) parts.Add($"공격 ×{atk:0.##}");
             if (red > 0.001f) parts.Add($"받는 피해 -{red * 100f:0}%");
-            // 이동 속도는 전사 대비로 (전사가 기준)
-            float speedRatio = t.MoveSpeed(kind) / t.MoveSpeed(CharacterKind.Warrior);
-            if (kind != CharacterKind.Warrior && speedRatio > 1.001f) parts.Add($"이속 +{(speedRatio - 1f) * 100f:0}%");
+            // 이동 속도는 플레이어 대비로 (플레이어가 기준)
+            float speedRatio = t.MoveSpeed(kind) / t.MoveSpeed(CharacterKind.Player);
+            if (kind != CharacterKind.Player && speedRatio > 1.001f) parts.Add($"이속 +{(speedRatio - 1f) * 100f:0}%");
             return parts.Count == 0 ? "" : $"  <color=#FFCC66>{string.Join(" · ", parts)}</color>";
         }
         private void UpdatePopup(float dt)
@@ -311,7 +315,7 @@ namespace ParryRL
             // 우상단 조작 안내 (스킬 키는 하단 스킬바에 표시되므로 이동·점프·일시정지만)
             var help = UiKit.Text("Help", _root, 22, TextAnchor.UpperRight);
             help.color = new Color(1f, 1f, 1f, 0.55f);
-            help.text = "←/→ 이동   Space 점프 (2단)   ↓+Space 발판 내려가기   ESC 일시정지   C 증강 목록   F1 튜닝";
+            help.text = "←/→ 이동   Space 점프 (2단)   ↓+Space 발판 내려가기   Q 무기 전환   ESC 일시정지   C 증강 목록   F1 튜닝";
             UiKit.Place(help.rectTransform, new Vector2(1f, 1f), new Vector2(-28f, -28f), new Vector2(900f, 32f));
 
             // C 증강 목록 (증강 선택 화면의 어두운 막 아래에 깔리도록 먼저 생성)

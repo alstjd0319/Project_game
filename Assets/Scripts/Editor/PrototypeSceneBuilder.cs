@@ -53,7 +53,7 @@ namespace ParryRL.EditorTools
                 new Vector2(1f, 1.6f), new Color(0.58f, 0.46f, 0.78f), meleeArt);
             CreateEnemyPrefab(RangedPrefabPath, "Enemy_Ranged", EnemyKind.Ranged,
                 new Vector2(0.9f, 1.3f), new Color(0.35f, 0.62f, 0.8f), null);
-            CreateCharacterArt(CharacterKind.Warrior, WarriorArtDir, "warrior", WarriorArtPath);
+            CreateCharacterArt(CharacterKind.Player, WarriorArtDir, "warrior", WarriorArtPath);
             CreateAttackFxArt();
             AssetDatabase.SaveAssets();
 
@@ -62,7 +62,7 @@ namespace ParryRL.EditorTools
             // NewScene이 사용되지 않는 에셋을 언로드하므로, 씬에 넣을 에셋은 씬 생성 후에 다시 로드한다.
             _square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
             var noFriction = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(NoFrictionPath);
-            var warriorArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(WarriorArtPath);
+            var playerArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(WarriorArtPath);
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
             var meleePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MeleePrefabPath).GetComponent<EnemyController>();
             var rangedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RangedPrefabPath).GetComponent<EnemyController>();
@@ -132,8 +132,8 @@ namespace ParryRL.EditorTools
             Set(playerSprite, "eye", eye.transform);
             var artsProp = new SerializedObject(playerSprite);
             var list = artsProp.FindProperty("arts");
-            list.arraySize = warriorArt != null ? 1 : 0;
-            if (warriorArt != null) list.GetArrayElementAtIndex(0).objectReferenceValue = warriorArt;
+            list.arraySize = playerArt != null ? 1 : 0;
+            if (playerArt != null) list.GetArrayElementAtIndex(0).objectReferenceValue = playerArt;
             artsProp.ApplyModifiedPropertiesWithoutUndo();
 
             // ── 적 스포너 ──
@@ -286,8 +286,8 @@ namespace ParryRL.EditorTools
             }
             fx.enemySlash = LoadClip(FxDir, "enemy", "slash", 20f);           // 부서지는 3장 = 0.15초
             fx.enemyHeavySlash = LoadClip(FxDir, "enemy", "heavyslash", 20f);
-            fx.warriorCounter = LoadClip(FxDir, "warrior", "counter", 14f);  // 4장 ≈ 0.29초 (반격 그림과 비슷한 길이)
-            fx.warriorAttack = LoadClip(FxDir, "warrior", "attack", 14f);
+            fx.meleeCounter = LoadClip(FxDir, "warrior", "counter", 14f);  // 4장 ≈ 0.29초 (반격 그림과 비슷한 길이)
+            fx.meleeAttack = LoadClip(FxDir, "warrior", "attack", 14f);
             EditorUtility.SetDirty(fx);
         }
 

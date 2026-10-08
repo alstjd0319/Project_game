@@ -342,10 +342,12 @@ namespace ParryRL
         private void BuildCharacterTab()
         {
             BeginPage();
-            Header("전사 — 사거리가 짧은 대신 강하고 단단함");
-            AddSlider("공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.warriorAttackMultiplier, v => T.warriorAttackMultiplier = v);
-            AddSlider("받는 피해 감소", 0f, 0.8f, 0.05f, "0%", () => T.warriorDamageReduction, v => T.warriorDamageReduction = v);
-            AddSlider("이동 속도", 2f, 10f, 0.25f, "0.00", () => T.warriorMoveSpeed, v => T.warriorMoveSpeed = v);
+            Header("플레이어 — 근접은 강하고 단단함 / 원거리는 멀리서 안전하게");
+            AddSlider("공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.playerAttackMultiplier, v => T.playerAttackMultiplier = v);
+            AddSlider("받는 피해 감소", 0f, 0.8f, 0.05f, "0%", () => T.playerDamageReduction, v => T.playerDamageReduction = v);
+            AddSlider("이동 속도", 2f, 10f, 0.25f, "0.00", () => T.playerMoveSpeed, v => T.playerMoveSpeed = v);
+            AddSlider("원거리 공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.rangedAttackMultiplier, v => T.rangedAttackMultiplier = v);
+            AddSlider("무기 전환 쿨타임 (초)", 0f, 2f, 0.05f, "0.00", () => T.weaponSwitchCooldown, v => T.weaponSwitchCooldown = v);
             Space(10f);
             var note = UiKit.Text("Note", Page, 17, TextAnchor.UpperLeft, outline: false);
             note.color = new Color(1f, 1f, 1f, 0.5f);
@@ -416,7 +418,7 @@ namespace ParryRL
             });
 
             AddAugmentGroup(AugmentOwner.Common, "공용", new Color(0.3f, 0.33f, 0.42f));
-            AddAugmentGroup(AugmentOwner.Warrior, "전사", new Color(0.5f, 0.2f, 0.18f));
+            AddAugmentGroup(AugmentOwner.Player, "플레이어", new Color(0.5f, 0.2f, 0.18f));
         }
 
         /// <summary>그룹 이름은 왼쪽 칸에 — 제목 줄을 따로 두면 12개가 한 화면(높이 상한)에 안 들어간다.</summary>

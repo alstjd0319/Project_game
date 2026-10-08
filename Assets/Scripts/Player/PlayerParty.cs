@@ -13,14 +13,14 @@ namespace ParryRL
     }
 
     /// <summary>
-    /// 플레이어 캐릭터(전사) 한 명의 체력·피격 표시. 궁수와 스왑 시스템은 폐기됐다 (2026-10-08).
+    /// 플레이어 캐릭터(플레이어) 한 명의 체력·피격 표시. 궁수와 스왑 시스템은 폐기됐다 (2026-10-08).
     /// 이름은 PlayerParty로 남겨 다른 코드의 참조를 유지한다.
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     public class PlayerParty : MonoBehaviour
     {
-        [SerializeField] private CharacterProfile warrior = new()
-            { kind = CharacterKind.Warrior, displayName = "전사", defenseName = "패링", color = new Color(0.95f, 0.38f, 0.32f) };
+        [SerializeField] private CharacterProfile player = new()
+            { kind = CharacterKind.Player, displayName = "플레이어", defenseName = "패링", color = new Color(0.95f, 0.38f, 0.32f) };
 
         [Header("체력")]
         [SerializeField] private int maxHp = 100;
@@ -40,7 +40,7 @@ namespace ParryRL
         {
             _sr = GetComponent<SpriteRenderer>();
             _defense = GetComponent<PlayerDefense>();
-            Current = warrior;
+            Current = player;
             Hp = maxHp;
         }
 
@@ -49,7 +49,7 @@ namespace ParryRL
         private void LateUpdate() => UpdateVisual();
 
         /// <summary>
-        /// 피격. 전사 방어 패시브로 줄인다 (가안 30% 감소, 최소 1).
+        /// 피격. 플레이어 방어 패시브로 줄인다 (가안 30% 감소, 최소 1).
         /// </summary>
         /// <returns>실제로 받은 데미지</returns>
         public int TakeDamage(int rawDamage)

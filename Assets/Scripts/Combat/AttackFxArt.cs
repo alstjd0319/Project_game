@@ -11,8 +11,8 @@ namespace ParryRL
     {
         [Tooltip("근접 몬스터 일반 베기 — 판정이 살아 있는 동안 첫 장, 꺼진 뒤 나머지(부서짐)")] public SpriteClip enemySlash = new();
         public SpriteClip enemyHeavySlash = new();
-        [Tooltip("전사 반격 — 판정은 순간이라 첫 장을 보여주고 바로 부서짐")] public SpriteClip warriorCounter = new();
-        public SpriteClip warriorAttack = new();
+        [Tooltip("플레이어 반격 — 판정은 순간이라 첫 장을 보여주고 바로 부서짐")] public SpriteClip meleeCounter = new();
+        public SpriteClip meleeAttack = new();
 
         public SpriteClip EnemySlash(AttackType type) => type == AttackType.Heavy ? enemyHeavySlash : enemySlash;
     }

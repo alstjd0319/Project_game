@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace ParryRL
 {
     /// <summary>
-    /// 화면 하단 스킬바: Shift 이동 / A 공격 / S 방어 (임시 아이콘).
+    /// 화면 하단 스킬바: Shift 이동 / A 공격 / S 방어 / Q 무기 전환 (임시 아이콘).
     /// 원형 쿨타임 + 남은 초, 게이지 코스트 배지(부족하면 빨강), 사용 불가 시 어둡게,
     /// 발동 시 튀어오름 / 실패 시 흔들림 / 쿨타임 끝나면 테두리 번쩍.
     /// </summary>
@@ -67,7 +67,7 @@ namespace ParryRL
             var bar = new GameObject("SkillBar", typeof(RectTransform)).GetComponent<RectTransform>();
             bar.SetParent(canvasRoot, false);
             float slotOuter = SlotSize + Border * 2f;
-            float width = slotOuter * 3f + Spacing * 2f;
+            float width = slotOuter * 4f + Spacing * 3f;
             UiKit.Place(bar, new Vector2(0.5f, 0f), new Vector2(0f, 26f), new Vector2(width, slotOuter + 42f));
 
             // 바닥 지형 위에 겹쳐도 슬롯이 묻히지 않도록 어두운 받침
@@ -79,6 +79,7 @@ namespace ParryRL
                 (PlayerAction.Move, "Shift", "≫"),
                 (PlayerAction.Attack, "A", "★"),
                 (PlayerAction.Defend, "S", "◈"),
+                (PlayerAction.Weapon, "Q", "⇄"),
             };
             for (int i = 0; i < defs.Length; i++)
             {
@@ -98,6 +99,7 @@ namespace ParryRL
             _slots[PlayerAction.Move].state = MoveState;
             _slots[PlayerAction.Attack].state = AttackState;
             _slots[PlayerAction.Defend].state = DefendState;
+            _slots[PlayerAction.Weapon].state = WeaponState;
 
             _combat.ActionUsed += a => Pulse(a);
             _combat.ActionDenied += a => Deny(a);
@@ -122,13 +124,23 @@ namespace ParryRL
 
         private SlotState AttackState() => new()
         {
-            color = _party.Current.color,
-            name = "일반공격 · 베기",
+            color = _combat.WeaponColor,
+            name = _combat.IsRanged ? "일반공격 · 화살" : "일반공격 · 베기",
             cost = _combat.AttackSkillGaugeCost,
             affordable = _gauge.CanSpend(_combat.AttackSkillGaugeCost),
             blocked = _defense.State == DefenseState.Active,
             cooldownLeft = _combat.AttackSkillCooldownLeft,
             cooldownTotal = _combat.AttackSkillCooldown,
+        };
+
+        // 무기 전환 슬롯: 지금 든 무기를 보여주고, 전환 쿨타임을 돈다 (게이지 소모 없음)
+        private SlotState WeaponState() => new()
+        {
+            color = _combat.WeaponColor,
+            name = _combat.IsRanged ? "무기 · 원거리" : "무기 · 근접",
+            blocked = _defense.State == DefenseState.Active,
+            cooldownLeft = _combat.WeaponCooldownLeft,
+            cooldownTotal = _combat.WeaponCooldown,
         };
 
         private SlotState DefendState()

@@ -8,6 +8,8 @@ namespace ParryRL
         public const KeyCode Left = KeyCode.LeftArrow;
         public const KeyCode Right = KeyCode.RightArrow;
         public const KeyCode Jump = KeyCode.Space;
+        /// <summary>Q = 근접 ↔ 원거리 무기 전환.</summary>
+        public const KeyCode Weapon = KeyCode.Q;
         /// <summary>↓ + 점프 = 얇은 발판 아래로 내려가기.</summary>
         public const KeyCode Down = KeyCode.DownArrow;
         public const KeyCode Defend = KeyCode.S;
