@@ -235,5 +235,31 @@ namespace ParryRL.Tests
             CollectionAssert.AreEqual(new[] { PlayerAction.Attack, PlayerAction.Attack, PlayerAction.Defend }, denied);
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator 패링은_앞뒤_양방향에서_모두_성공하고_공격쪽을_바라본다()
+        {
+            var motor = _defense.GetComponent<PlayerMotor>();
+            motor.SetFacing(1f); // 오른쪽을 보는 중
+
+            // 뒤(왼쪽)에서 온 공격
+            Assert.IsTrue(_defense.TryActivate());
+            SpawnAttack(AttackType.Normal, null, -1.2f);
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.AreEqual(100, _party.Hp, "뒤에서 온 공격도 패링");
+            Assert.AreEqual(1, _gauge.Value);
+            Assert.AreEqual(-1, motor.Facing, "막은 뒤 공격해 온 쪽을 바라봄");
+
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            // 앞(오른쪽)에서 온 공격
+            motor.SetFacing(-1f);
+            Assert.IsTrue(_defense.TryActivate());
+            SpawnAttack(AttackType.Normal, null, 1.2f);
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.AreEqual(100, _party.Hp, "반대편에서 온 공격도 패링");
+            Assert.AreEqual(2, _gauge.Value);
+            Assert.AreEqual(1, motor.Facing);
+        }
     }
 }
