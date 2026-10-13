@@ -221,7 +221,14 @@ namespace ParryRL.Tests
                 new Vector2(0.6f, 0.6f), 10f, 6f, Color.white, 10);
             FxClip counter = null;
             float t = 0f;
-            while (counter == null && t < 1f) { counter = Object.FindAnyObjectByType<FxClip>(); t += Time.unscaledDeltaTime; yield return null; }
+            // 패링 성공 불꽃(parry_staff)도 FxClip이라, 반격 그림(staff_thrust)만 골라낸다
+            while (counter == null && t < 1f)
+            {
+                foreach (var candidate in Object.FindObjectsByType<FxClip>())
+                    if (System.Array.IndexOf(GameAssets.AttackFx.meleeCounter.frames, candidate.Renderer.sprite) >= 0) counter = candidate;
+                t += Time.unscaledDeltaTime;
+                yield return null;
+            }
             Assert.IsNotNull(counter, "반격 그림");
             Assert.AreSame(GameAssets.AttackFx.meleeCounter.frames[0], counter.Renderer.sprite);
             Assert.IsTrue(counter.Renderer.flipX, "왼쪽으로 반격");

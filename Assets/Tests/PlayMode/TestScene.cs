@@ -16,6 +16,14 @@ namespace ParryRL.Tests
             yield return null;
             SetAttackSkillFree(false); // 게이지 규칙 테스트의 기준은 "A 스킬·대시가 게이지를 쓴다" — 공짜 설정은 따로 검증
             SetMoveSkillFree(false);
+            SetMoveSkillCharges(1); // 기존 규칙 테스트는 대시 1회 기준 — 2회 충전은 따로 검증
+        }
+
+        public static void SetMoveSkillCharges(int charges)
+        {
+            var combat = UnityEngine.Object.FindAnyObjectByType<PlayerCombat>();
+            typeof(PlayerCombat).GetField("moveSkillCharges", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(combat, charges);
         }
 
         public static void SetMoveSkillFree(bool free)

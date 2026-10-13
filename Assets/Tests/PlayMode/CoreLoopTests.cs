@@ -387,5 +387,30 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(1.1f);
             Assert.IsTrue(_combat.TryMoveSkill(), "쿨타임이 지나면 다시");
         }
+
+        [UnityTest]
+        public IEnumerator 대시는_연속_2번_쓸_수_있고_쿨타임마다_1회분씩_다시_찬다()
+        {
+            TestScene.SetMoveSkillFree(true);
+            TestScene.SetMoveSkillCharges(2);
+            yield return null;
+            Assert.AreEqual(2, _combat.MoveSkillMaxCharges);
+
+            Assert.IsTrue(_combat.TryMoveSkill(), "첫 번째 대시");
+            Assert.AreEqual(1, _combat.MoveSkillCharges);
+            yield return new WaitForSeconds(0.25f); // 대시(0.15초)가 끝나길 기다림
+            Assert.IsTrue(_combat.TryMoveSkill(), "바로 이어서 두 번째 대시");
+            Assert.AreEqual(0, _combat.MoveSkillCharges);
+            yield return new WaitForSeconds(0.25f);
+            Assert.IsFalse(_combat.TryMoveSkill(), "세 번째는 충전이 없다");
+            Assert.Greater(_combat.MoveSkillCooldownLeft, 0f, "다음 1회분 충전까지 남은 시간 표시");
+
+            yield return new WaitForSeconds(1.0f); // 첫 충전 (쓰기 시작한 지 1초)
+            Assert.AreEqual(1, _combat.MoveSkillCharges);
+            Assert.IsTrue(_combat.TryMoveSkill(), "1회분이 차면 다시 사용");
+            Assert.AreEqual(0, _combat.MoveSkillCharges);
+            yield return new WaitForSeconds(2.2f); // 둘 다 충전
+            Assert.AreEqual(2, _combat.MoveSkillCharges, "시간이 지나면 가득");
+        }
     }
 }

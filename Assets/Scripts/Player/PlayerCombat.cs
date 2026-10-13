@@ -73,6 +73,7 @@ namespace ParryRL
 
         [Header("이동 스킬 (Shift) — 임시")]
         [SerializeField] private int moveSkillCost = 1;
+        [SerializeField, Tooltip("대시를 연속으로 쓸 수 있는 횟수. 쓰면 1회분이 줄고, 쿨타임마다 1회분씩 다시 찬다 (1이면 예전처럼 한 번)")] private int moveSkillCharges = 2;
         [SerializeField, Tooltip("켜면 대시(Shift)가 게이지를 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool moveSkillFree = true;
         [SerializeField, Tooltip("기획서 4.4 — 0.1초에서 1초로 변경 (게이지 1칸당 딜 효율 관리)")] private float moveSkillCooldown = 1f;
 
@@ -96,7 +97,10 @@ namespace ParryRL
         public float AttackSkillCooldown => IsRanged ? arrowCooldown : attackSkillCooldown;
         public float AttackSkillCooldownLeft => _attackCd;
         public float MoveSkillCooldown => moveSkillCooldown;
-        public float MoveSkillCooldownLeft => _moveCd;
+        /// <summary>대시를 쓸 수 없을 때(충전 0) 다음 1회분이 찰 때까지 남은 시간. 충전이 남아 있으면 0.</summary>
+        public float MoveSkillCooldownLeft => _moveCharges <= 0 ? _moveCd : 0f;
+        public int MoveSkillCharges => _moveCharges;
+        public int MoveSkillMaxCharges => Mathf.Max(1, moveSkillCharges);
 
         /// <summary>스킬 발동 / 발동 실패(게이지 부족·쿨타임 등). UI 피드백용.</summary>
         public event Action<PlayerAction> ActionUsed;
@@ -115,7 +119,8 @@ namespace ParryRL
         private RunModifiers _mods;
         private SuccessEffects _effects;
         private float _attackCd;
-        private float _moveCd;
+        private float _moveCd;        // 다음 충전까지 남은 시간 (충전이 가득이면 0)
+        private int _moveCharges = -1; // -1 = 아직 초기화 안 됨 (Awake에서 최대치로)
         private float _weaponCd;
 
         private void Awake()
@@ -132,7 +137,16 @@ namespace ParryRL
         private void Update()
         {
             _attackCd = Mathf.Max(0f, _attackCd - Time.deltaTime);
-            _moveCd = Mathf.Max(0f, _moveCd - Time.deltaTime);
+            if (_moveCharges < 0 || _moveCharges > MoveSkillMaxCharges) _moveCharges = MoveSkillMaxCharges; // 최대 횟수를 바꾸면 맞춘다
+            if (_moveCharges < MoveSkillMaxCharges)
+            {
+                _moveCd -= Time.deltaTime;
+                if (_moveCd <= 0f)
+                {
+                    _moveCharges++;
+                    _moveCd = _moveCharges < MoveSkillMaxCharges ? moveSkillCooldown : 0f; // 아직 덜 찼으면 다음 1회분 충전 시작
+                }
+            }
             _weaponCd = Mathf.Max(0f, _weaponCd - Time.deltaTime);
 
             if (GameManager.InputBlocked || _party.IsDead) return;
@@ -281,7 +295,8 @@ namespace ParryRL
 
         public bool TryMoveSkill()
         {
-            if (_moveCd > 0f || _motor.IsDashing)
+            if (_moveCharges < 0 || _moveCharges > MoveSkillMaxCharges) _moveCharges = MoveSkillMaxCharges;
+            if (_moveCharges <= 0 || _motor.IsDashing)
             {
                 ActionDenied?.Invoke(PlayerAction.Move);
                 return false;
@@ -292,7 +307,9 @@ namespace ParryRL
                 return false;
             }
 
-            _moveCd = moveSkillCooldown;
+            // 충전 소모 — 가득 찬 상태에서 쓰기 시작하면 그때부터 충전 시간이 흐른다
+            if (_moveCharges >= MoveSkillMaxCharges) _moveCd = moveSkillCooldown;
+            _moveCharges--;
             var kind = _party.Current.kind;
             float h = _motor.HorizontalInput;
             int dir = h != 0f ? (h > 0f ? 1 : -1) : _motor.Facing;
