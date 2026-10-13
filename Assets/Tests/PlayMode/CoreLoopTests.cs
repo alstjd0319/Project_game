@@ -412,5 +412,29 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(2.2f); // 둘 다 충전
             Assert.AreEqual(2, _combat.MoveSkillCharges, "시간이 지나면 가득");
         }
+
+        [UnityTest]
+        public IEnumerator 공격_직후_또는_동시에_패링을_눌러도_둘_다_된다_패링_중에는_공격이_막힌다()
+        {
+            TestScene.SetAttackSkillFree(true);
+            Place(_melee, 1.5f);
+
+            // 같은 프레임: 공격(A) → 패링(S)
+            Assert.IsTrue(_combat.TryAttackSkill(), "공격이 나감");
+            Assert.IsTrue(_defense.TryActivate(), "공격과 같은 프레임에 패링도 켜진다");
+            Assert.AreEqual(DefenseState.Active, _defense.State);
+            Assert.Less(_melee.HpRatio, 1f, "공격은 이미 적에게 맞았다 (판정은 누르는 순간 생김)");
+
+            // 패링 활성 중 들어온 공격을 막는다
+            SpawnAttack(AttackType.Normal, null, 1.2f);
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.AreEqual(100, _party.Hp, "공격 직후 켠 패링으로 막음");
+            Assert.AreEqual(1, _gauge.Value);
+
+            // 패링 활성 중에는 공격 불가 (막은 뒤 창이 끝날 때까지)
+            yield return new WaitForSecondsRealtime(0.8f);
+            Assert.IsTrue(_defense.TryActivate());
+            Assert.IsFalse(_combat.TryAttackSkill(), "패링 활성 중에는 공격이 안 나간다");
+        }
     }
 }
