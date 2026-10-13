@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ParryRL
 {
-    /// <summary>공용 게이지 (기획서 4.4). 패링/회피 성공으로만 충전된다.</summary>
+    /// <summary>공용 도력 (기획서 4.4). 패링/회피 성공으로만 충전된다.</summary>
     public class SkillGauge : MonoBehaviour
     {
         [SerializeField] private int max = 20;
@@ -21,7 +21,7 @@ namespace ParryRL
             Changed?.Invoke(Value);
         }
 
-        /// <summary>연습 스위치 "게이지 무한" (튜닝 패널) — 써도 줄지 않는다.</summary>
+        /// <summary>연습 스위치 "도력 무한" (튜닝 패널) — 써도 줄지 않는다.</summary>
         public static bool Infinite => GameTuning.Current.infiniteGauge;
 
         public bool CanSpend(int amount) => Infinite || Value >= amount;

@@ -178,3 +178,8 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 사용자는 보통 에디터를 꺼둔다. 에디터가 열려 있어 배치모드가 프로젝트 잠금으로 실패하면 `Assets`/`Packages`/`ProjectSettings`만 스크래치 폴더(ASCII 경로)에 복사해서 그 사본으로 빌드·테스트한다.
 - 한글 경로 주의: 한글 경로가 들어간 `.ps1` 파일은 **UTF-8 BOM**으로 저장해야 Windows PowerShell 5.1이 경로를 제대로 읽는다.
 - `EditorSceneManager.NewScene`은 사용되지 않는 에셋을 언로드한다 — 씬에 연결할 에셋은 씬 생성 **후에** `AssetDatabase.LoadAssetAtPath`로 로드할 것.
+
+## 도력 (2026-10-14)
+- 화면에 보이는 "게이지"는 전부 **도력**으로 바꿨다 (클래스·변수 이름 `SkillGauge`/`_gauge`는 그대로). 패링/방어 성공 시 충전되는 규칙은 그대로.
+- HUD 도력은 네모 20칸 대신 **구슬(염주) 20개**: 줄에 꿰인 둥근 구슬, 찬 구슬은 숨 쉬듯 빛나고(앞 10개 옥빛 · 뒤 10개 귀문 보라) 가장 최근에 찬 구슬이 가장 밝다. 구슬 그림은 `FxSprites.Glow/Ring`(코드 생성)을 UI에서도 쓴다. 스킬바 코스트 배지도 보라색.
+- 배치모드 PlayMode 테스트는 `-nographics` 없이 돌릴 것 (스프라이트 렌더에서 네이티브 크래시, 종료 코드 139).

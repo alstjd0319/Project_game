@@ -38,7 +38,7 @@ namespace ParryRL
         public bool showTiming = true;
         [Tooltip("퍼펙트 방어: 방어 입력 직후 이 시간(초) 안에 공격이 닿으면 퍼펙트 — 연출만 강해지고 판정 결과는 같다")]
         public float perfectWindow = 0.08f;
-        [Tooltip("이동 스킬(대시) 중 무적 — 닿은 공격은 판정 없이 통과 (게이지·반격 없음)")]
+        [Tooltip("이동 스킬(대시) 중 무적 — 닿은 공격은 판정 없이 통과 (도력·반격 없음)")]
         public bool dashInvulnerable = true;
         [Tooltip("대시가 끝난 뒤 무적을 조금 더 이어주는 여유 시간 (초)")]
         public float dashInvulnerableExtra = 0f;
@@ -54,7 +54,7 @@ namespace ParryRL
 
         [Tooltip("원거리 무기: 반격·일반공격 데미지 배율 (근접은 playerAttackMultiplier)")]
         public float rangedAttackMultiplier = 1f;
-        [Tooltip("무기 전환 쿨타임 (초, 게이지 소모 없음)")]
+        [Tooltip("무기 전환 쿨타임 (초, 도력 소모 없음)")]
         public float weaponSwitchCooldown = 0.5f;
 
 
@@ -91,7 +91,7 @@ namespace ParryRL
         [NonSerialized] public bool enemyInvincible;
         [NonSerialized] public bool heavyOnly;
         [NonSerialized] public bool enemyPassive;
-        /// <summary>게이지를 써도 줄지 않음 (스킬·수동 스왑 연습용).</summary>
+        /// <summary>도력을 써도 줄지 않음 (스킬·수동 스왑 연습용).</summary>
         [NonSerialized] public bool infiniteGauge;
         /// <summary>근접 / 원거리 몬스터 치우기 (한 종류씩 연습용).</summary>
         [NonSerialized] public bool hideMelee;

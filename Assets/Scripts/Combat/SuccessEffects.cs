@@ -5,7 +5,7 @@ namespace ParryRL
 {
     /// <summary>
     /// 퍼펙트 패링(입력 직후 <see cref="GameTuning.perfectWindow"/> 안에 성공) 전용 연출.
-    /// 일반 성공 연출(HitFeel·Fx) 위에 얹는 층이라 판정·게이지·반격은 건드리지 않는다. 전부 unscaled time.
+    /// 일반 성공 연출(HitFeel·Fx) 위에 얹는 층이라 판정·도력·반격은 건드리지 않는다. 전부 unscaled time.
     /// </summary>
     public class SuccessEffects : MonoBehaviour
     {

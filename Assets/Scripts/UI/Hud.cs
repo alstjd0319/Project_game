@@ -7,7 +7,7 @@ namespace ParryRL
 {
     /// <summary>
     /// 디버그 겸 기본 HUD. 코드로 uGUI 캔버스를 만든다.
-    /// 체력 / 공용 게이지(20칸) / 현재 캐릭터 / 스킬바 / 판정 팝업 / 월드 텍스트 / 일시정지·게임오버.
+    /// 체력 / 공용 도력(20칸) / 현재 캐릭터 / 스킬바 / 판정 팝업 / 월드 텍스트 / 일시정지·게임오버.
     /// </summary>
     public class Hud : MonoBehaviour
     {
@@ -22,6 +22,7 @@ namespace ParryRL
         private Text _characterText;
         private Text _gaugeText;
         private readonly List<Image> _gaugeCells = new();
+        private readonly List<Image> _gaugeRings = new();
         private SkillBar _skillBar;
         private TuningPanel _tuningPanel;
         private PlayerLevel _level;
@@ -148,16 +149,32 @@ namespace ParryRL
 
             if (_gauge != null)
             {
+                // 도력 구슬(염주): 찬 구슬은 은은하게 숨 쉬듯 빛나고, 가장 최근에 찬 구슬이 가장 밝다. 앞 10개는 옥빛, 뒤 10개는 귀문의 보라빛
+                float t = Time.unscaledTime;
                 for (int i = 0; i < _gaugeCells.Count; i++)
                 {
                     bool filled = i < _gauge.Value;
-                    _gaugeCells[i].color = filled
-                        ? (i < 10 ? new Color(1f, 0.8f, 0.25f) : new Color(1f, 0.55f, 0.2f))
-                        : new Color(1f, 1f, 1f, 0.12f);
+                    var core = _gaugeCells[i];
+                    if (filled)
+                    {
+                        Color c = i < 10 ? new Color(0.55f, 0.95f, 0.88f) : new Color(0.78f, 0.55f, 1f);
+                        float pulse = 0.85f + 0.15f * Mathf.Sin(t * 3f + i * 0.5f);
+                        bool newest = i == _gauge.Value - 1;
+                        c.a = newest ? 1f : 0.85f * pulse;
+                        core.color = c;
+                        core.rectTransform.localScale = Vector3.one * (newest ? 1.15f + 0.1f * Mathf.Sin(t * 5f) : 1f);
+                        _gaugeRings[i].color = new Color(c.r, c.g, c.b, 0.9f);
+                    }
+                    else
+                    {
+                        core.color = Color.clear;
+                        core.rectTransform.localScale = Vector3.one;
+                        _gaugeRings[i].color = new Color(0.6f, 0.5f, 0.8f, 0.3f);
+                    }
                 }
                 _gaugeText.text = SkillGauge.Infinite
-                    ? $"게이지 {_gauge.Value} / {_gauge.Max}  <color=#FFD966>∞ 무한 (연습)</color>"
-                    : $"게이지 {_gauge.Value} / {_gauge.Max}";
+                    ? $"<color=#CDB8FF>도력</color> {_gauge.Value} / {_gauge.Max}  <color=#9DF5E0>∞ 무한 (연습)</color>"
+                    : $"<color=#CDB8FF>도력</color> {_gauge.Value} / {_gauge.Max}";
             }
 
             if (_level != null)
@@ -251,7 +268,7 @@ namespace ParryRL
             _screenFlash = UiKit.Image("ScreenFlash", _root, Color.clear);
             UiKit.Stretch(_screenFlash.rectTransform);
 
-            // 좌상단 상태 패널: 캐릭터 / 체력 / 게이지
+            // 좌상단 상태 패널: 캐릭터 / 체력 / 도력
             var panel = UiKit.Image("StatusPanel", _root, new Color(0f, 0f, 0f, 0.45f)).rectTransform;
             UiKit.Place(panel, new Vector2(0, 1), new Vector2(24, -24), new Vector2(620, 236));
 
@@ -265,14 +282,21 @@ namespace ParryRL
             _hpText = UiKit.Text("HpText", hpBg, 22, TextAnchor.MiddleCenter);
             UiKit.Stretch(_hpText.rectTransform);
 
-            // 게이지 20칸 (10칸째 뒤에 구분 간격)
+            // 도력 구슬 20개 (염주처럼 한 줄에 꿰어 있다, 10개째 뒤에 매듭 간격)
             const float cell = 24f, gap = 4f, midGap = 12f;
+            var thread = UiKit.Image("GaugeThread", panel, new Color(0.7f, 0.6f, 0.95f, 0.35f)).rectTransform;
+            UiKit.Place(thread, new Vector2(0, 1), new Vector2(10, -104 - cell * 0.5f + 1f), new Vector2(600, 2));
             for (int i = 0; i < 20; i++)
             {
-                var img = UiKit.Image($"Gauge{i}", panel, Color.white);
                 float x = 16 + i * (cell + gap) + (i >= 10 ? midGap : 0f);
-                UiKit.Place(img.rectTransform, new Vector2(0, 1), new Vector2(x, -104), new Vector2(cell, cell));
-                _gaugeCells.Add(img);
+                var ring = UiKit.Image($"GaugeRing{i}", panel, Color.white);
+                ring.sprite = FxSprites.Ring;
+                UiKit.Place(ring.rectTransform, new Vector2(0, 1), new Vector2(x, -104), new Vector2(cell, cell));
+                _gaugeRings.Add(ring);
+                var core = UiKit.Image($"Gauge{i}", panel, Color.clear);
+                core.sprite = FxSprites.Glow;
+                UiKit.Place(core.rectTransform, new Vector2(0, 1), new Vector2(x + 3f, -107), new Vector2(cell - 6f, cell - 6f));
+                _gaugeCells.Add(core);
             }
             _gaugeText = UiKit.Text("GaugeText", panel, 22, TextAnchor.UpperLeft);
             UiKit.Place(_gaugeText.rectTransform, new Vector2(0, 1), new Vector2(16, -134), new Vector2(590, 30));

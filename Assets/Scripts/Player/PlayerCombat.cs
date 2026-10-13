@@ -40,13 +40,13 @@ namespace ParryRL
     }
 
     /// <summary>
-    /// 방어 성공 처리(반격·게이지·스왑)와 액티브 스킬 2개 (기획서 4.1~4.4).
+    /// 방어 성공 처리(반격·도력·스왑)와 액티브 스킬 2개 (기획서 4.1~4.4).
     /// 스킬 내용은 프로토타입용 임시 구현. 데미지 계산은 전부 <see cref="DamageCalc"/> (기획서 5.3).
     /// </summary>
     [RequireComponent(typeof(PlayerMotor), typeof(PlayerParty), typeof(SkillGauge))]
     public class PlayerCombat : MonoBehaviour
     {
-        [Header("게이지 충전")]
+        [Header("도력 충전")]
         [SerializeField] private int normalSuccessGain = 1;
         [SerializeField] private int heavySuccessGain = 3;
 
@@ -55,9 +55,9 @@ namespace ParryRL
         [SerializeField, Tooltip("플레이어 근접 반격 사거리 (플레이어 중심 기준)")] private float meleeCounterRange = 1.8f;
         [SerializeField] private float meleeCounterHeight = 1.6f;
 
-        [Header("일반공격 (A) — 게이지 없이 쿨타임만, 연타 방지용으로 약하게")]
+        [Header("일반공격 (A) — 도력 없이 쿨타임만, 연타 방지용으로 약하게")]
         [SerializeField] private int attackSkillCost = 3;
-        [SerializeField, Tooltip("켜면 A 공격 스킬이 게이지를 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool attackSkillFree = true;
+        [SerializeField, Tooltip("켜면 A 공격 스킬이 도력을 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool attackSkillFree = true;
         [SerializeField] private float attackSkillCooldown = 0.35f;
         [SerializeField, Tooltip("기본 일반공격 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐")] private int attackSkillDamage = 15;
         [SerializeField] private Vector2 meleeSkillBox = new(2.4f, 1.6f);
@@ -74,8 +74,8 @@ namespace ParryRL
         [Header("이동 스킬 (Shift) — 임시")]
         [SerializeField] private int moveSkillCost = 1;
         [SerializeField, Tooltip("대시를 연속으로 쓸 수 있는 횟수. 쓰면 1회분이 줄고, 쿨타임마다 1회분씩 다시 찬다 (1이면 예전처럼 한 번)")] private int moveSkillCharges = 2;
-        [SerializeField, Tooltip("켜면 대시(Shift)가 게이지를 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool moveSkillFree = true;
-        [SerializeField, Tooltip("기획서 4.4 — 0.1초에서 1초로 변경 (게이지 1칸당 딜 효율 관리)")] private float moveSkillCooldown = 1f;
+        [SerializeField, Tooltip("켜면 대시(Shift)가 도력을 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool moveSkillFree = true;
+        [SerializeField, Tooltip("기획서 4.4 — 0.1초에서 1초로 변경 (도력 1칸당 딜 효율 관리)")] private float moveSkillCooldown = 1f;
 
         /// <summary>지금 들고 있는 무기 (Q로 전환).</summary>
         public WeaponMode Weapon { get; private set; } = WeaponMode.Melee;
@@ -85,13 +85,13 @@ namespace ParryRL
         /// <summary>무기를 바꿨을 때 (새 무기).</summary>
         public event Action<WeaponMode> WeaponChanged;
         public int AttackSkillCost => attackSkillCost;
-        /// <summary>실제로 소모하는 게이지 (공짜 설정이면 0).</summary>
+        /// <summary>실제로 소모하는 도력 (공짜 설정이면 0).</summary>
         public int AttackSkillGaugeCost => attackSkillFree ? 0 : attackSkillCost;
         public int AttackSkillBaseDamage => IsRanged ? arrowDamage : attackSkillDamage;
         public int CounterBaseDamage => counterDamage;
         public float MeleeCounterRange => meleeCounterRange;
         public int MoveSkillCost => moveSkillCost;
-        /// <summary>실제로 소모하는 게이지 (공짜 설정이면 0).</summary>
+        /// <summary>실제로 소모하는 도력 (공짜 설정이면 0).</summary>
         public int MoveSkillGaugeCost => moveSkillFree ? 0 : moveSkillCost;
         /// <summary>지금 무기의 일반공격 쿨타임 / 기본 데미지.</summary>
         public float AttackSkillCooldown => IsRanged ? arrowCooldown : attackSkillCooldown;
@@ -102,10 +102,10 @@ namespace ParryRL
         public int MoveSkillCharges => _moveCharges;
         public int MoveSkillMaxCharges => Mathf.Max(1, moveSkillCharges);
 
-        /// <summary>스킬 발동 / 발동 실패(게이지 부족·쿨타임 등). UI 피드백용.</summary>
+        /// <summary>스킬 발동 / 발동 실패(도력 부족·쿨타임 등). UI 피드백용.</summary>
         public event Action<PlayerAction> ActionUsed;
         public event Action<PlayerAction> ActionDenied;
-        /// <summary>방어 성공 — 게이지 충전 직후, 스왑·반격 전에 호출된다.</summary>
+        /// <summary>방어 성공 — 도력 충전 직후, 스왑·반격 전에 호출된다.</summary>
         public event Action<DefenseSuccess> DefenseSucceeded;
         /// <summary>반격 발사 직후.</summary>
         public event Action<CounterShot> CounterFired;
@@ -241,7 +241,7 @@ namespace ParryRL
             }
             if (!_gauge.TrySpend(AttackSkillGaugeCost))
             {
-                Denied(PlayerAction.Attack, $"게이지 부족 ({attackSkillCost})");
+                Denied(PlayerAction.Attack, $"도력 부족 ({attackSkillCost})");
                 return false;
             }
 
@@ -271,7 +271,7 @@ namespace ParryRL
             return true;
         }
 
-        /// <summary>Q: 근접 ↔ 원거리. 방어 활성 중이거나 쿨타임이면 안 된다. 게이지는 쓰지 않는다.</summary>
+        /// <summary>Q: 근접 ↔ 원거리. 방어 활성 중이거나 쿨타임이면 안 된다. 도력은 쓰지 않는다.</summary>
         public bool TrySwitchWeapon()
         {
             if (_party.IsDead) return false;
@@ -305,7 +305,7 @@ namespace ParryRL
             }
             if (!_gauge.TrySpend(MoveSkillGaugeCost))
             {
-                Denied(PlayerAction.Move, $"게이지 부족 ({moveSkillCost})");
+                Denied(PlayerAction.Move, $"도력 부족 ({moveSkillCost})");
                 return false;
             }
 

@@ -355,7 +355,7 @@ namespace ParryRL
             AddToggle("적이 공격하지 않음", () => T.enemyPassive, v => T.enemyPassive = v, persist: false);
             AddToggle("근접 몬스터 끄기 (원거리만 연습)", () => T.hideMelee, v => T.hideMelee = v, persist: false);
             AddToggle("원거리 몬스터 끄기 (근접만 연습)", () => T.hideRanged, v => T.hideRanged = v, persist: false);
-            AddToggle("게이지 무한 (써도 줄지 않음)", () => T.infiniteGauge, v =>
+            AddToggle("도력 무한 (써도 줄지 않음)", () => T.infiniteGauge, v =>
             {
                 T.infiniteGauge = v;
                 if (v && _gauge != null) _gauge.Add(_gauge.Max); // 켜면 가득 채워서 보이는 것도 맞게
@@ -370,7 +370,7 @@ namespace ParryRL
                 T.backgroundZone = (T.backgroundZone + 1) % Mathf.Max(1, count);
                 GameTuning.Save();
             });
-            AddButton("게이지 가득 채우기", () => { if (_gauge != null) _gauge.Add(_gauge.Max); });
+            AddButton("도력 가득 채우기", () => { if (_gauge != null) _gauge.Add(_gauge.Max); });
             AddButton("체력 회복", () => { if (_party != null) _party.RestoreFullHp(); });
             AddButton("레벨업 +1", () => { if (_level != null) _level.AddXp(_level.XpToNext - _level.Xp); });
         }

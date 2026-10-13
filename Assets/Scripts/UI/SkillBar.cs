@@ -7,12 +7,12 @@ namespace ParryRL
 {
     /// <summary>
     /// 화면 하단 스킬바: Shift 이동 / A 공격 / S 방어 / Q 무기 전환 (임시 아이콘).
-    /// 원형 쿨타임 + 남은 초, 게이지 코스트 배지(부족하면 빨강), 사용 불가 시 어둡게,
+    /// 원형 쿨타임 + 남은 초, 도력 코스트 배지(부족하면 빨강), 사용 불가 시 어둡게,
     /// 발동 시 튀어오름 / 실패 시 흔들림 / 쿨타임 끝나면 테두리 번쩍.
     /// </summary>
     public class SkillBar
     {
-        private static readonly Color GaugeColor = new(1f, 0.8f, 0.25f);
+        private static readonly Color GaugeColor = new(0.72f, 0.62f, 1f);
         private static readonly Color LackColor = new(0.95f, 0.25f, 0.25f);
 
         private const float SlotSize = 104f;
@@ -133,7 +133,7 @@ namespace ParryRL
             cooldownTotal = _combat.AttackSkillCooldown,
         };
 
-        // 무기 전환 슬롯: 지금 든 무기를 보여주고, 전환 쿨타임을 돈다 (게이지 소모 없음)
+        // 무기 전환 슬롯: 지금 든 무기를 보여주고, 전환 쿨타임을 돈다 (도력 소모 없음)
         private SlotState WeaponState() => new()
         {
             color = _combat.WeaponColor,
@@ -203,7 +203,7 @@ namespace ParryRL
             if (coolingDown) slot.cooldownText.text = s.cooldownLeft.ToString("0.0");
             else if (active) slot.cooldownText.text = s.activeLeft.ToString("0.00");
 
-            // 게이지 부족 / 지금 못 씀 → 전체를 어둡게
+            // 도력 부족 / 지금 못 씀 → 전체를 어둡게
             slot.dim.enabled = !coolingDown && !active && (!s.affordable || s.blocked);
 
             // 코스트 배지
@@ -272,7 +272,7 @@ namespace ParryRL
             UiKit.Stretch(keyText.rectTransform);
             keyText.text = key;
 
-            // 게이지 코스트 배지 (우하단)
+            // 도력 코스트 배지 (우하단)
             slot.costBadge = UiKit.Image("CostBadge", slot.root, GaugeColor);
             UiKit.Place(slot.costBadge.rectTransform, new Vector2(1f, 0f), new Vector2(8f, -8f), new Vector2(40f, 32f));
             slot.costText = UiKit.Text("Cost", slot.costBadge.rectTransform, 22, TextAnchor.MiddleCenter, outline: false);
