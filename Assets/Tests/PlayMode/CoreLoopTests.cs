@@ -414,7 +414,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 공격_직후_또는_동시에_패링을_눌러도_둘_다_된다_패링_중에는_공격이_막힌다()
+        public IEnumerator 공격_직후_또는_동시에_패링을_눌러도_둘_다_된다_막은_직후에는_바로_공격할_수_있다()
         {
             TestScene.SetAttackSkillFree(true);
             Place(_melee, 1.5f);
@@ -431,10 +431,20 @@ namespace ParryRL.Tests
             Assert.AreEqual(100, _party.Hp, "공격 직후 켠 패링으로 막음");
             Assert.AreEqual(1, _gauge.Value);
 
-            // 패링 활성 중에는 공격 불가 (막은 뒤 창이 끝날 때까지)
-            yield return new WaitForSecondsRealtime(0.8f);
+            // 막은 직후에는 판정 창이 남아 있어도 바로 공격(이어치기)할 수 있다 — 패링은 그대로 유지
+            Assert.AreEqual(DefenseState.Active, _defense.State, "막은 뒤에도 창은 남아 있다");
+            yield return new WaitForSecondsRealtime(0.6f);
+            Place(_melee, 1.5f);
+            float before = _melee.HpRatio;
             Assert.IsTrue(_defense.TryActivate());
-            Assert.IsFalse(_combat.TryAttackSkill(), "패링 활성 중에는 공격이 안 나간다");
+            Assert.IsFalse(_combat.TryAttackSkill(), "패링을 막 켠 동안(아직 못 막음)에는 공격이 안 나간다");
+            SpawnAttack(AttackType.Normal, null, 1.2f);
+            yield return new WaitForSecondsRealtime(0.25f);
+            Assert.AreEqual(DefenseState.Active, _defense.State, "막은 뒤 창이 남아 있는 상태");
+            Assert.IsTrue(_defense.SucceededThisActive);
+            yield return new WaitForSecondsRealtime(0.4f); // 공격 쿨타임(0.35초) 지남
+            Assert.IsTrue(_combat.TryAttackSkill(), "막은 직후에는 창이 남아 있어도 공격이 나간다");
+            Assert.Less(_melee.HpRatio, before, "이어친 공격이 적에게 닿음");
         }
     }
 }

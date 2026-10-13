@@ -230,7 +230,9 @@ namespace ParryRL
 
         public bool TryAttackSkill()
         {
-            if (_defense.State == DefenseState.Active || _attackCd > 0f)
+            // 패링을 막 켠 동안(아직 못 막음)은 공격 불가 — 하지만 한 번 막은 뒤에는 창이 남아 있어도 바로 공격(반격 이어치기)할 수 있다
+            bool parrying = _defense.State == DefenseState.Active && !_defense.SucceededThisActive;
+            if (parrying || _attackCd > 0f)
             {
                 ActionDenied?.Invoke(PlayerAction.Attack);
                 return false;

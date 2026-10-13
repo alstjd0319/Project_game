@@ -55,6 +55,8 @@
 - `Tools/launcher/귀문_실행.command`(macOS) · `귀문_실행.bat` → `귀문_실행.ps1`(Windows, **UTF-8 BOM 필수**): 빌드가 없으면 Unity 배치로 빌드한 뒤 실행. Unity가 프로젝트를 열고 있으면 배치 빌드가 막히니 사본에서 빌드하거나 에디터 메뉴를 쓴다. `바탕화면에_설치.command`(macOS)는 빌드를 `~/Desktop/귀문.app`으로 복사하고, `바탕화면에_설치.bat`(Windows)는 `귀문.lnk` 바로가기를 만든다. Mac 빌드·바탕화면 설치는 이 PC에서 확인됨(14초, 177MB, 앱이 뜨고 예외 없음), **Windows 빌드는 이 PC에 모듈이 없어 확인 못 했다.**
 - 빌드에서 튜닝 파일은 `Tuning/tuning.json`이 아니라 `persistentDataPath`(제품명 폴더)의 `tuning.json`을 쓴다 (`GameTuning.FilePath`).
 
+- **막은 직후 공격 (2026-10-14)**: 패링 판정 창이 남아 있어도 **한 번 막은 뒤에는 일반공격(A)이 나간다** (`PlayerCombat.TryAttackSkill`: 막기 전 활성 중에만 공격 불가, `PlayerDefense.SucceededThisActive`). 공격 직후·같은 프레임에 패링(S)을 켜는 건 원래 된다.
+
 ## 시작 화면 (2026-10-14)
 
 - `Assets/Scenes/Start.unity`가 빌드 **0번 씬**, 게임(`Prototype.unity`)이 1번. `PrototypeSceneBuilder.Build`가 둘 다 만들고(`BuildStartScene`만 따로: 메뉴 Tools → ParryRL → 시작 씬 생성), 씬 직접 편집 금지(생성물).
