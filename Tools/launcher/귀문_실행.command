@@ -14,6 +14,17 @@ if [ "$1" = "--rebuild" ] && [ -d "$APP" ]; then
   rm -rf "$APP"
 fi
 
+# 코드·그림·설정이 빌드보다 새로우면 자동으로 다시 빌드한다 (빌드가 없을 때와 같은 경로)
+STALE_FALLBACK=0
+if [ -d "$APP" ] && [ -n "$(find Assets Packages ProjectSettings -type f -newer "$APP" -print -quit 2>/dev/null)" ]; then
+  echo "[귀문] 빌드 이후 프로젝트가 바뀌었습니다. 새로 빌드합니다."
+  if [ -f Temp/UnityLockfile ] && pgrep -f "Unity.*-projectpath|Unity.app/Contents/MacOS/Unity$" >/dev/null 2>&1; then
+    echo "[귀문] Unity가 프로젝트를 열고 있어 빌드할 수 없습니다. 이전 빌드로 실행합니다. (에디터를 닫거나 메뉴 Tools → ParryRL → 게임 빌드 사용)"
+  else
+    mv "$APP" "$APP.old" && STALE_FALLBACK=1
+  fi
+fi
+
 if [ ! -d "$APP" ]; then
   VERSION=$(sed -n 's/^m_EditorVersion: //p' ProjectSettings/ProjectVersion.txt)
   UNITY="${UNITY_PATH:-/Applications/Unity/Hub/Editor/$VERSION/Unity.app/Contents/MacOS/Unity}"
@@ -27,11 +38,14 @@ if [ ! -d "$APP" ]; then
   echo "[귀문] 빌드 중... (로그: Logs/build_mac.log)"
   if ! "$UNITY" -batchmode -nographics -quit -projectPath "$ROOT" \
        -executeMethod ParryRL.EditorTools.GameBuilder.BuildMac -logFile "$ROOT/Logs/build_mac.log"; then
+    if [ "$STALE_FALLBACK" = 1 ] && [ -d "$APP.old" ]; then mv "$APP.old" "$APP"; echo "[귀문] 이전 빌드로 실행합니다."; else
     echo "[귀문] 빌드에 실패했습니다. Logs/build_mac.log 를 확인하세요."
     echo "       (Unity가 이 프로젝트를 열고 있으면 먼저 닫아 주세요.)"
     read -n 1 -s -r -p "아무 키나 누르면 닫힙니다."
     exit 1
+    fi
   fi
+  rm -rf "$APP.old"
 fi
 
 if [ "$1" = "--build-only" ] || [ "$2" = "--build-only" ]; then

@@ -183,3 +183,7 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 화면에 보이는 "게이지"는 전부 **도력**으로 바꿨다 (클래스·변수 이름 `SkillGauge`/`_gauge`는 그대로). 패링/방어 성공 시 충전되는 규칙은 그대로.
 - HUD 도력은 네모 20칸 대신 **구슬(염주) 20개**: 줄에 꿰인 둥근 구슬, 찬 구슬은 숨 쉬듯 빛나고(앞 10개 옥빛 · 뒤 10개 귀문 보라) 가장 최근에 찬 구슬이 가장 밝다. 구슬 그림은 `FxSprites.Glow/Ring`(코드 생성)을 UI에서도 쓴다. 스킬바 코스트 배지도 보라색.
 - 배치모드 PlayMode 테스트는 `-nographics` 없이 돌릴 것 (스프라이트 렌더에서 네이티브 크래시, 종료 코드 139).
+
+## 런처 자동 갱신 (2026-10-14)
+- `귀문_실행.command`는 Assets/Packages/ProjectSettings에 빌드(`Builds/Mac/귀문.app`)보다 새로운 파일이 있으면 자동으로 다시 빌드한다(에디터가 열려 있으면 이전 빌드로 실행).
+- `바탕화면에_설치.command`는 이제 빌드 복사본이 아니라 **바로가기 앱**을 만든다(프로젝트 경로 고정, 바뀐 게 있으면 터미널에서 런처 실행). 배포용 복사는 `--copy`. 윈도우(`.bat/.ps1`)는 아직 이전 방식.

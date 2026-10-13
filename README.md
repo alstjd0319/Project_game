@@ -91,9 +91,42 @@
 | macOS | `Tools/launcher/귀문_실행.command` | 터미널에서 `--rebuild`를 붙이면 다시 빌드 |
 | Windows | `Tools/launcher/귀문_실행.bat` | Unity Hub의 *Windows Build Support (Mono)* 모듈 필요. 다시 빌드는 `.ps1 -Rebuild` |
 
-- **바탕화면에서 바로 실행**: `Tools/launcher/바탕화면에_설치.command`(macOS)를 한 번 실행하면 바탕화면에 `귀문.app`이 생긴다 — 이후엔 그걸 더블클릭하면 Unity·프로젝트 폴더 없이 게임이 뜬다 (코드·그림을 바꾼 뒤엔 다시 실행해 갱신, `--rebuild`로 새로 빌드). Windows는 `바탕화면에_설치.bat`이 바탕화면에 `귀문.lnk` 바로가기를 만든다 (빌드 폴더를 지우면 끊김).
+- **바탕화면에서 바로 실행**: `Tools/launcher/바탕화면에_설치.command`(macOS)를 한 번 실행하면 바탕화면에 `귀문.app` 바로가기가 생긴다 — 더블클릭하면 프로젝트가 마지막 빌드보다 새로울 때 자동으로 다시 빌드한 뒤(터미널 창) 최신 상태로 실행한다. 다른 사람에게 줄 때는 `--copy`로 빌드 통째로 복사(Unity·프로젝트 없이 실행, 자동 갱신 없음). Windows는 `바탕화면에_설치.bat`이 바탕화면에 `귀문.lnk` 바로가기를 만든다 (빌드 폴더를 지우면 끊김).
 - Unity가 이 프로젝트를 열고 있으면 배치 빌드가 잠금으로 실패한다 → 에디터를 닫거나, 에디터 메뉴 **Tools → ParryRL → 게임 빌드 (macOS / Windows)** 를 쓴다 (결과: `Builds/Mac/귀문.app`, `Builds/Windows/귀문.exe`).
 - Unity 위치가 다르면 `UNITY_PATH` 환경변수에 Unity 실행 파일 경로를 넣는다. 빌드는 `.gitignore`의 `Builds/`라 저장소에 올라가지 않는다.
+
+### 배포하기 (다른 사람에게 게임 주기)
+
+저장소에는 소스만 올라가고 빌드(`Builds/`)는 올라가지 않는다. 플레이할 사람에게는 **빌드 결과물**을 따로 전달한다.
+
+**1. 빌드 만들기**
+
+| 대상 | 방법 | 결과 |
+|---|---|---|
+| macOS | `Tools/launcher/바탕화면에_설치.command --copy` 또는 에디터 메뉴 **Tools → ParryRL → 게임 빌드 (macOS)** | `Builds/Mac/귀문.app` (약 177MB) |
+| Windows | Windows PC에서 `Tools\launcher\귀문_실행.bat`, 또는 에디터 메뉴 **게임 빌드 (Windows)** (*Windows Build Support (Mono)* 모듈 필요) | `Builds/Windows/` 폴더 전체 |
+
+- 빌드는 이 PC의 Unity에서 만든 것이라 **macOS 빌드는 Windows에서, Windows 빌드는 Mac에서 만들 수 없다**(모듈이 있으면 Mac에서 Windows 빌드는 가능하지만 이 PC에는 모듈이 없어 확인하지 못했다).
+- 빌드 전에 시작 화면 → 게임 씬이 정상 동작하는지(Start 0번 → Prototype 1번) 에디터에서 한 번 돌려 본다.
+
+**2. 압축해서 전달**
+
+- macOS: 터미널에서 `ditto -c -k --keepParent Builds/Mac/귀문.app 귀문_mac.zip` (일반 zip은 앱의 실행 권한이 깨질 수 있어 `ditto`를 쓴다).
+- Windows: `Builds/Windows/` 폴더 **통째로** 압축한다. `귀문.exe`만 따로 주면 실행되지 않는다(`귀문_Data` 폴더, `UnityPlayer.dll` 등이 같이 있어야 한다).
+- 전달 방법: Google Drive 같은 공유 링크, 또는 GitHub **Releases**(저장소 → Releases → 새 릴리스에 zip 첨부), 또는 itch.io 업로드.
+
+**3. 받은 사람이 실행할 때**
+
+- macOS: 서명하지 않은 앱이라 처음에 "확인되지 않은 개발자" 경고가 뜬다. 앱을 **우클릭 → 열기**로 한 번 열거나, 터미널에서 `xattr -cr 귀문.app` 후 실행한다. Apple Silicon(M1 이상) 기준으로 빌드했다.
+- Windows: SmartScreen 경고가 뜨면 **추가 정보 → 실행**.
+- 조작과 규칙은 위 "조작" 표 / 인게임 일시정지(ESC) 메뉴를 보면 된다.
+
+**4. 정식으로 퍼뜨리기 전에 확인할 것**
+
+- **에셋 라이선스**: 그림·효과음의 출처와 재배포 조건을 확인한다(저장소가 공개 상태다).
+- 경고 없이 실행되게 하려면 macOS는 Apple Developer 계정(연 약 $99)으로 서명·공증, Windows는 코드서명 인증서가 필요하다. 졸업 작품 시연·공유 정도는 위 경고 우회 방법으로 충분하다.
+- **Windows 빌드와 런처는 아직 실제 PC에서 확인하지 못했다.** 배포 전에 Windows 환경에서 한 번 실행해 볼 것.
+- 개발용 도구(F1 튜닝 패널, 연습 스위치)가 빌드에도 포함된다. 시연용으로 숨기려면 별도 작업이 필요하다.
 
 ### 테스트
 
