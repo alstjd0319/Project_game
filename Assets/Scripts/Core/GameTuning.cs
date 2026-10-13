@@ -67,6 +67,10 @@ namespace ParryRL
         public float MoveSpeed(CharacterKind kind) =>
             Mathf.Max(0.5f, playerMoveSpeed);
 
+        // ── 배경 ──
+        [Tooltip("배경 구간 번호 (0 사당 · 1 1구간 · 2 2구간 황천길 · 3 3구간 저승 문턱) — F1 연습 탭에서 바꾼다")]
+        public int backgroundZone = 1;
+
         // ── 적 ──
         [Tooltip("근접 / 원거리 각각 동시에 유지할 몬스터 수 (F1 몬스터 탭)")]
         public int enemiesPerKind = 1;

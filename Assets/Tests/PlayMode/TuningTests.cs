@@ -252,5 +252,55 @@ namespace ParryRL.Tests
             Assert.IsFalse(b.godMode, "연습 스위치는 파일에 남지 않음");
             StringAssert.DoesNotContain("godMode", json);
         }
+
+        [UnityTest]
+        public IEnumerator 배경은_3겹_시차로_카메라를_따라가고_구간을_바꿀_수_있다()
+        {
+            var bg = Object.FindAnyObjectByType<ParallaxBackground>();
+            Assert.IsNotNull(bg, "씬에 배경");
+            Assert.AreEqual(4, bg.ZoneCount, "사당·1구간·2구간·3구간");
+            yield return null;
+            yield return null;
+            Assert.AreEqual(1, bg.Zone, "기본은 1구간");
+            Assert.AreEqual(3, bg.LayerCount, "먼·중간·가까운");
+
+            var cam = Camera.main;
+            var far = bg.transform.Find("Layer_Far");
+            var near = bg.transform.Find("Layer_Near");
+            Assert.IsNotNull(far);
+            // 카메라 폭을 빈틈없이 덮는다: 가장 왼쪽·오른쪽 그림이 화면 밖까지
+            float halfW = cam.orthographicSize * cam.aspect;
+            float minX = float.MaxValue, maxX = float.MinValue;
+            foreach (var sr in far.GetComponentsInChildren<SpriteRenderer>())
+            {
+                minX = Mathf.Min(minX, sr.bounds.min.x);
+                maxX = Mathf.Max(maxX, sr.bounds.max.x);
+            }
+            Assert.Less(minX, cam.transform.position.x - halfW, "왼쪽 끝이 화면 밖");
+            Assert.Greater(maxX, cam.transform.position.x + halfW, "오른쪽 끝이 화면 밖");
+
+            // 화면 높이(12유닛)에 딱 맞는다
+            Assert.AreEqual(12f, far.GetComponentInChildren<SpriteRenderer>().bounds.size.y, 0.01f);
+
+            // 장수 계산: 감아 돌리는 최악의 위치에서도 초광폭(32:9)까지 덮는다
+            float tile = far.GetComponentInChildren<SpriteRenderer>().sprite.bounds.size.x;
+            float ultraHalf = cam.orthographicSize * 32f / 9f;
+            int n = ParallaxBackground.RequiredCopies(tile, ultraHalf);
+            Assert.AreEqual(1, n % 2, "홀수");
+            Assert.GreaterOrEqual(((n - 1) / 2 - 0.5f) * tile, ultraHalf, "한쪽 최소 덮는 폭이 화면 반폭 이상");
+            Assert.AreEqual(n, far.childCount, "먼 배경 장수");
+
+            // 구간 바꾸기: 2구간은 가까운 배경이 앞(전경)
+            T.backgroundZone = 2;
+            yield return null;
+            yield return null;
+            Assert.AreEqual(2, bg.Zone);
+            int nearOrder = bg.transform.Find("Layer_Near").GetComponentInChildren<SpriteRenderer>().sortingOrder;
+            Assert.Greater(nearOrder, 12, "2구간 near는 플레이어 그림(12) 앞");
+            T.backgroundZone = 1;
+            yield return null;
+            yield return null;
+            Assert.Less(bg.transform.Find("Layer_Near").GetComponentInChildren<SpriteRenderer>().sortingOrder, 0, "1구간 near는 뒤");
+        }
     }
 }

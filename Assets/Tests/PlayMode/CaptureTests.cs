@@ -68,6 +68,20 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 배경_구간별()
+        {
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            string[] names = { "shrine", "zone1", "zone2", "zone3" };
+            for (int i = 0; i < names.Length; i++)
+            {
+                GameTuning.Current.backgroundZone = i;
+                yield return new WaitForSeconds(0.25f);
+                yield return Capture("bg_" + names[i]);
+            }
+            GameTuning.Current.backgroundZone = 1;
+        }
+
+        [UnityTest]
         public IEnumerator 증강_선택창()
         {
             var level = Object.FindAnyObjectByType<PlayerLevel>();

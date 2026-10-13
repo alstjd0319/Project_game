@@ -116,8 +116,8 @@ namespace ParryRL
         {
             color = _party.Current.color,
             name = "이동 · 돌진",
-            cost = _combat.MoveSkillCost,
-            affordable = _gauge.CanSpend(_combat.MoveSkillCost),
+            cost = _combat.MoveSkillGaugeCost,
+            affordable = _gauge.CanSpend(_combat.MoveSkillGaugeCost),
             cooldownLeft = _combat.MoveSkillCooldownLeft,
             cooldownTotal = _combat.MoveSkillCooldown,
         };

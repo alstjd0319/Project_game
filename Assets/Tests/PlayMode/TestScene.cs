@@ -14,7 +14,15 @@ namespace ParryRL.Tests
             SceneManager.LoadScene("Prototype");
             yield return null;
             yield return null;
-            SetAttackSkillFree(false); // 게이지 규칙 테스트의 기준은 "A 스킬이 게이지를 쓴다" — 공짜 설정은 따로 검증
+            SetAttackSkillFree(false); // 게이지 규칙 테스트의 기준은 "A 스킬·대시가 게이지를 쓴다" — 공짜 설정은 따로 검증
+            SetMoveSkillFree(false);
+        }
+
+        public static void SetMoveSkillFree(bool free)
+        {
+            var combat = UnityEngine.Object.FindAnyObjectByType<PlayerCombat>();
+            typeof(PlayerCombat).GetField("moveSkillFree", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(combat, free);
         }
 
         public static void SetAttackSkillFree(bool free)

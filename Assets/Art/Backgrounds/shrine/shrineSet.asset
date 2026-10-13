@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26d3c2195596e46dab220b84d0af6acf, type: 3}
+  m_Name: shrineSet
+  m_EditorClassIdentifier: ParryRL::ParryRL.BackgroundSet
+  zoneName: "\uC0AC\uB2F9"
+  far: {fileID: 21300000, guid: 19a6c2a4787124f1db5d29fd57f588df, type: 3}
+  mid: {fileID: 21300000, guid: 27ca5317a19f7487e9492b051dc94e98, type: 3}
+  near: {fileID: 21300000, guid: f1f3e21c54c1944249186dd638abd044, type: 3}
+  nearInFront: 0

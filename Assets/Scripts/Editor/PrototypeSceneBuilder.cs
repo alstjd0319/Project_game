@@ -36,6 +36,11 @@ namespace ParryRL.EditorTools
         private const string DokkaebibulArtDir = "Assets/Art/Enemies/Dokkaebibul";
         private const string DokkaebibulArtPath = DokkaebibulArtDir + "/DokkaebibulArt.asset";
         // 전투 이펙트 — 칸 256×256, 피벗 가운데. 게임에서 판정 박스(또는 원본 크기)에 맞춰 그린다.
+        // 배경 — 원본 1536×1024를 세로 12유닛(화면 높이)에 맞춘다: 1024px = 12유닛 → PPU 85.33. 좌우로 이어 붙여 반복한다.
+        private const string BgDir = "Assets/Art/Backgrounds";
+        private static readonly string[] BgZones = { "shrine", "zone1", "zone2", "zone3" }; // 사당 · 1구간 · 2구간 황천길 · 3구간 저승 문턱 (보스방은 보류)
+        private static readonly string[] BgZoneLabels = { "사당", "1구간", "2구간 황천길", "3구간 저승 문턱" };
+        private static readonly bool[] BgNearInFront = { false, false, true, true }; // 안내.md: 사당·1구간은 near를 뒤에, 2·3구간은 앞에
         private const string FxDir = "Assets/Art/Fx";
         private const string FxArtPath = FxDir + "/AttackFx.asset";
 
@@ -60,6 +65,7 @@ namespace ParryRL.EditorTools
             CreateHeroArt(WeaponMode.Melee, StaffArtPath, "staff");
             CreateHeroArt(WeaponMode.Ranged, TalismanArtPath, "talisman");
             CreateAttackFxArt();
+            var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -67,6 +73,14 @@ namespace ParryRL.EditorTools
             // NewScene이 사용되지 않는 에셋을 언로드하므로, 씬에 넣을 에셋은 씬 생성 후에 다시 로드한다.
             _square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
             var noFriction = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(NoFrictionPath);
+            // 배경 묶음도 NewScene 뒤에 다시 로드한다 (안 그러면 씬에 null이 들어간다)
+            var bgSetList = new System.Collections.Generic.List<BackgroundSet>();
+            foreach (string zone in BgZones)
+            {
+                var set = AssetDatabase.LoadAssetAtPath<BackgroundSet>($"{BgDir}/{zone}/{zone}Set.asset");
+                if (set != null) bgSetList.Add(set);
+            }
+            bgSets = bgSetList.ToArray();
             var staffArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(StaffArtPath);
             var talismanArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(TalismanArtPath);
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
@@ -88,17 +102,20 @@ namespace ParryRL.EditorTools
 
             // ── 레벨 ──
             var level = new GameObject("Level").transform;
-            CreateSolid("Ground", new Vector2(0f, -0.5f), new Vector2(ArenaHalfWidth * 2f + 2f, 1f), new Color(0.3f, 0.32f, 0.38f), level);
-            CreateSolid("Wall_L", new Vector2(-ArenaHalfWidth - 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f), level);
-            CreateSolid("Wall_R", new Vector2(ArenaHalfWidth + 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f), level);
-            CreateOneWay("Platform_L", new Vector2(-7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f), level);
-            CreateOneWay("Platform_R", new Vector2(7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f), level);
-            CreateOneWay("Platform_Top", new Vector2(0f, 4.4f), new Vector2(3f, 0.4f), new Color(0.36f, 0.38f, 0.45f), level);
+            CreateSolid("Ground", new Vector2(0f, -0.5f), new Vector2(ArenaHalfWidth * 2f + 2f, 1f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
+            CreateSolid("Wall_L", new Vector2(-ArenaHalfWidth - 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
+            CreateSolid("Wall_R", new Vector2(ArenaHalfWidth + 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
+            CreateOneWay("Platform_L", new Vector2(-7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
+            CreateOneWay("Platform_R", new Vector2(7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
+            CreateOneWay("Platform_Top", new Vector2(0f, 4.4f), new Vector2(3f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
 
-            // 배경 기둥 (판정 없음, 이동감 표시용)
-            var bg = new GameObject("Background").transform;
-            for (float x = -ArenaHalfWidth; x <= ArenaHalfWidth; x += 4f)
-                CreateVisual("Pillar", new Vector2(x, 4f), new Vector2(0.5f, 8f), new Color(1f, 1f, 1f, 0.035f), -10, bg);
+            // 배경 (판정 없음): 먼·중간·가까운 3겹 시차 스크롤. 구간은 F1 연습 탭에서 바꾼다.
+            var background = new GameObject("Background").AddComponent<ParallaxBackground>();
+            var bgSerialized = new SerializedObject(background);
+            var bgList = bgSerialized.FindProperty("sets");
+            bgList.arraySize = bgSets.Length;
+            for (int b = 0; b < bgSets.Length; b++) bgList.GetArrayElementAtIndex(b).objectReferenceValue = bgSets[b];
+            bgSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             // ── 플레이어 ──
             var player = CreateVisual("Player", new Vector2(-3f, 0.7f), new Vector2(0.8f, 1.4f), new Color(0.95f, 0.38f, 0.32f), 10, null);
@@ -301,6 +318,51 @@ namespace ParryRL.EditorTools
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
             fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);
             EditorUtility.SetDirty(fx);
+        }
+
+        /// <summary>구간별 배경 3겹(far·mid·near)을 임포트하고 BackgroundSet 에셋으로 묶는다. 그림이 없는 구간은 건너뛴다.</summary>
+        private static BackgroundSet[] CreateBackgroundSets()
+        {
+            var sets = new System.Collections.Generic.List<BackgroundSet>();
+            for (int i = 0; i < BgZones.Length; i++)
+            {
+                string dir = $"{BgDir}/{BgZones[i]}";
+                if (!AssetDatabase.IsValidFolder(dir)) continue;
+                foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+                    importer.textureType = TextureImporterType.Sprite;
+                    importer.spriteImportMode = SpriteImportMode.Single;
+                    var settings = new TextureImporterSettings();
+                    importer.ReadTextureSettings(settings);
+                    settings.spriteAlignment = (int)SpriteAlignment.Center;
+                    settings.spritePixelsPerUnit = 1024f / 12f;
+                    settings.spriteMeshType = SpriteMeshType.FullRect;
+                    settings.filterMode = FilterMode.Point;
+                    settings.mipmapEnabled = false;
+                    settings.alphaIsTransparency = true;
+                    importer.SetTextureSettings(settings);
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                    importer.SaveAndReimport();
+                }
+
+                string assetPath = $"{dir}/{BgZones[i]}Set.asset";
+                var set = AssetDatabase.LoadAssetAtPath<BackgroundSet>(assetPath);
+                if (set == null)
+                {
+                    set = ScriptableObject.CreateInstance<BackgroundSet>();
+                    AssetDatabase.CreateAsset(set, assetPath);
+                }
+                set.zoneName = BgZoneLabels[i];
+                set.far = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/far.png");
+                set.mid = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/mid.png");
+                set.near = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/near.png");
+                set.nearInFront = BgNearInFront[i];
+                EditorUtility.SetDirty(set);
+                sets.Add(set);
+            }
+            return sets.ToArray();
         }
 
         /// <summary>도트 프레임 임포트 설정: 점 필터 · 90px/유닛 · 압축 없음 · 피벗은 파일마다 지정.</summary>

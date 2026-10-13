@@ -73,6 +73,7 @@ namespace ParryRL
 
         [Header("이동 스킬 (Shift) — 임시")]
         [SerializeField] private int moveSkillCost = 1;
+        [SerializeField, Tooltip("켜면 대시(Shift)가 게이지를 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool moveSkillFree = true;
         [SerializeField, Tooltip("기획서 4.4 — 0.1초에서 1초로 변경 (게이지 1칸당 딜 효율 관리)")] private float moveSkillCooldown = 1f;
 
         /// <summary>지금 들고 있는 무기 (Q로 전환).</summary>
@@ -89,6 +90,8 @@ namespace ParryRL
         public int CounterBaseDamage => counterDamage;
         public float MeleeCounterRange => meleeCounterRange;
         public int MoveSkillCost => moveSkillCost;
+        /// <summary>실제로 소모하는 게이지 (공짜 설정이면 0).</summary>
+        public int MoveSkillGaugeCost => moveSkillFree ? 0 : moveSkillCost;
         /// <summary>지금 무기의 일반공격 쿨타임 / 기본 데미지.</summary>
         public float AttackSkillCooldown => IsRanged ? arrowCooldown : attackSkillCooldown;
         public float AttackSkillCooldownLeft => _attackCd;
@@ -283,7 +286,7 @@ namespace ParryRL
                 ActionDenied?.Invoke(PlayerAction.Move);
                 return false;
             }
-            if (!_gauge.TrySpend(moveSkillCost))
+            if (!_gauge.TrySpend(MoveSkillGaugeCost))
             {
                 Denied(PlayerAction.Move, $"게이지 부족 ({moveSkillCost})");
                 return false;

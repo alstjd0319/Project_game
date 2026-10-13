@@ -374,5 +374,18 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(1.5f);
             Assert.AreEqual(0.8f, _melee.HpRatio, 1e-4f, "반격 20 × 원거리 배율 1.0");
         }
+
+        [UnityTest]
+        public IEnumerator 대시는_기본으로_게이지없이_발동_쿨타임만_적용()
+        {
+            TestScene.SetMoveSkillFree(true);
+            Assert.AreEqual(0, _gauge.Value);
+            Assert.AreEqual(0, _combat.MoveSkillGaugeCost);
+            Assert.IsTrue(_combat.TryMoveSkill(), "게이지 0이어도 대시");
+            Assert.AreEqual(0, _gauge.Value);
+            Assert.IsFalse(_combat.TryMoveSkill(), "쿨타임 중");
+            yield return new WaitForSeconds(1.1f);
+            Assert.IsTrue(_combat.TryMoveSkill(), "쿨타임이 지나면 다시");
+        }
     }
 }

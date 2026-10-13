@@ -394,6 +394,13 @@ namespace ParryRL
             AddToggle("판정 상자 보기 (그림 위에 겹쳐 표시)", () => T.showHitboxes, v => T.showHitboxes = v, persist: false);
             Space(10f);
             Header("바로 실행");
+            AddButton("배경 구간 바꾸기 (사당 → 1구간 → 2구간 → 3구간)", () =>
+            {
+                var bg = UnityEngine.Object.FindAnyObjectByType<ParallaxBackground>();
+                int count = bg != null ? bg.ZoneCount : 1;
+                T.backgroundZone = (T.backgroundZone + 1) % Mathf.Max(1, count);
+                GameTuning.Save();
+            });
             AddButton("게이지 가득 채우기", () => { if (_gauge != null) _gauge.Add(_gauge.Max); });
             AddButton("체력 회복", () => { if (_party != null) _party.RestoreFullHp(); });
             AddButton("레벨업 +1 (증강 선택 확인용)", () => { if (_level != null) _level.AddXp(_level.XpToNext - _level.Xp); });

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26d3c2195596e46dab220b84d0af6acf, type: 3}
+  m_Name: zone3Set
+  m_EditorClassIdentifier: ParryRL::ParryRL.BackgroundSet
+  zoneName: "3\uAD6C\uAC04 \uC800\uC2B9 \uBB38\uD131"
+  far: {fileID: 21300000, guid: e0fdf20c86c3b4c1e846cff0a61b9cdf, type: 3}
+  mid: {fileID: 21300000, guid: 71c73c5685951476db89b60f777a8a75, type: 3}
+  near: {fileID: 21300000, guid: d4f4376b1099f467b90509a9c511968e, type: 3}
+  nearInFront: 1
