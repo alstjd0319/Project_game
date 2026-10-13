@@ -20,6 +20,8 @@
 | 적 | 창귀(근접, 예비 모션 뒤 베기) · 도깨비불(원거리 불덩이), 마릿수는 설정으로 조절 |
 | 상태 | 프로토타입 — 규칙과 손맛 검증 중 (수치는 모두 가안) |
 
+![시작 화면](Captures/start_menu.png)
+
 ## 핵심 재미
 
 - **막으면 곧 공격이다**: 패링에 성공하면 같은 자리에서 반격이 나간다. 입력 직후 0.08초 안에 막으면 **퍼펙트 패링** 연출(히트스탑·화면 어둡게·줌·집중선)이 붙는다.
@@ -51,7 +53,7 @@
 | Q | 무기 전환 (근접 ↔ 원거리) |
 | Shift | 이동 스킬: 돌진 (대시 중 무적, 게이지 소모 없음, **연속 2번** — 쿨타임 1초마다 1회분씩 충전) |
 | F1 | 튜닝 패널 (판정·타격감·몬스터·연습 스위치) |
-| ESC | 일시정지 |
+| ESC | 일시정지 — 화면에서 계속(ESC) · 다시 시작(R) · **시작 화면(M)** (마우스 클릭도 된다). 게임오버 화면에서도 R / M |
 
 ## 게임 규칙 요약
 
@@ -78,7 +80,7 @@
 
 1. **Unity 6000.6.0f1**로 이 폴더를 연다.
 2. 메뉴 **Tools → ParryRL → 프로토타입 씬 생성** (씬·프리팹·그림 에셋 묶음을 코드로 만든다. 씬은 생성물이라 직접 편집하지 않는다).
-3. `Assets/Scenes/Prototype.unity`를 열고 Play.
+3. `Assets/Scenes/Start.unity`(시작 화면 — 게임 시작 / 종료하기)를 열고 Play. 게임 씬만 바로 보려면 `Assets/Scenes/Prototype.unity`를 연다. 빌드 설정에는 Start(0) → Prototype(1) 순서로 들어 있다.
 
 ### 테스트
 
@@ -110,12 +112,12 @@ Assets/
 │   │                   # Fx · FxClip/AttackFxArt(공격 이펙트 그림) · Sfx(합성음) · WorldBar
 │   ├── Enemy/          # EnemyController · EnemySpawner · EnemySprite/EnemyArt · EnemyCorpse
 │   ├── Progression/    # PlayerLevel (경험치·레벨)
-│   ├── UI/             # Hud · SkillBar · TuningPanel(F1) · UiKit
-│   └── Editor/         # PrototypeSceneBuilder (씬·프리팹·에셋 묶음 생성)
+│   ├── UI/             # StartMenu(시작 화면) · Hud · SkillBar · TuningPanel(F1) · UiKit
+│   └── Editor/         # PrototypeSceneBuilder (시작 씬·게임 씬·프리팹·에셋 묶음 생성)
 ├── Tests/PlayMode/     # 판정·증강·몬스터·튜닝·그림·캡처 테스트
 ├── Art/                # Characters/Hero · Enemies/(Changgwi, Dokkaebibul) · Fx/ (도트 프레임) · Square.png
 ├── Audio/              # 패링 성공음
-└── Scenes/ Prefabs/    # 생성물
+└── Scenes/ Prefabs/    # 생성물 (Start.unity · Prototype.unity)
 ArtSource/              # 그림 원본 시트 · gwimun/안내.md(귀문 에셋 안내)
 Tools/                  # run_tests.ps1 · sprites/(프레임 자르기)
 Tuning/tuning.json      # F1 패널로 바꾼 수치 (팀 공유)

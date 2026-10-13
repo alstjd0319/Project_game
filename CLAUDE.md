@@ -49,6 +49,13 @@
 - 남긴 것: `PlayerLevel`(경험치·레벨, `LeveledUp` 이벤트)은 그대로 — 레벨업하면 HUD에 "레벨 업!" 알림과 효과음만 나오고 **게임은 멈추지 않는다**. 스킬 트리 등 새 성장 보상은 팀 결정 뒤에 `LeveledUp`에 연결한다. 데미지 계산은 `DamageCalc`에서 기본 × 캐릭터 배율만 쓴다 (보너스 층이 필요하면 다시 붙인다). `PlayerMotor.Dash(dir, extraDistance)`의 추가 거리 인자는 남아 있다.
 - 아래 본문의 증강 관련 설명(5장 등)과 `기획서.md`의 증강 장은 더 이상 유효하지 않다.
 
+## 시작 화면 (2026-10-14)
+
+- `Assets/Scenes/Start.unity`가 빌드 **0번 씬**, 게임(`Prototype.unity`)이 1번. `PrototypeSceneBuilder.Build`가 둘 다 만들고(`BuildStartScene`만 따로: 메뉴 Tools → ParryRL → 시작 씬 생성), 씬 직접 편집 금지(생성물).
+- `StartMenu`(UI/StartMenu.cs): 코드로 만든 uGUI. 사당 배경(`ParallaxBackground.forcedZone = 0`)을 `MenuCameraPan`이 천천히 흘린다. 주인공은 세우지 않는다 (`StartMenu.heroArt`를 채우면 `MenuHero`가 대기 모션으로 서 있게 할 수 있다). 귀문 빛 = 보라색, 제목 "귀문" + 부제 "패링 로그라이크 (가제)".
+- 메뉴는 `Entries` 목록에서 버튼을 만든다 → **기능 추가는 `StartMenu.Awake`에 `AddEntry("이어하기", 동작, enabled, hint)` 한 줄** (비활성 항목은 회색·선택 건너뜀 — 아직 없는 기능 자리 표시로 쓸 수 있다). 조작: ↑/↓·마우스 올리기 선택, Enter/Space/클릭 확인. 종료는 `StartMenu.QuitHandler`(에디터에선 플레이 종료, 빌드에선 `Application.Quit`; 테스트가 갈아끼움).
+- 게임 → 시작 화면: 일시정지(ESC)·게임오버 화면의 "시작 화면 (M)" 버튼 또는 M 키 → `GameManager.GoToStartMenu()` (판은 버려지고 timeScale 1로 복귀). 일시정지 화면 버튼은 계속(ESC) · 다시 시작(R) · 시작 화면(M), 게임오버는 다시 시작 · 시작 화면. 오버레이 버튼은 `Hud.CreateOverlay`에 `(라벨, 동작)`을 더 넘기면 늘어난다.
+
 ## 귀문 에셋 적용 (2026-10-13)
 
 - 새 콘셉트 "귀문"(퇴마사 / 봉·부적 / 창귀·도깨비불 …)의 그림 묶음(`ArtSource/gwimun/안내.md`가 원본 안내)을 **게임에 있는 것만** 적용했다. 옛 전사 그림·옛 근접 몬스터 그림·Project_Game 몬스터 스프라이트·옛 공격 이펙트는 삭제.
@@ -125,7 +132,7 @@ Assets/
   - **플레이어 딜은 반드시 `DamageCalc`로 계산한다** (기본 × 캐릭터 패시브 × (1 + 증강 보너스 합), 기획서 5.3). 새 공격도 `HitInfo`를 만들어 `MeleeStrike`/`PlayerProjectile`/`DamageCalc.Apply`에 넘길 것 — 직접 `TakeDamage(숫자)` 금지.
 - 딜을 넣는 스킬·증강은 기획서 2장 기준(게이지를 소모할 것, 게이지 1칸당 **기본** 딜 약 10~15)을 지킨다. 게이지 쓰는 딜을 추가하면 `AugmentTests`의 1칸당 효율 테스트에도 넣는다.
 - 그 외 오브젝트 고유 값(크기, 체력, 색, 사거리 등)은 `[SerializeField] private` 필드 + 기획서 가안값을 기본값으로. 필요하면 `[Header]`/`[Tooltip]`에 한국어 설명.
-- 조작키는 `Controls` 상수로만 참조 (기획서 4.5): ←/→ 이동, Space 점프(2단·고정 높이, ↓+Space 발판 내려가기), S 방어, A 일반공격, Q 무기 전환, Shift 이동 스킬, Enter 수락, ESC 일시정지, C 증강 목록, F1 튜닝 패널.
+- 조작키는 `Controls` 상수로만 참조 (기획서 4.5): ←/→ 이동, Space 점프(2단·고정 높이, ↓+Space 발판 내려가기), S 방어, A 일반공격, Q 무기 전환, Shift 이동 스킬, Enter 수락, ESC 일시정지(일시정지·게임오버 중 M 시작 화면), C 증강 목록, F1 튜닝 패널.
 - 보조 창(증강 목록·튜닝 패널)은 평소 접혀 있고 키로 토글, 게임을 멈추지 않는다. 좌측(상태 패널 아래)과 우측에 나눠 서로 겹치지 않게 둔다.
 - 입력 처리 전 `GameManager.InputBlocked` 확인 (일시정지·게임오버).
 - Unity 6 API 사용: `Rigidbody2D.linearVelocity`, `FindAnyObjectByType` / `FindObjectsByType` (구 API 금지).

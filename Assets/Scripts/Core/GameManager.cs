@@ -7,6 +7,9 @@ namespace ParryRL
     /// <summary>일시정지 / 메뉴(증강 선택 등) / 게임오버 / 재시작.</summary>
     public class GameManager : MonoBehaviour
     {
+        /// <summary>시작 화면 씬 이름 (빌드 0번).</summary>
+        public const string StartSceneName = "Start";
+
         public static GameManager Instance { get; private set; }
 
         public bool IsPaused { get; private set; }
@@ -31,6 +34,7 @@ namespace ParryRL
         {
             if (Input.GetKeyDown(Controls.Pause) && !IsGameOver && !IsMenuOpen) SetPaused(!IsPaused);
             if (Input.GetKeyDown(Controls.Restart) && (IsPaused || IsGameOver)) Restart();
+            if (Input.GetKeyDown(Controls.MainMenu) && (IsPaused || IsGameOver)) GoToStartMenu();
         }
 
         public void SetPaused(bool paused)
@@ -60,6 +64,13 @@ namespace ParryRL
             // 멈춤 상태가 바뀌면 진행 중인 히트스탑은 버린다 (복귀 시 timeScale을 덮어쓰지 않도록)
             if (HitFeel.Instance != null) HitFeel.Instance.Cancel();
             Time.timeScale = IsPaused || IsMenuOpen || IsGameOver ? 0f : 1f;
+        }
+
+        /// <summary>시작 화면으로 돌아간다 (진행 중인 판은 버려진다).</summary>
+        public void GoToStartMenu()
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(StartSceneName);
         }
 
         public void Restart()

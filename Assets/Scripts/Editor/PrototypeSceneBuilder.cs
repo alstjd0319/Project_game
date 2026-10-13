@@ -13,6 +13,7 @@ namespace ParryRL.EditorTools
     public static class PrototypeSceneBuilder
     {
         public const string ScenePath = "Assets/Scenes/Prototype.unity";
+        public const string StartScenePath = "Assets/Scenes/Start.unity"; // 첫 화면 (게임 시작 · 종료하기)
         private const string SquarePath = "Assets/Art/Square.png";
         private const string NoFrictionPath = "Assets/Art/NoFriction.physicsMaterial2D";
         private const string MeleePrefabPath = "Assets/Prefabs/Enemy_Melee.prefab";
@@ -74,13 +75,7 @@ namespace ParryRL.EditorTools
             _square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
             var noFriction = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(NoFrictionPath);
             // 배경 묶음도 NewScene 뒤에 다시 로드한다 (안 그러면 씬에 null이 들어간다)
-            var bgSetList = new System.Collections.Generic.List<BackgroundSet>();
-            foreach (string zone in BgZones)
-            {
-                var set = AssetDatabase.LoadAssetAtPath<BackgroundSet>($"{BgDir}/{zone}/{zone}Set.asset");
-                if (set != null) bgSetList.Add(set);
-            }
-            bgSets = bgSetList.ToArray();
+            bgSets = LoadBackgroundSets();
             var staffArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(StaffArtPath);
             var talismanArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(TalismanArtPath);
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
@@ -182,9 +177,66 @@ namespace ParryRL.EditorTools
             SetFloat(rig, "arenaMaxX", ArenaHalfWidth + 1f);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+            BuildStartScene();
             AssetDatabase.SaveAssets();
             Debug.Log($"[ParryRL] 프로토타입 씬 생성 완료: {ScenePath}");
+        }
+
+        /// <summary>
+        /// 시작 화면 씬 (빌드 첫 번째 씬). 사당 배경이 천천히 흐르고, 메뉴는 StartMenu가 코드로 만든다.
+        /// 메뉴만 따로 다시 만들 때: Tools → ParryRL → 시작 씬 생성 (게임 씬·그림 에셋이 이미 있어야 한다).
+        /// </summary>
+        [MenuItem("Tools/ParryRL/시작 씬 생성")]
+        public static void BuildStartScene()
+        {
+            EnsureFolder("Assets/Scenes");
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            // NewScene 뒤에 에셋을 로드한다 (안 그러면 씬에 null이 들어간다)
+            var bgSets = LoadBackgroundSets();
+            var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
+            camGo.transform.position = new Vector3(0f, 3.5f, -10f);
+            var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = 6f;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.09f, 0.1f, 0.13f);
+            camGo.AddComponent<AudioListener>();
+            camGo.AddComponent<MenuCameraPan>();
+
+            var systems = new GameObject("Systems");
+            systems.AddComponent<AudioSource>();
+            systems.AddComponent<Sfx>(); // 메뉴 선택·확인 소리
+
+            var background = new GameObject("Background").AddComponent<ParallaxBackground>();
+            var bgSerialized = new SerializedObject(background);
+            var bgList = bgSerialized.FindProperty("sets");
+            bgList.arraySize = bgSets.Length;
+            for (int b = 0; b < bgSets.Length; b++) bgList.GetArrayElementAtIndex(b).objectReferenceValue = bgSets[b];
+            bgSerialized.FindProperty("forcedZone").intValue = 0; // 사당
+            bgSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            // 시작 화면에는 주인공을 세우지 않는다 (StartMenu.heroArt를 채우면 대기 모션으로 서 있게 할 수 있다)
+            new GameObject("StartMenu").AddComponent<StartMenu>();
+
+            EditorSceneManager.SaveScene(scene, StartScenePath);
+            EditorBuildSettings.scenes = new[]
+            {
+                new EditorBuildSettingsScene(StartScenePath, true), // 0: 시작 화면
+                new EditorBuildSettingsScene(ScenePath, true),      // 1: 게임
+            };
+            Debug.Log($"[ParryRL] 시작 씬 생성 완료: {StartScenePath}");
+        }
+
+        private static BackgroundSet[] LoadBackgroundSets()
+        {
+            var list = new System.Collections.Generic.List<BackgroundSet>();
+            foreach (string zone in BgZones)
+            {
+                var set = AssetDatabase.LoadAssetAtPath<BackgroundSet>($"{BgDir}/{zone}/{zone}Set.asset");
+                if (set != null) list.Add(set);
+            }
+            return list.ToArray();
         }
 
         // ───────────── 에셋 ─────────────

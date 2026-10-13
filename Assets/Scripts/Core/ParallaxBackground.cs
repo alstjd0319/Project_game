@@ -20,6 +20,7 @@ namespace ParryRL
         private const int FarOrder = -30, MidOrder = -20, NearBehindOrder = -10, NearFrontOrder = 14;
 
         [SerializeField] private BackgroundSet[] sets;
+        [SerializeField, Tooltip("0 이상이면 GameTuning 대신 이 구간을 고정으로 쓴다 (시작 화면: 사당)")] private int forcedZone = -1;
 
         private sealed class Layer
         {
@@ -43,7 +44,7 @@ namespace ParryRL
             if (_cam == null) _cam = Camera.main;
             if (_cam == null) return;
 
-            int wanted = Mathf.Clamp(GameTuning.Current.backgroundZone, 0, sets.Length - 1);
+            int wanted = Mathf.Clamp(forcedZone >= 0 ? forcedZone : GameTuning.Current.backgroundZone, 0, sets.Length - 1);
             if (wanted != _zone || _layers.Count == 0) Build(wanted);
 
             Vector3 camPos = _cam.transform.position;

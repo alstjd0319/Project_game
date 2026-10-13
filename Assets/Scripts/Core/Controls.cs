@@ -18,6 +18,8 @@ namespace ParryRL
         public const KeyCode Confirm = KeyCode.Return;
         public const KeyCode Pause = KeyCode.Escape;
         public const KeyCode Restart = KeyCode.R;
+        /// <summary>M = 시작 화면으로 (일시정지·게임오버 화면에서).</summary>
+        public const KeyCode MainMenu = KeyCode.M;
 
         // 보조 창 (평소엔 접혀 있음)
         public const KeyCode TuningPanel = KeyCode.F1;

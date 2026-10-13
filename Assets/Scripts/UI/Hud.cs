@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -307,17 +308,35 @@ namespace ParryRL
             // F1 튜닝 패널
             _tuningPanel = new TuningPanel(_root);
 
-            _pausePanel = CreateOverlay("PausePanel", "일시 정지\n<size=28>ESC 계속   R 재시작</size>");
-            _gameOverPanel = CreateOverlay("GameOverPanel", "쓰러졌다\n<size=28>R 재시작</size>");
+            _pausePanel = CreateOverlay("PausePanel", "일시 정지\n<size=28>ESC 계속   R 다시 시작   M 시작 화면</size>",
+                ("계속  (ESC)", () => GameManager.Instance?.SetPaused(false)),
+                ("다시 시작  (R)", () => GameManager.Instance?.Restart()),
+                ("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
+            _gameOverPanel = CreateOverlay("GameOverPanel", "쓰러졌다\n<size=28>R 다시 시작   M 시작 화면</size>",
+                ("다시 시작  (R)", () => GameManager.Instance?.Restart()),
+                ("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
         }
 
-        private GameObject CreateOverlay(string name, string message)
+        /// <summary>화면 전체를 덮는 안내 + 아래 버튼들 (키로도 되고 마우스로도 된다). 버튼은 가운데 줄로 늘어선다.</summary>
+        private GameObject CreateOverlay(string name, string message, params (string label, Action action)[] buttons)
         {
             var bg = UiKit.Image(name, _root, new Color(0f, 0f, 0f, 0.6f));
             UiKit.Stretch(bg.rectTransform);
             var text = UiKit.Text("Text", bg.rectTransform, 72, TextAnchor.MiddleCenter);
             UiKit.Stretch(text.rectTransform);
             text.text = message;
+
+            const float width = 340f, height = 70f, gap = 24f;
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var (label, action) = buttons[i];
+                var button = UiKit.Button($"Button_{i}", bg.rectTransform, label, 30, new Color(0.30f, 0.16f, 0.55f, 0.95f));
+                float x = (i - (buttons.Length - 1) * 0.5f) * (width + gap);
+                UiKit.Place((RectTransform)button.transform, new Vector2(0.5f, 0.5f), new Vector2(x, -170f), new Vector2(width, height));
+                ((RectTransform)button.transform).pivot = new Vector2(0.5f, 0.5f);
+                var captured = action;
+                button.onClick.AddListener(() => captured());
+            }
             bg.gameObject.SetActive(false);
             return bg.gameObject;
         }
