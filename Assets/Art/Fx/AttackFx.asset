@@ -88,6 +88,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 5c7f726725f0f4e4282e6a423f78a396, type: 3}
     - {fileID: 21300000, guid: 0ced2ac5adf164ef8949070542a6e6f8, type: 3}
     fps: 14
+  yogiAbsorb:
+    frames:
+    - {fileID: 21300000, guid: 8285c0590d06642f7945f180bc9501f8, type: 3}
+    - {fileID: 21300000, guid: 3a38c684877e247948d641a3901d56ad, type: 3}
+    - {fileID: 21300000, guid: caf1d123a15c441f8b99b36f185d00ce, type: 3}
+    - {fileID: 21300000, guid: 2f6f4f5f84ced466ebc7da78439f8951, type: 3}
+    - {fileID: 21300000, guid: 75cf5eabad9714481b6ef9938eff7f57, type: 3}
+    - {fileID: 21300000, guid: 0edd784f6dfdb40f3a3e839c6f75811b, type: 3}
+    fps: 14
   dokkaebiProjectile:
     frames:
     - {fileID: 21300000, guid: b384bbec7a0104140a9c35b929f1a9f8, type: 3}

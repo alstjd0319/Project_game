@@ -2,33 +2,63 @@ using UnityEngine;
 
 namespace ParryRL
 {
-    /// <summary>네모 조각으로 만드는 이펙트. 판정 없음(콜라이더 없음), 실시간 기준으로 재생.</summary>
+    /// <summary>이펙트용 둥근 그림 (코드로 한 번만 생성): 부드러운 빛덩이 / 얇은 고리.</summary>
+    public static class FxSprites
+    {
+        private static Sprite _glow, _ring;
+
+        public static Sprite Glow => _glow != null ? _glow : _glow = Make(false);
+        public static Sprite Ring => _ring != null ? _ring : _ring = Make(true);
+
+        private static Sprite Make(bool ring)
+        {
+            const int n = 64;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(n / 2f, n / 2f)) / (n / 2f);
+                    float a;
+                    if (ring) a = Mathf.Clamp01(1f - Mathf.Abs(d - 0.88f) / 0.12f);          // 가장자리 근처 얇은 고리
+                    else a = d >= 1f ? 0f : Mathf.Pow(1f - d, 1.6f) * (d < 0.35f ? 1f : 0.85f); // 중심이 밝고 가장자리로 부드럽게
+                    px[y * n + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), n);
+        }
+    }
+
+    /// <summary>부드러운 조각으로 만드는 이펙트. 판정 없음(콜라이더 없음), 실시간 기준으로 재생.</summary>
     public static class Fx
     {
         private const int FxOrder = 50;
 
-        /// <summary>사방으로 튀는 네모 파편.</summary>
+        /// <summary>사방으로 튀는 불꽃 조각.</summary>
         public static void Sparks(Vector2 pos, Color color, int count, float speed, float size = 0.12f, float life = 0.35f)
         {
             for (int i = 0; i < count; i++)
             {
                 Vector2 dir = Random.insideUnitCircle.normalized;
                 float s = size * Random.Range(0.6f, 1.3f);
-                var go = Box.Create("Fx_Spark", pos, new Vector2(s, s), color, FxOrder);
-                go.transform.rotation = Quaternion.Euler(0, 0, Random.Range(0f, 90f));
+                var go = Box.Create("Fx_Spark", pos, new Vector2(s * 2.4f, s * 0.8f), color, FxOrder);
+                go.GetComponent<SpriteRenderer>().sprite = FxSprites.Glow;
+                go.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
                 go.AddComponent<FxPiece>().Init(dir * speed * Random.Range(0.5f, 1.2f), life * Random.Range(0.7f, 1.2f),
                     1f, 0.2f, 8f, 6f);
             }
         }
 
-        /// <summary>커졌다가 사라지는 네모 섬광.</summary>
+        /// <summary>커졌다가 사라지는 둥근 섬광.</summary>
         public static void Flash(Vector2 pos, float startSize, float endSize, Color color, float life = 0.12f)
         {
             var go = Box.Create("Fx_Flash", pos, Vector2.one * startSize, color, FxOrder - 1);
+            go.GetComponent<SpriteRenderer>().sprite = FxSprites.Glow;
             go.AddComponent<FxPiece>().Init(Vector2.zero, life, 1f, endSize / startSize, 0f, 0f);
         }
 
-        /// <summary>퍼져나가는 네모 테두리(충격파).</summary>
+        /// <summary>퍼져나가는 둥근 고리(충격파).</summary>
         public static void Ring(Vector2 pos, Color color, float startSize, float endSize, float thickness, float life)
         {
             var go = new GameObject("Fx_Ring");
@@ -129,23 +159,19 @@ namespace ParryRL
 
     public class FxRing : MonoBehaviour
     {
-        private readonly SpriteRenderer[] _edges = new SpriteRenderer[4];
+        private SpriteRenderer _sr;
         private Color _color;
-        private float _start, _end, _thickness, _life, _t;
+        private float _start, _end, _life, _t;
 
         public void Init(Color color, float startSize, float endSize, float thickness, float life, int order)
         {
             _color = color;
             _start = startSize;
             _end = endSize;
-            _thickness = thickness;
             _life = Mathf.Max(0.01f, life);
-            for (int i = 0; i < 4; i++)
-            {
-                var edge = Box.Create("Edge", transform.position, Vector2.one, color, order);
-                edge.transform.SetParent(transform, true);
-                _edges[i] = edge.GetComponent<SpriteRenderer>();
-            }
+            _sr = gameObject.AddComponent<SpriteRenderer>();
+            _sr.sprite = FxSprites.Ring;
+            _sr.sortingOrder = order;
             Layout(0f);
         }
 
@@ -165,23 +191,10 @@ namespace ParryRL
         {
             float eased = 1f - (1f - k) * (1f - k);
             float size = Mathf.Lerp(_start, _end, eased);
-            float th = _thickness * (1f - k * 0.7f);
-            float half = size * 0.5f;
+            transform.localScale = new Vector3(size, size, 1f);
             var c = _color;
             c.a *= 1f - k;
-
-            SetEdge(0, new Vector2(0, half), new Vector2(size, th), c);
-            SetEdge(1, new Vector2(0, -half), new Vector2(size, th), c);
-            SetEdge(2, new Vector2(-half, 0), new Vector2(th, size), c);
-            SetEdge(3, new Vector2(half, 0), new Vector2(th, size), c);
-        }
-
-        private void SetEdge(int i, Vector2 localPos, Vector2 size, Color c)
-        {
-            var t = _edges[i].transform;
-            t.localPosition = localPos;
-            t.localScale = new Vector3(size.x, size.y, 1f);
-            _edges[i].color = c;
+            _sr.color = c;
         }
     }
 }

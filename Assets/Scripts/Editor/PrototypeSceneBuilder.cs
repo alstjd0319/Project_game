@@ -366,6 +366,7 @@ namespace ParryRL.EditorTools
             fx.yokaiDissolve = LoadClip(FxDir, "fx", "yokai_dissolve", 12f);
             fx.heavyWarning = LoadClip(FxDir, "fx", "heavy_warning", 12f);
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
+            fx.yogiAbsorb = LoadClip(FxDir, "fx", "yogi_absorb", 14f);
             fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);
             EditorUtility.SetDirty(fx);
         }

@@ -195,6 +195,8 @@ namespace ParryRL
             Fx.Sparks(hitPoint, heavy ? new Color(1f, 0.85f, 0.3f) : Color.white, heavy ? 22 : 12, heavy ? 12f : 8f);
             var art = GameAssets.AttackFx;
             if (art != null) FxClip.PlayAt(IsRanged ? art.parryRanged : art.parryMelee, hitPoint, heavy ? 0.95f : 0.65f, false, 46);
+            // 성공 연출: 플레이어 몸 주변에 요기 흡수 (플레이어 뒤쪽 레이어)
+            if (art != null) FxClip.PlayAt(art.yogiAbsorb, transform.position + Vector3.up * 0.7f, heavy ? 0.9f : 0.7f, false, 8);
             if (heavy) Hud.ScreenFlash(new Color(1f, 1f, 1f, 0.35f));
         }
 
