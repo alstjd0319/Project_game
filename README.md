@@ -16,7 +16,7 @@
 | 장르 | 2D 횡스크롤 액션 · 로그라이크 (패링 중심) |
 | 플레이어 | 한 명. **Q로 근접 ↔ 원거리 무기 전환**, 무기에 따라 일반공격·반격·스킬창이 바뀜 |
 | 핵심 규칙 | 타이밍 맞춰 막으면(패링) 그 자리에서 반격이 나가고 게이지가 찬다 |
-| 성장 | 경험치 → 레벨업 → 증강 3택 1 (증강 6종) |
+| 성장 | 경험치·레벨은 쌓이지만 지금은 보상이 없다 (증강은 폐지, 스킬 트리는 미정) |
 | 적 | 창귀(근접, 예비 모션 뒤 베기) · 도깨비불(원거리 불덩이), 마릿수는 설정으로 조절 |
 | 상태 | 프로토타입 — 규칙과 손맛 검증 중 (수치는 모두 가안) |
 
@@ -50,7 +50,6 @@
 | A | 일반공격 (무기에 따라 베기 / 화살) |
 | Q | 무기 전환 (근접 ↔ 원거리) |
 | Shift | 이동 스킬: 돌진 (대시 중 무적, 게이지 소모 없음, **연속 2번** — 쿨타임 1초마다 1회분씩 충전) |
-| C | 획득한 증강 목록 |
 | F1 | 튜닝 패널 (판정·타격감·몬스터·연습 스위치) |
 | ESC | 일시정지 |
 
@@ -63,11 +62,7 @@
   - 근접: 예비 모션(일반 0.65초 / 강공격 1.2초 — 곧 반응시간) 뒤 몸 앞에서 한 번에 벤다.
   - 원거리: 사정거리 안이면 그 자리에서 쏘고, 벗어나면 다가온다.
   - 피격 경직 0.15초. F1 몬스터 탭에서 종류별 마릿수 1~10 조절.
-- **증강 6종** (레벨업마다 3택 1)
-  - 공용: 넓은 판정(활성 +0.05초) · 연쇄 방어(3연속 성공마다 게이지 +2) · 강공격 사냥꾼(강공격 방어 게이지 +2)
-  - 플레이어: 지척의 일격(바짝 붙은 적 반격 +50%) · 피의 패링(패링 시 체력 회복) · 돌진 베기(돌진이 지나간 적에게 피해)
-
-![증강 선택](Captures/augment_choice.png)
+- **증강은 폐지됐다** (2026-10-13). 레벨업은 "레벨 업!" 알림만 나오고 게임은 멈추지 않는다. 성장 보상(스킬 트리)은 아직 정하지 않았다.
 
 ## 아트 · 사운드
 
@@ -87,7 +82,7 @@
 
 ### 테스트
 
-PlayMode 테스트 약 90개(판정·게이지·증강·몬스터·튜닝·그림 연동·무기 전환)와 화면 캡처(`Captures/`)가 있다.
+PlayMode 테스트 약 90개(판정·게이지·레벨·몬스터·튜닝·그림 연동·무기 전환)와 화면 캡처(`Captures/`)가 있다.
 
 ```powershell
 # Windows (씬 생성 + 전체 테스트 + 캡처)
@@ -114,8 +109,8 @@ Assets/
 │   ├── Combat/         # DamageCalc · EnemyAttack · MeleeStrike · PlayerProjectile · HitFeel · SuccessEffects
 │   │                   # Fx · FxClip/AttackFxArt(공격 이펙트 그림) · Sfx(합성음) · WorldBar
 │   ├── Enemy/          # EnemyController · EnemySpawner · EnemySprite/EnemyArt · EnemyCorpse
-│   ├── Progression/    # PlayerLevel · AugmentManager/Catalog · RunModifiers · Augments/(증강 1개 = 파일 1개)
-│   ├── UI/             # Hud · SkillBar · AugmentChoiceUI · AugmentListPanel · TuningPanel(F1) · UiKit
+│   ├── Progression/    # PlayerLevel (경험치·레벨)
+│   ├── UI/             # Hud · SkillBar · TuningPanel(F1) · UiKit
 │   └── Editor/         # PrototypeSceneBuilder (씬·프리팹·에셋 묶음 생성)
 ├── Tests/PlayMode/     # 판정·증강·몬스터·튜닝·그림·캡처 테스트
 ├── Art/                # Characters/Hero · Enemies/(Changgwi, Dokkaebibul) · Fx/ (도트 프레임) · Square.png
@@ -130,9 +125,8 @@ Captures/               # 테스트가 찍는 화면 캡처
 ## 개발 방식 메모
 
 - 모든 판정은 **실제 콜라이더 겹침**이다 (거리 계산 판정 금지). 연출은 `unscaled time`이라 히트스탑 중에도 재생된다.
-- 플레이어 딜 계산은 `DamageCalc` 한 곳(기본 × 캐릭터 배율 × (1 + 증강 보너스 합))에서만 한다.
-- 플레이 감각 수치는 `GameTuning`(F1 패널)에, 증강은 `RunModifiers`("이번 판 보정" 층)에 둔다.
-- 증강 추가 = `Progression/Augments/XxxAugment.cs` + `AugmentCatalog` 한 줄 + 테스트.
+- 플레이어 딜 계산은 `DamageCalc` 한 곳(기본 × 캐릭터 배율)에서만 한다.
+- 플레이 감각 수치는 `GameTuning`(F1 패널)에 둔다.
 
 ## 개발 이력 (주요 변경)
 

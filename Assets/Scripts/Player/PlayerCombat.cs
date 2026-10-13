@@ -116,7 +116,6 @@ namespace ParryRL
         private PlayerParty _party;
         private SkillGauge _gauge;
         private PlayerDefense _defense;
-        private RunModifiers _mods;
         private SuccessEffects _effects;
         private float _attackCd;
         private float _moveCd;        // 다음 충전까지 남은 시간 (충전이 가득이면 0)
@@ -129,7 +128,6 @@ namespace ParryRL
             _party = GetComponent<PlayerParty>();
             _gauge = GetComponent<SkillGauge>();
             _defense = GetComponent<PlayerDefense>();
-            _mods = GetComponent<RunModifiers>();
             _effects = GetComponent<SuccessEffects>();
             if (_effects == null) _effects = gameObject.AddComponent<SuccessEffects>();
         }
@@ -314,19 +312,18 @@ namespace ParryRL
             float h = _motor.HorizontalInput;
             int dir = h != 0f ? (h > 0f ? 1 : -1) : _motor.Facing;
 
-            _motor.Dash(dir, _mods != null ? _mods.DashDistanceBonus(kind) : 0f);
+            _motor.Dash(dir);
             Sfx.Play(SfxId.Dash);
             ActionUsed?.Invoke(PlayerAction.Move);
             MoveSkillUsed?.Invoke(kind, dir);
             return true;
         }
 
-        /// <summary>지금 나와 있는 캐릭터의 공격 정보 (증강이 발동 순간 성질을 바꿀 수 있음).</summary>
+        /// <summary>지금 나와 있는 캐릭터의 공격 정보 .</summary>
         private HitInfo NewHit(DamageSource source, bool heavy)
         {
             var hit = HitInfo.Create(source, _party.Current.kind, transform.position, heavy);
             hit.Ranged = IsRanged;
-            if (_mods != null) _mods.PrepareHit(ref hit);
             return hit;
         }
 

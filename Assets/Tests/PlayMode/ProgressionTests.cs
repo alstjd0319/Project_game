@@ -8,11 +8,10 @@ using UnityEngine.TestTools;
 
 namespace ParryRL.Tests
 {
-    /// <summary>경험치 / 레벨업 / 증강 선택 흐름 (기획서 5장).</summary>
+    /// <summary>경험치 / 레벨업 (기획서 5장). 증강은 폐지됐다.</summary>
     public class ProgressionTests
     {
         private PlayerLevel _level;
-        private AugmentManager _augments;
         private EnemyController _melee;
 
         [UnitySetUp]
@@ -21,7 +20,6 @@ namespace ParryRL.Tests
             yield return TestScene.LoadPrototype();
 
             _level = Object.FindAnyObjectByType<PlayerLevel>();
-            _augments = _level.GetComponent<AugmentManager>();
             var enemies = Object.FindObjectsByType<EnemyController>();
             foreach (var e in enemies) e.enabled = false;
             _melee = enemies.First(e => e.Kind == EnemyKind.Melee);
@@ -59,107 +57,10 @@ namespace ParryRL.Tests
             Assert.AreEqual(4, _level.Level);
             Assert.AreEqual(5, _level.Xp);
             CollectionAssert.AreEqual(new[] { 2, 3, 4 }, ups);
-            Assert.AreEqual(3, _augments.PendingChoices, "레벨업마다 증강 선택 1개씩 대기");
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator 레벨업하면_증강3택이_열리고_게임정지_고르면_재개()
-        {
-            _level.AddXp(20);
-            Assert.IsFalse(_augments.IsChoosing, "레벨업 연출 후 약간 늦게 열린다");
-
-            yield return new WaitForSecondsRealtime(0.7f);
-            Assert.IsTrue(_augments.IsChoosing);
-            Assert.AreEqual(3, _augments.Options.Count);
-            Assert.AreEqual(3, _augments.Options.Distinct().Count(), "후보는 서로 다름");
-            Assert.AreEqual(0f, Time.timeScale, "선택 중 게임 정지");
-            Assert.IsTrue(GameManager.InputBlocked, "선택 중 플레이 입력 차단");
-
-            var pick = _augments.Options[1];
-            Assert.IsTrue(_augments.Choose(1));
-            Assert.AreEqual(1, _augments.Acquired.Count);
-            Assert.AreSame(pick, _augments.Acquired[0]);
-            Assert.IsFalse(_augments.IsChoosing);
-            Assert.AreEqual(1f, Time.timeScale, "선택 후 재개");
-            Assert.IsFalse(GameManager.InputBlocked);
-        }
-
-        [UnityTest]
-        public IEnumerator 여러_레벨이_오르면_선택창이_연달아_열린다()
-        {
-            _level.AddXp(20 + 30); // Lv.3
-            yield return new WaitForSecondsRealtime(0.7f);
-
-            Assert.IsTrue(_augments.IsChoosing);
-            Assert.IsTrue(_augments.Choose(0));
-            Assert.IsTrue(_augments.IsChoosing, "두 번째 선택이 바로 열림");
-            Assert.AreEqual(0f, Time.timeScale);
-
-            Assert.IsTrue(_augments.Choose(0));
-            Assert.IsFalse(_augments.IsChoosing);
-            Assert.AreEqual(2, _augments.Acquired.Count);
+            Assert.IsFalse(GameManager.InputBlocked, "레벨업해도 게임이 멈추지 않는다 (증강 선택 창 폐지)");
             Assert.AreEqual(1f, Time.timeScale);
-        }
-
-        [UnityTest]
-        public IEnumerator 증강목록창_평소엔_접혀있고_같은_증강은_한줄로_묶는다()
-        {
-            var panel = AugmentListPanel.Instance;
-            Assert.IsNotNull(panel);
-            Assert.IsFalse(panel.IsVisible, "평소엔 접혀 있음");
-
-            panel.SetVisible(true);
-            Assert.AreEqual(0, panel.RowCount);
-
-            Random.InitState(1234);
-            _level.AddXp(20 + 30 + 40 + 50); // 4레벨
-            yield return new WaitForSecondsRealtime(0.7f);
-            while (_augments.IsChoosing) _augments.Choose(0);
-
-            int distinct = _augments.Acquired.Distinct().Count();
-            Assert.AreEqual(4, _augments.Acquired.Count);
-            Assert.AreEqual(distinct, panel.RowCount, "열려 있는 동안 획득하면 바로 갱신, 같은 증강은 한 줄");
-
-            panel.SetVisible(false);
-            Assert.IsFalse(panel.IsVisible);
-        }
-
-        [UnityTest]
-        public IEnumerator 증강을_다_모아도_목록창은_높이_상한_안에서_스크롤()
-        {
-            var panel = AugmentListPanel.Instance;
-            panel.SetVisible(true);
-            float emptyHeight = panel.PanelHeight;
-
-            _level.AddXp(5000);
-            yield return new WaitForSecondsRealtime(0.7f);
-            int guard = 0;
-            while (_augments.IsChoosing && guard++ < 100) _augments.Choose(0);
             yield return null;
-
-            Assert.AreEqual(AugmentCatalog.All.Count, panel.RowCount, "모든 증강이 한 줄씩");
-            Assert.IsTrue(panel.IsScrollable, "다 모으면 스크롤");
-            Assert.LessOrEqual(panel.PanelHeight, 92f + 330f + 16f + 0.5f, "창 높이는 상한을 넘지 않음");
-            Assert.Greater(panel.PanelHeight, emptyHeight);
         }
 
-        [UnityTest]
-        public IEnumerator 최대중첩에_도달한_증강은_다시_나오지_않고_다_떨어지면_창을_안연다()
-        {
-            int totalStacks = AugmentCatalog.All.Sum(a => a.MaxStacks);
-            _level.AddXp(5000); // 증강 풀보다 훨씬 많이 레벨업
-            Assert.Greater(_level.Level - 1, totalStacks);
-
-            yield return new WaitForSecondsRealtime(0.7f);
-            int guard = 0;
-            while (_augments.IsChoosing && guard++ < 100) _augments.Choose(0);
-
-            Assert.AreEqual(totalStacks, _augments.Acquired.Count);
-            foreach (var def in AugmentCatalog.All)
-                Assert.LessOrEqual(_augments.StacksOf(def), def.MaxStacks, def.Id);
-            Assert.IsFalse(_augments.IsChoosing);
-            Assert.AreEqual(1f, Time.timeScale, "줄 증강이 없으면 게임 재개");
-        }
     }
 }

@@ -23,8 +23,7 @@ namespace ParryRL
         private static readonly Color TabOn = new(0.95f, 0.75f, 0.25f);
         private static readonly Color Accent = new(0.45f, 0.9f, 1f);
 
-        private static readonly string[] TabNames = { "타격감", "판정", "캐릭터", "적", "연습", "증강" };
-        public const int AugmentTab = 5;
+        private static readonly string[] TabNames = { "타격감", "판정", "캐릭터", "적", "연습" };
         private static readonly string[] ProfileNames = { "일반 패링", "강공격 패링", "피격", "스킬 적중" };
         private const int ProfilesPerRow = 3;
 
@@ -64,26 +63,6 @@ namespace ParryRL
             }
         }
 
-        /// <summary>증강 골라 받기 버튼 하나 — 중첩 수를 보여준다.</summary>
-        private sealed class AugmentRow : Row
-        {
-            public AugmentDefinition def;
-            public Image image;
-            public Text label;
-            public Func<AugmentManager> manager;
-            public Color color;
-
-            public override void Refresh()
-            {
-                var m = manager();
-                int stacks = m != null ? m.StacksOf(def) : 0;
-                bool maxed = stacks >= def.MaxStacks;
-                string count = stacks > 0 ? $"<color=#FFD966>{stacks}/{def.MaxStacks}</color>" : $"<color=#999999>0/{def.MaxStacks}</color>";
-                label.text = maxed ? $"{def.Name}  <color=#FFD966>최대</color>" : $"{def.Name}  {count}";
-                image.color = maxed ? color * new Color(0.5f, 0.5f, 0.5f, 1f) : color;
-            }
-        }
-
         // ───────────── 상태 ─────────────
 
         private readonly GameObject _root;
@@ -115,8 +94,6 @@ namespace ParryRL
         private PlayerParty _party;
         private SkillGauge _gauge;
         private PlayerLevel _level;
-        private AugmentManager _augments;
-        private Text _augmentInfo;
 
         private static GameTuning T => GameTuning.Current;
 
@@ -188,7 +165,6 @@ namespace ParryRL
             BuildCharacterTab();
             BuildEnemyTab();
             BuildPracticeTab();
-            BuildAugmentTab();
             EndPage();
 
             // 패널 높이는 SelectTab에서 지금 탭 내용에 맞춘다 (상한 넘으면 스크롤)
@@ -210,20 +186,13 @@ namespace ParryRL
             _root.SetActive(false);
         }
 
-        public void Bind(PlayerDefense defense, PlayerParty party, SkillGauge gauge, PlayerLevel level, AugmentManager augments)
+        public void Bind(PlayerDefense defense, PlayerParty party, SkillGauge gauge, PlayerLevel level)
         {
             _defense = defense;
             _party = party;
             _gauge = gauge;
             _level = level;
-            _augments = augments;
             if (_defense != null) _defense.TimingReported += OnTiming;
-            if (_augments != null)
-            {
-                // 레벨업 선택으로 얻어도 탭의 중첩 표시가 맞게
-                _augments.AugmentAcquired += _ => RefreshAll();
-                _augments.AugmentsCleared += RefreshAll;
-            }
         }
 
         public void Dispose() => GameTuning.Changed -= RefreshAll;
@@ -403,78 +372,7 @@ namespace ParryRL
             });
             AddButton("게이지 가득 채우기", () => { if (_gauge != null) _gauge.Add(_gauge.Max); });
             AddButton("체력 회복", () => { if (_party != null) _party.RestoreFullHp(); });
-            AddButton("레벨업 +1 (증강 선택 확인용)", () => { if (_level != null) _level.AddXp(_level.XpToNext - _level.Xp); });
-        }
-
-        private void BuildAugmentTab()
-        {
-            BeginPage();
-            Header("증강 골라 받기 — 누를 때마다 1중첩 (저장 안 됨)");
-
-            _augmentInfo = UiKit.Text("AugmentInfo", Page, 17, TextAnchor.UpperLeft, outline: false);
-            _augmentInfo.color = new Color(1f, 1f, 1f, 0.6f);
-            _augmentInfo.horizontalOverflow = HorizontalWrapMode.Wrap;
-            UiKit.Place(_augmentInfo.rectTransform, new Vector2(0f, 1f), new Vector2(8f, _y - 2f), new Vector2(Width - 60f, 44f));
-            _augmentInfo.text = "레벨업 선택과 똑같이 효과가 붙는다. 받은 증강은 C 목록 창에도 바로 나온다.";
-            Space(46f);
-            AddButton("획득한 증강 전부 제거", () =>
-            {
-                if (_augments == null) return;
-                _augments.ClearAll();
-                _augmentInfo.text = "증강을 전부 제거했다.";
-            });
-
-            AddAugmentGroup(AugmentOwner.Common, "공용", new Color(0.3f, 0.33f, 0.42f));
-            AddAugmentGroup(AugmentOwner.Player, "플레이어", new Color(0.5f, 0.2f, 0.18f));
-        }
-
-        /// <summary>그룹 이름은 왼쪽 칸에 — 제목 줄을 따로 두면 12개가 한 화면(높이 상한)에 안 들어간다.</summary>
-        private void AddAugmentGroup(AugmentOwner owner, string title, Color color)
-        {
-            const int columns = 2;
-            const float labelWidth = 56f;
-            var defs = new List<AugmentDefinition>();
-            foreach (var d in AugmentCatalog.All) if (d.Owner == owner) defs.Add(d);
-
-            int rows = (defs.Count + columns - 1) / columns;
-            var rowRt = NewRowRect(rows * 44f);
-            Space(6f);
-
-            var label = UiKit.Text("GroupLabel", rowRt, 20, TextAnchor.MiddleLeft, outline: false);
-            label.color = Color.Lerp(color, Color.white, 0.55f);
-            label.fontStyle = FontStyle.Bold;
-            UiKit.Place(label.rectTransform, new Vector2(0f, 1f), new Vector2(4f, 0f), new Vector2(labelWidth, rows * 44f - 6f));
-            label.text = title;
-
-            float w = (Width - 40f - labelWidth - (columns - 1) * 8f) / columns;
-            for (int i = 0; i < defs.Count; i++)
-            {
-                var def = defs[i];
-                var b = UiKit.Button($"Augment_{def.Id}", rowRt, def.Name, 19, color);
-                var pos = new Vector2(labelWidth + (i % columns) * (w + 8f), -(i / columns) * 44f);
-                UiKit.Place(b.GetComponent<RectTransform>(), new Vector2(0f, 1f), pos, new Vector2(w, 38f));
-                var row = new AugmentRow
-                {
-                    def = def, image = b.GetComponent<Image>(), label = b.GetComponentInChildren<Text>(),
-                    manager = () => _augments, color = color,
-                };
-                row.label.supportRichText = true;
-                b.onClick.AddListener(() => GrantFromPanel(def));
-                _tabRows[^1].Add(row);
-            }
-        }
-
-        /// <summary>튜닝 패널에서 증강 하나를 바로 받는다 (테스트에서도 호출).</summary>
-        public bool GrantFromPanel(AugmentDefinition def)
-        {
-            if (_augments == null) return false;
-            bool ok = _augments.TryGrant(def);
-            _augmentInfo.text = ok
-                ? $"<color=#FFD966>{def.Name}</color> ({def.OwnerLabel}) — {def.Description}"
-                : $"{def.Name}은(는) 이미 최대 중첩({def.MaxStacks})이다.";
-            if (ok) Sfx.Play(SfxId.LevelUp, 0.5f);
-            RefreshAll();
-            return ok;
+            AddButton("레벨업 +1", () => { if (_level != null) _level.AddXp(_level.XpToNext - _level.Xp); });
         }
 
         // ───────────── 행 빌더 ─────────────

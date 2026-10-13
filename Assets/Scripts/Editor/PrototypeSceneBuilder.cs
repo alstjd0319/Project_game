@@ -139,8 +139,6 @@ namespace ParryRL.EditorTools
             player.AddComponent<PlayerCombat>();
             player.AddComponent<PlayerDefense>();
             player.AddComponent<PlayerLevel>();
-            player.AddComponent<RunModifiers>(); // 이번 판 증강 보정 층 (획득한 증강 효과 컴포넌트가 여기 붙는다)
-            player.AddComponent<AugmentManager>();
 
             // PlayerSprite는 PlayerDefense를 RequireComponent하므로 반드시 PlayerDefense를 붙인 뒤에 추가한다 (아니면 방어 컴포넌트가 둘이 된다)
             // 도트 애니메이션 (판정 없음). 발끝 = 네모 바닥, 부모의 늘림(0.8×1.4)을 상쇄해 픽셀 비율 유지.

@@ -20,7 +20,6 @@ namespace ParryRL
         public const KeyCode Restart = KeyCode.R;
 
         // 보조 창 (평소엔 접혀 있음)
-        public const KeyCode AugmentList = KeyCode.C;
         public const KeyCode TuningPanel = KeyCode.F1;
 
         public static float Horizontal

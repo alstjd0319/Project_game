@@ -32,13 +32,9 @@ namespace ParryRL.Tests
             var combat = defense.GetComponent<PlayerCombat>();
             var gauge = defense.GetComponent<SkillGauge>();
             var level = defense.GetComponent<PlayerLevel>();
-            var augments = defense.GetComponent<AugmentManager>();
 
-            // 증강 2개 획득 + 경험치 일부
-            level.AddXp(20 + 30);
-            yield return new WaitForSecondsRealtime(0.7f);
-            while (augments.IsChoosing) augments.Choose(0);
-            level.AddXp(18);
+            // 경험치 일부 (레벨 3)
+            level.AddXp(20 + 30 + 18);
 
             gauge.Add(5);            // 이동·공격 가능
             combat.TryAttackSkill(); // 공격 쿨타임
@@ -79,61 +75,6 @@ namespace ParryRL.Tests
                 yield return Capture("bg_" + names[i]);
             }
             GameTuning.Current.backgroundZone = 1;
-        }
-
-        [UnityTest]
-        public IEnumerator 증강_선택창()
-        {
-            var level = Object.FindAnyObjectByType<PlayerLevel>();
-            level.AddXp(20 + 30); // 남은 선택 2 표시
-            yield return new WaitForSecondsRealtime(1.2f); // 열림 + 카드 등장 애니메이션
-
-            yield return Capture("augment_choice");
-        }
-
-        [UnityTest]
-        public IEnumerator 증강목록창()
-        {
-            var level = Object.FindAnyObjectByType<PlayerLevel>();
-            var augments = level.GetComponent<AugmentManager>();
-
-            // 6레벨: 이미 가진 중첩형 증강이 후보에 있으면 그걸 골라 "×2"가 보이게
-            Random.InitState(7);
-            level.AddXp(20 + 30 + 40 + 50 + 60 + 70);
-            yield return new WaitForSecondsRealtime(0.7f);
-            while (augments.IsChoosing)
-            {
-                int pick = 0;
-                for (int i = 0; i < augments.Options.Count; i++)
-                {
-                    var o = augments.Options[i];
-                    if (o.MaxStacks > 1 && augments.StacksOf(o) > 0) { pick = i; break; }
-                    if (o.MaxStacks > 1) pick = i;
-                }
-                augments.Choose(pick);
-            }
-
-            AugmentListPanel.Instance.SetVisible(true);
-            yield return null;
-            yield return Capture("augment_list");
-
-            // 작은 게임 뷰에서는 글자가 상대적으로 넓어져 줄바꿈이 생긴다 (에디터 Game 탭 크기 재현)
-            yield return Capture("augment_list_960x540", 960, 540);
-            yield return Capture("augment_list_640x360", 640, 360);
-        }
-
-        [UnityTest]
-        public IEnumerator 증강목록창_전부_모음()
-        {
-            var level = Object.FindAnyObjectByType<PlayerLevel>();
-            var augments = level.GetComponent<AugmentManager>();
-            level.AddXp(5000);
-            yield return new WaitForSecondsRealtime(0.7f);
-            while (augments.IsChoosing) augments.Choose(0);
-
-            AugmentListPanel.Instance.SetVisible(true);
-            yield return null;
-            yield return Capture("augment_list_full");
         }
 
         [UnityTest]
@@ -209,7 +150,6 @@ namespace ParryRL.Tests
             yield return Capture("enemy_melee_slash_heavy");
         }
 
-        // ───────────── 증강 ─────────────
 
         private static void PlaceEnemy(EnemyController enemy, PlayerDefense defense, float dx)
         {
@@ -243,24 +183,6 @@ namespace ParryRL.Tests
             yield return null;
             yield return null;
             yield return Capture("tuning_practice");
-        }
-
-        [UnityTest]
-        public IEnumerator 튜닝패널_증강탭_골라받기와_게이지무한()
-        {
-            var panel = TuningPanel.Instance;
-            GameTuning.Current.infiniteGauge = true;
-            Object.FindAnyObjectByType<SkillGauge>().Add(20);
-            panel.SetVisible(true);
-            panel.SelectTab(TuningPanel.AugmentTab);
-            panel.GrantFromPanel(AugmentCatalog.Get("wide_window"));
-            panel.GrantFromPanel(AugmentCatalog.Get("wide_window"));
-            panel.GrantFromPanel(AugmentCatalog.Get("w_blood_parry"));
-            panel.GrantFromPanel(AugmentCatalog.Get("w_blood_parry"));
-            panel.GrantFromPanel(AugmentCatalog.Get("w_close_strike"));
-            yield return null;
-            yield return Capture("tuning_augments");
-            yield return Capture("tuning_augments_640x360", 640, 360);
         }
 
         [UnityTest]

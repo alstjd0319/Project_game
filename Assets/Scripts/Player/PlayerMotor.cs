@@ -208,7 +208,7 @@ namespace ParryRL
             if (Mathf.Abs(dx) > 0.01f) SetFacing(dx);
         }
 
-        /// <param name="extraDistance">증강 보정 (거리 유지: 백스텝 +1.5)</param>
+        /// <param name="extraDistance">대시 거리 추가 (지금은 쓰는 곳 없음)</param>
         public void Dash(int dir, float extraDistance = 0f)
         {
             _dashDir = dir;

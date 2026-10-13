@@ -144,5 +144,21 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(0.1f);
             if (shot != null) Assert.Greater(shot.transform.position.x, x0, "플레이어 쪽으로 날아감");
         }
+
+        [UnityTest]
+        public IEnumerator 기절하면_예비모션중인_공격이_취소된다()
+        {
+            _melee.enabled = true;
+            GameTuning.Current.heavyOnly = true; // 예비 모션을 길게
+            Place(_melee, 2f);
+            float t = 0f;
+            while (_melee.transform.localScale.x <= 1.001f && t < 5f) { t += Time.deltaTime; yield return null; }
+            Assert.Less(t, 5f, "예비 모션 시작");
+
+            _melee.Stun(0.8f);
+            Assert.AreEqual(1f, _melee.transform.localScale.x, 1e-4f, "몸 크기 원래대로 (공격 취소)");
+            yield return new WaitForSeconds(0.6f);
+            Assert.AreEqual(0, Object.FindObjectsByType<EnemyAttack>().Length, "기절 중엔 공격이 안 나감");
+        }
     }
 }

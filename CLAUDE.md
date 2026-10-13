@@ -43,6 +43,12 @@
 - **아래 `기획서.md`는 아직 두 캐릭터 기준 문장이 많다** — 위 폐기 결정이 우선이며, 기획서 갱신은 사용자 확인 후 한다. 코드에서 `CharacterKind`는 `Player` 하나, `PlayerParty`는 체력·피격 표시만 담당한다.
 - 지금 규칙: 패링 성공 → 같은 자리에서 근접 반격(강공격이면 더 큰 연출). 스왑이 없으니 "방어 성공 = 항상 스왑" 규칙도 사라졌다.
 
+## ⚠️ 증강 시스템 폐기 (2026-10-13)
+
+- 사용자 결정: **증강 개념을 쓰지 않는다.** 지운 것: `AugmentManager/Catalog/Definition/Effect`, `RunModifiers`, 증강 6개 파일(`Progression/Augments/`), 레벨업 증강 3택 창(`AugmentChoiceUI`), C 증강 목록(`AugmentListPanel`, `Controls.AugmentList`), F1 패널 증강 탭, HUD 증강 개수 표시, 증강 테스트·캡처.
+- 남긴 것: `PlayerLevel`(경험치·레벨, `LeveledUp` 이벤트)은 그대로 — 레벨업하면 HUD에 "레벨 업!" 알림과 효과음만 나오고 **게임은 멈추지 않는다**. 스킬 트리 등 새 성장 보상은 팀 결정 뒤에 `LeveledUp`에 연결한다. 데미지 계산은 `DamageCalc`에서 기본 × 캐릭터 배율만 쓴다 (보너스 층이 필요하면 다시 붙인다). `PlayerMotor.Dash(dir, extraDistance)`의 추가 거리 인자는 남아 있다.
+- 아래 본문의 증강 관련 설명(5장 등)과 `기획서.md`의 증강 장은 더 이상 유효하지 않다.
+
 ## 귀문 에셋 적용 (2026-10-13)
 
 - 새 콘셉트 "귀문"(퇴마사 / 봉·부적 / 창귀·도깨비불 …)의 그림 묶음(`ArtSource/gwimun/안내.md`가 원본 안내)을 **게임에 있는 것만** 적용했다. 옛 전사 그림·옛 근접 몬스터 그림·Project_Game 몬스터 스프라이트·옛 공격 이펙트는 삭제.

@@ -131,7 +131,7 @@ namespace ParryRL.Tests
         {
             var panel = TuningPanel.Instance;
             panel.SetVisible(true);
-            Assert.AreEqual(6, panel.TabCount);
+            Assert.AreEqual(5, panel.TabCount);
             for (int i = 0; i < panel.TabCount; i++)
             {
                 panel.SelectTab(i);
@@ -212,31 +212,6 @@ namespace ParryRL.Tests
             Assert.IsFalse(combat.TryAttackSkill(), "끄면 원래대로 게이지 부족");
         }
 
-        [UnityTest]
-        public IEnumerator 튜닝패널에서_증강_골라받기_최대중첩_전부제거()
-        {
-            var panel = TuningPanel.Instance;
-            var augments = _defense.GetComponent<AugmentManager>();
-            var wide = AugmentCatalog.Get("wide_window");
-            panel.SetVisible(true);
-            panel.SelectTab(TuningPanel.AugmentTab);
-            Assert.IsFalse(panel.IsScrollable, "증강 12개가 스크롤 없이 한 화면에 보인다");
-
-            for (int i = 0; i < 3; i++) Assert.IsTrue(panel.GrantFromPanel(wide));
-            Assert.IsFalse(panel.GrantFromPanel(wide), "최대 중첩(3) 넘으면 안 받아짐");
-            Assert.AreEqual(3, augments.StacksOf(wide));
-            Assert.AreEqual(0.45f, _defense.ActiveTime, 1e-4f, "효과도 레벨업 선택과 똑같이 붙음");
-            Assert.IsFalse(augments.IsChoosing, "선택 창을 거치지 않음");
-
-            augments.ClearAll();
-            Assert.AreEqual(0, augments.Acquired.Count);
-            Assert.AreEqual(0.3f, _defense.ActiveTime, 1e-4f, "제거하면 효과도 사라짐");
-
-            Assert.IsTrue(panel.GrantFromPanel(wide), "제거 직후 같은 프레임에 다시 받아도 정상");
-            Assert.AreEqual(0.35f, _defense.ActiveTime, 1e-4f);
-            yield return null;
-            Assert.AreEqual(0.35f, _defense.ActiveTime, 1e-4f, "지운 컴포넌트가 프레임 끝에 사라져도 새 효과는 유지");
-        }
         [Test]
         public void 튜닝_저장형식_왕복_연습스위치는_저장안됨()
         {

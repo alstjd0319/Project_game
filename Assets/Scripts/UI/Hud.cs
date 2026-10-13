@@ -22,17 +22,12 @@ namespace ParryRL
         private Text _gaugeText;
         private readonly List<Image> _gaugeCells = new();
         private SkillBar _skillBar;
-        private AugmentChoiceUI _augmentUi;
         private TuningPanel _tuningPanel;
-        private AugmentListPanel _augmentList;
         private PlayerLevel _level;
-        private AugmentManager _augments;
         private Text _levelText;
         private Image _xpFill;
         private Text _xpText;
-        private Text _augmentListText;
         private float _xpFlash;
-        private int _shownAugmentCount = -1;
         private Text _popupText;
         private float _popupTimer;
         private float _popupScale;
@@ -68,11 +63,17 @@ namespace ParryRL
             _gauge = FindAnyObjectByType<SkillGauge>();
             _skillBar.Bind(_party, _gauge, FindAnyObjectByType<PlayerDefense>(), FindAnyObjectByType<PlayerCombat>());
             _level = FindAnyObjectByType<PlayerLevel>();
-            _augments = FindAnyObjectByType<AugmentManager>();
-            _augmentUi.Bind(_augments, _level);
-            _augmentList.Bind(_augments);
-            if (_level != null) _level.XpGained += _ => _xpFlash = 1f;
-            _tuningPanel.Bind(FindAnyObjectByType<PlayerDefense>(), _party, _gauge, _level, _augments);
+            if (_level != null)
+            {
+                _level.XpGained += _ => _xpFlash = 1f;
+                // 레벨업은 지금 보상이 없다 (증강 폐지) — 알림만. 스킬 트리가 생기면 여기에 연결한다.
+                _level.LeveledUp += lv =>
+                {
+                    Popup($"레벨 업!  Lv.{lv}", new Color(0.45f, 0.9f, 1f), false);
+                    Sfx.Play(SfxId.LevelUp, 0.7f);
+                };
+            }
+            _tuningPanel.Bind(FindAnyObjectByType<PlayerDefense>(), _party, _gauge, _level);
 
             if (GameManager.Instance != null)
             {
@@ -121,9 +122,7 @@ namespace ParryRL
             float dt = Time.unscaledDeltaTime;
             UpdateStatus();
             _skillBar.Tick(dt);
-            _augmentUi.Tick(dt);
             _tuningPanel.Tick();
-            _augmentList.Tick();
             UpdatePopup(dt);
             UpdateFloating(dt);
 
@@ -168,19 +167,11 @@ namespace ParryRL
                 _xpFlash = Mathf.Max(0f, _xpFlash - Time.unscaledDeltaTime * 4f);
                 _xpFill.color = Color.Lerp(new Color(0.45f, 0.9f, 1f), Color.white, _xpFlash);
             }
-
-            if (_augments != null && _augments.Acquired.Count != _shownAugmentCount)            {
-                // 자세한 목록은 C 창에서. 여기엔 개수만 (증강이 쌓여도 패널을 넘치지 않게)
-                _shownAugmentCount = _augments.Acquired.Count;
-                _augmentListText.text = _shownAugmentCount == 0
-                    ? "<color=#888888>증강 없음  ·  [C] 목록</color>"
-                    : $"증강 {_shownAugmentCount}개  <color=#999999>·  [C] 목록</color>";
-            }
         }
 
-        /// <summary>기본값(배율 1, 감소 0)이 아닌 패시브만 표시. 예: "  공격 ×1.5 · 받는 피해 -30%" / "  이속 +30%"</summary>
         private PlayerCombat _combat;
 
+        /// <summary>기본값(배율 1, 감소 0)이 아닌 패시브만 표시. 예: "  공격 ×1.5 · 받는 피해 -30%" / "  이속 +30%"</summary>
         private static string PassiveLabel(CharacterKind kind, bool ranged)
         {
             var t = GameTuning.Current;
@@ -297,11 +288,6 @@ namespace ParryRL
             _xpText = UiKit.Text("XpText", xpBg, 16, TextAnchor.MiddleCenter);
             UiKit.Stretch(_xpText.rectTransform);
 
-            // 획득한 증강 목록
-            _augmentListText = UiKit.Text("Augments", panel, 20, TextAnchor.UpperLeft);
-            _augmentListText.color = new Color(1f, 0.8f, 0.25f, 0.9f);
-            UiKit.Place(_augmentListText.rectTransform, new Vector2(0, 1), new Vector2(16, -200), new Vector2(590, 28));
-
             // 하단 스킬바 (Shift / A / S / D)
             _skillBar = new SkillBar(_root);
 
@@ -315,14 +301,8 @@ namespace ParryRL
             // 우상단 조작 안내 (스킬 키는 하단 스킬바에 표시되므로 이동·점프·일시정지만)
             var help = UiKit.Text("Help", _root, 22, TextAnchor.UpperRight);
             help.color = new Color(1f, 1f, 1f, 0.55f);
-            help.text = "←/→ 이동   Space 점프 (2단)   ↓+Space 발판 내려가기   Q 무기 전환   ESC 일시정지   C 증강 목록   F1 튜닝";
+            help.text = "←/→ 이동   Space 점프 (2단)   ↓+Space 발판 내려가기   Q 무기 전환   ESC 일시정지   F1 튜닝";
             UiKit.Place(help.rectTransform, new Vector2(1f, 1f), new Vector2(-28f, -28f), new Vector2(900f, 32f));
-
-            // C 증강 목록 (증강 선택 화면의 어두운 막 아래에 깔리도록 먼저 생성)
-            _augmentList = new AugmentListPanel(_root);
-
-            // 증강 선택 화면 (일시정지·게임오버 패널보다 아래)
-            _augmentUi = new AugmentChoiceUI(_root);
 
             // F1 튜닝 패널
             _tuningPanel = new TuningPanel(_root);

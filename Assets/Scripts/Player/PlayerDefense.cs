@@ -49,8 +49,8 @@ namespace ParryRL
 
         public DefenseState State { get; private set; } = DefenseState.Ready;
         public float Timer { get; private set; }
-        /// <summary>방어 활성 시간 = 튜닝 기본값 + 증강 보정 (넓은 판정).</summary>
-        public float ActiveTime => GameTuning.Current.defenseActiveTime + (_mods != null ? _mods.DefenseWindowBonus : 0f);
+        /// <summary>방어 활성 시간 = 튜닝 값.</summary>
+        public float ActiveTime => GameTuning.Current.defenseActiveTime;
         public float WhiffCooldown => GameTuning.Current.whiffCooldown;
         /// <summary>이번 활성의 전체 길이 (활성 시간 + 입력 버퍼).</summary>
         public float ActiveDuration { get; private set; }
@@ -65,7 +65,6 @@ namespace ParryRL
         private PlayerMotor _motor;
         private PlayerParty _party;
         private PlayerCombat _combat;
-        private RunModifiers _mods;
         private float _pressTime = float.NegativeInfinity;
         private float _lastHitTime = float.NegativeInfinity;
         /// <summary>이번 활성 중 한 번 이상 막았다 — 활성은 끝까지 유지돼 연속 패링이 되고, 끝날 때 헛스윙이 아니다.</summary>
@@ -78,7 +77,6 @@ namespace ParryRL
             _motor = GetComponent<PlayerMotor>();
             _party = GetComponent<PlayerParty>();
             _combat = GetComponent<PlayerCombat>();
-            _mods = GetComponent<RunModifiers>();
         }
 
         private void Update()

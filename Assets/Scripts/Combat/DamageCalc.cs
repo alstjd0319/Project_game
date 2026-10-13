@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ParryRL
 {
-    /// <summary>플레이어 딜의 출처. 증강 보너스가 어디에 붙는지 가르는 기준.</summary>
+    /// <summary>플레이어 딜의 출처.</summary>
     public enum DamageSource { Counter, AttackSkill, DashSlash }
 
     /// <summary>
@@ -38,8 +38,7 @@ namespace ParryRL
 
     /// <summary>
     /// 플레이어 딜 계산은 전부 여기 한 곳 (기획서 5.3).
-    /// 최종 = 기본 × 캐릭터 패시브(공격력 배율) × (1 + 증강 보너스 합).
-    /// 증강끼리는 더하고 캐릭터 패시브에만 곱한다 — 증강을 전부 곱하면 빌드 간 편차가 폭발하기 때문.
+    /// 최종 = 기본 × 캐릭터 패시브(공격력 배율). (증강은 폐지됐다 — 보너스 층이 필요하면 여기에 다시 붙인다.)
     /// </summary>
     public static class DamageCalc
     {
@@ -53,9 +52,8 @@ namespace ParryRL
 
             float passive = hit.Ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(hit.Kind);
 
-            float bonus = RunModifiers.Instance != null ? RunModifiers.Instance.DamageBonus(hit, target, Notes) : 0f;
             note = Notes.Count > 0 ? string.Join(" · ", Notes) : null;
-            return Mathf.Max(1, Mathf.RoundToInt(baseDamage * passive * (1f + bonus)));
+            return Mathf.Max(1, Mathf.RoundToInt(baseDamage * passive));
         }
 
         public static int Compute(int baseDamage, in HitInfo hit, EnemyController target) => Compute(baseDamage, hit, target, out _);
