@@ -70,6 +70,7 @@ namespace ParryRL
                 _combat.DefenseSucceeded += OnDefenseSucceeded;
                 _combat.CounterFired += OnCounterFired;
                 _combat.ActionUsed += OnActionUsed;
+                _combat.WeaponChanged += OnWeaponChanged;
             }
         }
 
@@ -82,6 +83,7 @@ namespace ParryRL
                 _combat.DefenseSucceeded -= OnDefenseSucceeded;
                 _combat.CounterFired -= OnCounterFired;
                 _combat.ActionUsed -= OnActionUsed;
+                _combat.WeaponChanged -= OnWeaponChanged;
             }
         }
 
@@ -107,6 +109,8 @@ namespace ParryRL
         }
 
         private void OnDamaged(int _) => PlayOnce("hit");
+        // 무기를 바꾸면 교체 동작을 한 번 보여준다
+        private void OnWeaponChanged(WeaponMode _) => PlayOnce("enter");
 
         private void PlayOnce(string clip)
         {
@@ -114,13 +118,21 @@ namespace ParryRL
             _oneShotTime = 0f;
         }
 
-        public CharacterArt ArtFor(CharacterKind kind)
+        /// <summary>그 캐릭터·무기의 그림 묶음. 무기에 맞는 묶음이 없으면 같은 캐릭터의 아무 묶음.</summary>
+        public CharacterArt ArtFor(CharacterKind kind, WeaponMode weapon)
         {
             if (arts == null) return null;
+            CharacterArt fallback = null;
             foreach (var a in arts)
-                if (a != null && a.kind == kind) return a;
-            return null;
+            {
+                if (a == null || a.kind != kind) continue;
+                if (a.weapon == weapon) return a;
+                fallback ??= a;
+            }
+            return fallback;
         }
+
+        public CharacterArt ArtFor(CharacterKind kind) => ArtFor(kind, _combat != null ? _combat.Weapon : WeaponMode.Melee);
 
         private void LateUpdate()
         {
@@ -143,11 +155,17 @@ namespace ParryRL
             if (!_motor.IsGrounded) _airTime += dt;
             else
             {
-                if (_airTime >= MinAirTimeForLanding) _landTimer = LandHold;
+                if (_airTime >= MinAirTimeForLanding)
+                {
+                    _landTimer = LandHold;
+                    // 착지 먼지 (발밑)
+                    FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.dustLand : null,
+                        transform.position + Vector3.down * (transform.localScale.y * 0.5f - 0.1f), 0.6f, false, 6);
+                }
                 _airTime = 0f;
             }
 
-            var art = ArtFor(_party.Current.kind);
+            var art = ArtFor(_party.Current.kind, _combat != null ? _combat.Weapon : WeaponMode.Melee);
             if (art == null || artRenderer == null)
             {
                 if (artRenderer != null) artRenderer.enabled = false;

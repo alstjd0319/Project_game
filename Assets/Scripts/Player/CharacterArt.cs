@@ -19,6 +19,7 @@ namespace ParryRL
     public class CharacterArt : ScriptableObject
     {
         public CharacterKind kind;
+        [Tooltip("이 그림 묶음이 쓰이는 무기 (근접 = 봉, 원거리 = 부적)")] public WeaponMode weapon;
         public SpriteClip idle = new();
         public SpriteClip run = new();
         [Tooltip("방어 활성 시간 동안 한 번 재생 (fps는 무시하고 활성 길이에 맞춘다)")] public SpriteClip parry = new();

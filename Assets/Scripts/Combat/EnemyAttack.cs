@@ -131,8 +131,36 @@ namespace ParryRL
             ApplyVisual();
         }
 
+        private bool _loopArt;    // 투사체 그림: 몇 장을 계속 돌려 재생
+        private int _loopStart, _loopCount;
+        private float _loopTime;
+
+        /// <summary>
+        /// 투사체(원거리) 그림: clip의 start부터 count장을 반복 재생. 박스 대신 보이고(판정 박스는 "판정 상자 보기"에서만),
+        /// 그림 원본 색을 그대로 쓴다. scale은 원본 크기 배율.
+        /// </summary>
+        public void AttachProjectileArt(SpriteClip clip, int start, int count, float scale)
+        {
+            if (clip == null || clip.IsEmpty || start >= clip.frames.Length) return;
+            var go = new GameObject("Art");
+            go.transform.SetParent(transform, false);
+            Vector3 box = transform.localScale;
+            go.transform.localScale = new Vector3(scale / box.x, scale / box.y, 1f);
+            _art = go.AddComponent<SpriteRenderer>();
+            _art.sortingOrder = ArtOrder;
+            _art.flipX = _direction.x < 0f;
+            _artClip = clip;
+            _loopArt = true;
+            _loopStart = start;
+            _loopCount = Mathf.Clamp(count, 1, clip.frames.Length - start);
+            _art.sprite = clip.frames[start];
+            ApplyVisual();
+        }
+
         /// <summary>그림 색: 공격색 그대로(박스는 반투명이지만 그림은 불투명하게), 흘려보낸 공격은 회색 반투명.</summary>
-        private Color ArtColor => new(_color.r, _color.g, _color.b, _ghost ? _color.a : 1f);
+        private Color ArtColor => _loopArt
+            ? new Color(1f, 1f, 1f, _ghost ? _color.a : 1f)   // 투사체 그림은 원본 색
+            : new(_color.r, _color.g, _color.b, _ghost ? _color.a : 1f);
 
         private void SetColor(Color c)
         {
@@ -160,13 +188,19 @@ namespace ParryRL
 
         private void LateUpdate()
         {
-            if (_art != null) ApplyVisual();
+            if (_art == null) return;
+            if (_loopArt)
+            {
+                _loopTime += Time.deltaTime;
+                _art.sprite = _artClip.frames[_loopStart + (int)(_loopTime * _artClip.fps) % _loopCount];
+            }
+            ApplyVisual();
         }
 
         /// <summary>판정이 끝난 베기 그림의 나머지(부서지는 장면)를 판정 없이 마저 재생한다.</summary>
         private void PlayArtBreakup()
         {
-            if (_art == null || _artClip.frames.Length < 2) return;
+            if (_art == null || _loopArt || _artClip.frames.Length < 2) return;
             FxClip.Play(_artClip, 1, transform.position, transform.localScale, _art.flipX, ArtColor, ArtOrder);
         }
 

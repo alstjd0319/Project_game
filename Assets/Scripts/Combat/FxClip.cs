@@ -21,14 +21,14 @@ namespace ParryRL
         /// <summary>
         /// clip의 startFrame부터 끝까지 재생. center·size는 판정 박스 그대로 (그림을 박스 크기로 늘린다).
         /// </summary>
-        public static FxClip Play(SpriteClip clip, int startFrame, Vector2 center, Vector2 size, bool flipX, Color color, int order)
+        public static FxClip Play(SpriteClip clip, int startFrame, Vector2 center, Vector2 size, bool flipX, Color color, int order, bool uniform = false)
         {
             var go = new GameObject("Fx_Clip");
             go.transform.position = center;
             var sr = go.AddComponent<SpriteRenderer>();
             sr.flipX = flipX;
             sr.sortingOrder = order;
-            FitToBox(go.transform, clip.frames[0], size);
+            FitToBox(go.transform, clip.frames[0], size, uniform);
             var fx = go.AddComponent<FxClip>();
             fx._sr = sr;
             fx._clip = clip;
@@ -41,10 +41,28 @@ namespace ParryRL
         }
 
         /// <summary>그림(가운데 피벗)이 정확히 size(유닛) 크기로 보이도록 스케일을 맞춘다.</summary>
-        public static void FitToBox(Transform t, Sprite sprite, Vector2 size)
+        public static void FitToBox(Transform t, Sprite sprite, Vector2 size, bool uniform = false)
         {
             Vector2 s = sprite.bounds.size;
+            if (uniform)
+            {
+                // 비율을 유지한 채 박스 안에 들어가게 (정사각 칸에 그린 이펙트를 늘리면 일그러지므로)
+                float k = Mathf.Min(size.x / s.x, size.y / s.y);
+                t.localScale = new Vector3(k, k, 1f);
+                return;
+            }
             t.localScale = new Vector3(size.x / s.x, size.y / s.y, 1f);
+        }
+
+        /// <summary>
+        /// 연출용 그림 재생 (판정 없음): 원본 크기 × scale로 pos에 그리고 끝까지 재생한 뒤 사라진다. 그림이 없으면 아무것도 안 한다.
+        /// </summary>
+        public static FxClip PlayAt(SpriteClip clip, Vector2 pos, float scale = 1f, bool flipX = false, int order = 45, Color? tint = null)
+        {
+            if (clip == null || clip.IsEmpty) return null;
+            var fx = Play(clip, 0, pos, Vector2.one, flipX, tint ?? Color.white, order);
+            fx.transform.localScale = new Vector3(scale, scale, 1f);
+            return fx;
         }
 
         private void Update()

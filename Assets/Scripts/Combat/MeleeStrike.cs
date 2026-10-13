@@ -29,8 +29,8 @@ namespace ParryRL
             if (hasArt)
             {
                 // 그림은 흰 먹물 — 캐릭터 색을 살짝만 섞는다
-                var tint = Color.Lerp(Color.white, new Color(color.r, color.g, color.b, 1f), 0.25f);
-                FxClip.Play(art, 0, center, size, facing < 0f, tint, ArtOrder);
+                var tint = Color.white; // 그림이 이미 컬러라 색을 입히지 않는다
+                FxClip.Play(art, 0, center, size, facing < 0f, tint, ArtOrder, uniform: true);
             }
             if (!hasArt || GameTuning.Current.showHitboxes)
             {

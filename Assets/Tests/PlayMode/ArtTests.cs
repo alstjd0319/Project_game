@@ -49,8 +49,8 @@ namespace ParryRL.Tests
             var col = _sprite.GetComponent<BoxCollider2D>();
             var art = _sprite.ArtRenderer;
             Assert.AreEqual(col.bounds.min.y, art.transform.position.y, 0.01f, "그림 피벗(발끝) = 네모 바닥");
-            Assert.AreEqual(col.bounds.center.x, art.transform.position.x, 0.01f, "그림 피벗(삿갓 중심) = 네모 가운데");
-            Assert.AreEqual(45f, art.sprite.pixelsPerUnit, "960×540 기준: 1유닛 = 45px");
+            Assert.AreEqual(col.bounds.center.x, art.transform.position.x, 0.01f, "그림 피벗(기준점) = 네모 가운데");
+            Assert.AreEqual(90f, art.sprite.pixelsPerUnit, "1920×1080 배율 1: 1유닛 = 90px");
             Assert.AreEqual(FilterMode.Point, art.sprite.texture.filterMode, "도트는 흐리게 늘리지 않는다");
             Assert.AreEqual(1f, art.transform.lossyScale.x, 0.001f, "부모 네모의 늘림을 상쇄 (픽셀 비율 유지)");
             Assert.AreEqual(1f, art.transform.lossyScale.y, 0.001f);
@@ -166,58 +166,38 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 몬스터_베기는_그림이고_그림은_판정박스와_같은_크기_판정이_꺼지면_부서진다()
+        public IEnumerator 도깨비불_불덩이는_그림이고_일반은_청록_강공격은_빨강_판정네모는_숨는다()
         {
             var fx = GameAssets.AttackFx;
             Assert.IsNotNull(fx, "씬에 공격 이펙트 그림 연결");
+            Assert.AreEqual(8, fx.dokkaebiProjectile.frames.Length, "청록 4 + 빨강 4");
             Vector2 p = _sprite.transform.position;
-            // 플레이어에게 닿지 않는 곳에서 왼쪽으로 베기
-            var slash = EnemyAttack.SpawnSlash(null, AttackType.Normal, new Vector2(p.x + 10f, 0.7f), -1f, 1.0f, 45f, 2.4f,
-                new Color(1f, 0.7f, 0.45f, 0.55f), 10);
-            var box = slash.GetComponent<SpriteRenderer>();
-            var col = slash.GetComponent<BoxCollider2D>();
-            var art = slash.transform.Find("Art").GetComponent<SpriteRenderer>();
 
-            for (int i = 0; i < 6; i++) yield return new WaitForFixedUpdate(); // 다 뻗음 (0.05초)
+            var normal = EnemyAttack.Spawn(null, AttackType.Normal, new Vector2(p.x + 12f, 3f), Vector2.left,
+                new Vector2(0.6f, 0.6f), 0.01f, 6f, new Color(1f, 0.7f, 0.45f, 0.55f), 10);
+            normal.AttachProjectileArt(fx.dokkaebiProjectile, 0, 4, 2.2f);
+            var heavy = EnemyAttack.Spawn(null, AttackType.Heavy, new Vector2(p.x + 12f, 5f), Vector2.left,
+                new Vector2(0.9f, 0.9f), 0.01f, 6f, new Color(1f, 0.1f, 0.3f, 1f), 20);
+            heavy.AttachProjectileArt(fx.dokkaebiProjectile, 4, 4, 2.2f);
             yield return null;
-            Assert.AreEqual(2.4f, slash.transform.localScale.x, 0.001f);
-            Assert.IsFalse(box.enabled, "판정 네모는 숨김");
-            Assert.AreSame(fx.enemySlash.frames[0], art.sprite, "판정이 살아 있는 동안은 꽉 찬 첫 장");
-            Assert.IsTrue(art.flipX, "왼쪽으로 베면 뒤집기");
-            Physics2D.SyncTransforms();
-            AssertSameRect(col.bounds, art.bounds, "그림 = 판정");
+            yield return null;
+
+            var nArt = normal.transform.Find("Art").GetComponent<SpriteRenderer>();
+            var hArt = heavy.transform.Find("Art").GetComponent<SpriteRenderer>();
+            CollectionAssert.Contains(new[] { fx.dokkaebiProjectile.frames[0], fx.dokkaebiProjectile.frames[1], fx.dokkaebiProjectile.frames[2], fx.dokkaebiProjectile.frames[3] }, nArt.sprite, "일반은 앞 4장(청록)");
+            CollectionAssert.Contains(new[] { fx.dokkaebiProjectile.frames[4], fx.dokkaebiProjectile.frames[5], fx.dokkaebiProjectile.frames[6], fx.dokkaebiProjectile.frames[7] }, hArt.sprite, "강공격은 뒤 4장(빨강)");
+            Assert.IsFalse(normal.GetComponent<SpriteRenderer>().enabled, "판정 네모는 숨김");
+            Assert.AreEqual(Color.white.r, nArt.color.r, 1e-3f, "그림은 원본 색 (공격색을 덧입히지 않음)");
+            Assert.IsTrue(nArt.flipX, "왼쪽으로 날아가면 뒤집기");
 
             GameTuning.Current.showHitboxes = true;
             yield return null;
-            Assert.IsTrue(box.enabled, "판정 상자 보기");
-            Assert.Greater(box.sortingOrder, art.sortingOrder);
+            Assert.IsTrue(normal.GetComponent<SpriteRenderer>().enabled, "판정 상자 보기");
             GameTuning.Current.showHitboxes = false;
-
-            Bounds last = col.bounds;
-            float t = 0f;
-            while (slash != null && t < 1f) { t += Time.deltaTime; yield return null; }
-            Assert.IsTrue(slash == null, "판정이 끝나면 공격은 사라짐");
-            var breakup = Object.FindAnyObjectByType<FxClip>();
-            Assert.IsNotNull(breakup, "부서지는 그림은 판정 없이 마저 재생");
-            Assert.GreaterOrEqual(breakup.Frame, 1);
-            Assert.IsNull(breakup.GetComponent<Collider2D>());
-            AssertSameRect(last, breakup.Renderer.bounds, "부서지는 그림도 같은 자리");
         }
 
         [UnityTest]
-        public IEnumerator 몬스터_강공격_베기는_강공격_그림()
-        {
-            Vector2 p = _sprite.transform.position;
-            var slash = EnemyAttack.SpawnSlash(null, AttackType.Heavy, new Vector2(p.x + 10f, 0.9f), 1f, 1.4f, 45f, 2.4f,
-                new Color(1f, 0.1f, 0.3f, 1f), 20);
-            yield return new WaitForFixedUpdate();
-            var art = slash.transform.Find("Art").GetComponent<SpriteRenderer>();
-            Assert.AreSame(GameAssets.AttackFx.enemyHeavySlash.frames[0], art.sprite);
-            Assert.IsFalse(art.flipX);
-        }
-
-        [UnityTest]
-        public IEnumerator 플레이어_공격스킬과_반격은_그림이고_판정박스와_같은_크기()
+        public IEnumerator 플레이어_공격스킬과_반격은_그림이고_판정박스_안에_비율대로_들어간다()
         {
             _sprite.GetComponent<SkillGauge>().Add(3);
             Assert.IsTrue(_combat.TryAttackSkill());
@@ -228,8 +208,10 @@ namespace ParryRL.Tests
             Vector2 p = _sprite.transform.position;
             int facing = _sprite.GetComponent<PlayerMotor>().Facing;
             Assert.AreEqual(facing < 0, clip.Renderer.flipX, "바라보는 쪽으로 베기");
-            var expected = new Bounds(new Vector3(p.x + facing * 1.2f, p.y, 0f), new Vector3(2.4f, 1.6f, 0f));
-            AssertSameRect(expected, clip.Renderer.bounds, "그림 = 공격 스킬 판정 (2.4×1.6)");
+            // 정사각 칸에 그린 이펙트라 일그러뜨리지 않고 비율을 유지한 채 박스(2.4×1.6) 안에 맞춘다
+            Assert.AreEqual(1.6f, clip.Renderer.bounds.size.y, 0.01f, "높이는 박스 높이");
+            Assert.AreEqual(clip.Renderer.bounds.size.y, clip.Renderer.bounds.size.x, 0.01f, "정사각 비율 유지");
+            Assert.AreEqual(p.x + facing * 1.2f, clip.Renderer.bounds.center.x, 0.01f, "박스 가운데");
             Object.Destroy(clip.gameObject);
             yield return null;
 
@@ -243,8 +225,7 @@ namespace ParryRL.Tests
             Assert.IsNotNull(counter, "반격 그림");
             Assert.AreSame(GameAssets.AttackFx.meleeCounter.frames[0], counter.Renderer.sprite);
             Assert.IsTrue(counter.Renderer.flipX, "왼쪽으로 반격");
-            Assert.AreEqual(1.8f, counter.Renderer.bounds.size.x, 0.01f, "반격 판정 가로 1.8");
-            Assert.AreEqual(1.6f, counter.Renderer.bounds.size.y, 0.01f);
+            Assert.AreEqual(1.6f, counter.Renderer.bounds.size.y, 0.01f, "반격 박스(1.8×1.6) 높이에 맞춤");
         }
 
         // ───────────── 근접 몬스터 ─────────────
@@ -261,7 +242,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 근접몬스터만_그림이고_발끝은_판정네모_바닥()
+        public IEnumerator 창귀_그림이고_발끝은_판정네모_바닥_도깨비불은_몸_중심()
         {
             var melee = FindEnemy(EnemyKind.Melee);
             var art = melee.GetComponent<EnemySprite>();
@@ -273,8 +254,8 @@ namespace ParryRL.Tests
 
             var col = melee.GetComponent<BoxCollider2D>();
             Assert.AreEqual(col.bounds.min.y, art.ArtRenderer.transform.position.y, 0.01f, "그림 피벗(발끝) = 네모 바닥");
-            Assert.AreEqual(col.bounds.center.x, art.ArtRenderer.transform.position.x, 0.01f, "그림 피벗(삿갓 중심) = 네모 가운데");
-            Assert.AreEqual(45f, art.ArtRenderer.sprite.pixelsPerUnit);
+            Assert.AreEqual(col.bounds.center.x, art.ArtRenderer.transform.position.x, 0.01f, "그림 피벗(기준점) = 네모 가운데");
+            Assert.AreEqual(90f, art.ArtRenderer.sprite.pixelsPerUnit);
             Assert.AreEqual(FilterMode.Point, art.ArtRenderer.sprite.texture.filterMode);
             Assert.AreEqual(1f, art.ArtRenderer.transform.lossyScale.x, 0.001f, "부모 네모의 늘림을 상쇄");
             Assert.AreEqual(1f, art.ArtRenderer.transform.lossyScale.y, 0.001f);
@@ -286,9 +267,11 @@ namespace ParryRL.Tests
             Assert.Greater(box.sortingOrder, art.ArtRenderer.sortingOrder);
             GameTuning.Current.showHitboxes = false;
 
+            // 도깨비불(원거리)은 떠 있는 몸이라 그림 기준점 = 네모 가운데
             var ranged = FindEnemy(EnemyKind.Ranged);
-            Assert.IsNull(ranged.GetComponent<EnemySprite>(), "원거리 몬스터는 아직 네모");
-            Assert.IsTrue(ranged.GetComponent<SpriteRenderer>().enabled);
+            var rArt = ranged.GetComponent<EnemySprite>();
+            Assert.IsNotNull(rArt, "원거리 몬스터에도 그림");
+            Assert.AreEqual(ranged.GetComponent<BoxCollider2D>().bounds.center.y, rArt.ArtRenderer.transform.position.y, 0.01f, "도깨비불 몸 중심 = 네모 가운데");
         }
 
         [UnityTest]
@@ -378,6 +361,32 @@ namespace ParryRL.Tests
             Assert.AreEqual(deathClip.frames.Length - 1, corpse.Frame, "마지막 장면(잉크 웅덩이)까지");
             yield return new WaitForSeconds(1f);
             Assert.IsTrue(corpse == null, "흐려지며 사라짐");
+        }
+
+        [UnityTest]
+        public IEnumerator 무기를_바꾸면_그림_묶음이_봉에서_부적으로_바뀌고_교체_동작이_나온다()
+        {
+            yield return new WaitForSeconds(0.2f);
+            Assert.AreEqual("idle", _sprite.Clip);
+            Assert.IsTrue(_sprite.ArtRenderer.sprite.name.StartsWith("hero_staff_idle"), "근접 = 봉: " + _sprite.ArtRenderer.sprite.name);
+
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            yield return null;
+            Assert.AreEqual("enter", _sprite.Clip, "무기 교체 동작");
+            Assert.IsTrue(_sprite.ArtRenderer.sprite.name.StartsWith("hero_swap"));
+
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual("idle", _sprite.Clip);
+            Assert.IsTrue(_sprite.ArtRenderer.sprite.name.StartsWith("hero_talisman_idle"), "원거리 = 부적: " + _sprite.ArtRenderer.sprite.name);
+            Assert.AreEqual(WeaponMode.Ranged, _sprite.ArtFor(CharacterKind.Player).weapon);
+
+            // 일반공격 시트도 무기별
+            yield return new WaitForSeconds(0.3f);
+            TestScene.SetAttackSkillFree(true);
+            Assert.IsTrue(_combat.TryAttackSkill());
+            yield return null;
+            Assert.AreEqual("attack", _sprite.Clip);
+            Assert.IsTrue(_sprite.ArtRenderer.sprite.name.StartsWith("hero_talisman_skill_fan"), _sprite.ArtRenderer.sprite.name);
         }
     }
 }

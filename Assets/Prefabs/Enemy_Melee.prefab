@@ -191,9 +191,6 @@ MonoBehaviour:
   recoverTime: 0.35
   normalDamage: 10
   heavyDamage: 20
-  idleSprite: {fileID: 0}
-  windupSprite: {fileID: 0}
-  attackSprite: {fileID: 0}
   normalWindupScale: 1.06
   heavyWindupScale: 1.25
   normalAttackColor: {r: 1, g: 0.7, b: 0.45, a: 0.55}
@@ -222,7 +219,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ParryRL::ParryRL.EnemySprite
   artRenderer: {fileID: 5564191848079619644}
-  art: {fileID: 11400000, guid: 023ea66b9a439d245a846dc1bc168f74, type: 2}
+  art: {fileID: 11400000, guid: 20441532403b0473fabb84a85a9b7c61, type: 2}
 --- !u!1 &5413686194535119099
 GameObject:
   m_ObjectHideFlags: 0

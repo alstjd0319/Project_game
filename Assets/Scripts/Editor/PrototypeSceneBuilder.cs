@@ -18,22 +18,24 @@ namespace ParryRL.EditorTools
         private const string MeleePrefabPath = "Assets/Prefabs/Enemy_Melee.prefab";
         private const string RangedPrefabPath = "Assets/Prefabs/Enemy_Ranged.prefab";
 
-        private const string SpriteDir = "Assets/Sprites/ParryPrototype/";
         private const string AudioDir = "Assets/Audio/ParryPrototype/";
 
         private const float ArenaHalfWidth = 22f;
 
-        // 도트 그림 규격 — Tools/sprites/process_sheets.ps1의 칸 규격과 같아야 한다.
-        // 960×540 기준(1080p에서 2배) · 화면 높이 12유닛 → 1유닛 = 45px.
-        private const float PixelsPerUnit = 45f;
-        private const int FrameW = 160, FrameH = 88, AnchorX = 92, FootY = 84;
-        private const string WarriorArtDir = "Assets/Art/Characters/Warrior";
-        private const string WarriorArtPath = WarriorArtDir + "/WarriorArt.asset";
-        // 근접 몬스터는 키가 더 크고 강공격 때 칼을 머리 위로 치켜들어 칸이 크다 (process_sheets.ps1의 melee cell과 같아야 한다).
-        private const int MeleeFrameW = 176, MeleeFrameH = 120, MeleeAnchorX = 80, MeleeFootY = 116;
-        private const string MeleeArtDir = "Assets/Art/Enemies/Melee";
-        private const string MeleeArtPath = MeleeArtDir + "/MeleeArt.asset";
-        // 공격 이펙트 — 프레임이 이미 판정 박스 크기(45px/유닛)라 피벗 가운데, 게임에서 박스 크기로 늘려 그린다.
+        // 도트 그림 규격 (귀문 에셋 묶음 안내.md): 화면 1920×1080을 배율 1로, 화면 높이 12유닛 → 1유닛 = 90px.
+        // 칸 안의 기준점(피벗)은 시트 manifest 값. 땅 캐릭터는 발끝(0.5, 0.0714), 도깨비불은 몸 중심(0.5, 0.3304).
+        private const float PixelsPerUnit = 90f;
+        private static readonly Vector2 GroundPivot = new(0.5f, 0.0714f);
+        private static readonly Vector2 FloatPivot = new(0.5f, 0.3304f);
+        private static readonly Vector2 CenterPivot = new(0.5f, 0.5f);
+        private const string HeroArtDir = "Assets/Art/Characters/Hero";
+        private const string StaffArtPath = HeroArtDir + "/StaffArt.asset";
+        private const string TalismanArtPath = HeroArtDir + "/TalismanArt.asset";
+        private const string ChanggwiArtDir = "Assets/Art/Enemies/Changgwi";
+        private const string ChanggwiArtPath = ChanggwiArtDir + "/ChanggwiArt.asset";
+        private const string DokkaebibulArtDir = "Assets/Art/Enemies/Dokkaebibul";
+        private const string DokkaebibulArtPath = DokkaebibulArtDir + "/DokkaebibulArt.asset";
+        // 전투 이펙트 — 칸 256×256, 피벗 가운데. 게임에서 판정 박스(또는 원본 크기)에 맞춰 그린다.
         private const string FxDir = "Assets/Art/Fx";
         private const string FxArtPath = FxDir + "/AttackFx.asset";
 
@@ -48,12 +50,15 @@ namespace ParryRL.EditorTools
 
             _square = CreateSquareSprite();
             CreateNoFrictionMaterial();
-            var meleeArt = CreateEnemyArt(MeleeArtDir, "melee", MeleeArtPath);
+            var changgwiArt = CreateEnemyArt(ChanggwiArtDir, "changgwi", ChanggwiArtPath, FloatPivotFor: false);
+            var dokkaebibulArt = CreateEnemyArt(DokkaebibulArtDir, "dokkaebibul", DokkaebibulArtPath, FloatPivotFor: true);
+            // 근접 = 창귀, 원거리 = 도깨비불 (두억시니·장산범·어둑시니·불가살이·만신은 게임에 아직 없어 보류)
             CreateEnemyPrefab(MeleePrefabPath, "Enemy_Melee", EnemyKind.Melee,
-                new Vector2(1f, 1.6f), new Color(0.58f, 0.46f, 0.78f), meleeArt);
+                new Vector2(1f, 1.6f), new Color(0.58f, 0.46f, 0.78f), changgwiArt, floating: false);
             CreateEnemyPrefab(RangedPrefabPath, "Enemy_Ranged", EnemyKind.Ranged,
-                new Vector2(0.9f, 1.3f), new Color(0.35f, 0.62f, 0.8f), null);
-            CreateCharacterArt(CharacterKind.Player, WarriorArtDir, "warrior", WarriorArtPath);
+                new Vector2(0.9f, 1.3f), new Color(0.35f, 0.62f, 0.8f), dokkaebibulArt, floating: true);
+            CreateHeroArt(WeaponMode.Melee, StaffArtPath, "staff");
+            CreateHeroArt(WeaponMode.Ranged, TalismanArtPath, "talisman");
             CreateAttackFxArt();
             AssetDatabase.SaveAssets();
 
@@ -62,7 +67,8 @@ namespace ParryRL.EditorTools
             // NewScene이 사용되지 않는 에셋을 언로드하므로, 씬에 넣을 에셋은 씬 생성 후에 다시 로드한다.
             _square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
             var noFriction = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(NoFrictionPath);
-            var playerArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(WarriorArtPath);
+            var staffArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(StaffArtPath);
+            var talismanArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(TalismanArtPath);
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
             var meleePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MeleePrefabPath).GetComponent<EnemyController>();
             var rangedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RangedPrefabPath).GetComponent<EnemyController>();
@@ -132,8 +138,11 @@ namespace ParryRL.EditorTools
             Set(playerSprite, "eye", eye.transform);
             var artsProp = new SerializedObject(playerSprite);
             var list = artsProp.FindProperty("arts");
-            list.arraySize = playerArt != null ? 1 : 0;
-            if (playerArt != null) list.GetArrayElementAtIndex(0).objectReferenceValue = playerArt;
+            var heroArts = new System.Collections.Generic.List<CharacterArt>();
+            if (staffArt != null) heroArts.Add(staffArt);
+            if (talismanArt != null) heroArts.Add(talismanArt);
+            list.arraySize = heroArts.Count;
+            for (int a = 0; a < heroArts.Count; a++) list.GetArrayElementAtIndex(a).objectReferenceValue = heroArts[a];
             artsProp.ApplyModifiedPropertiesWithoutUndo();
 
             // ── 적 스포너 ──
@@ -202,13 +211,14 @@ namespace ParryRL.EditorTools
         }
 
         /// <summary>
-        /// 캐릭터 프레임(&lt;prefix&gt;_&lt;동작&gt;_&lt;번호&gt;.png)을 도트 설정으로 임포트하고 CharacterArt 에셋으로 묶는다.
-        /// 폴더에 그림이 없으면 아무것도 하지 않는다 (그 캐릭터는 네모로 표시).
+        /// 퇴마사 프레임(hero_&lt;시트&gt;_&lt;번호&gt;.png)을 도트 설정으로 임포트하고, 무기별 CharacterArt로 묶는다.
+        /// 봉(근접)·부적(원거리)이 각각 대기·달리기·패링·반격·일반공격 그림을 따로 갖고, 점프·대시·피격·사망은 공용이다.
+        /// 스킬 시트 중 휩쓸기(봉)·부채꼴(부적)을 일반공격에 쓴다 — 내려찍기·봉인 등 나머지 스킬 시트는 스킬이 생기면 쓴다.
         /// </summary>
-        private static void CreateCharacterArt(CharacterKind kind, string dir, string prefix, string assetPath)
+        private static void CreateHeroArt(WeaponMode weapon, string assetPath, string w)
         {
-            if (!AssetDatabase.IsValidFolder(dir)) return;
-            ImportFrames(dir, FrameW, FrameH, AnchorX, FootY);
+            if (!AssetDatabase.IsValidFolder(HeroArtDir)) return;
+            ImportFrames(HeroArtDir, _ => GroundPivot);
 
             var art = AssetDatabase.LoadAssetAtPath<CharacterArt>(assetPath);
             if (art == null)
@@ -216,25 +226,33 @@ namespace ParryRL.EditorTools
                 art = ScriptableObject.CreateInstance<CharacterArt>();
                 AssetDatabase.CreateAsset(art, assetPath);
             }
-            art.kind = kind;
-            art.idle = LoadClip(dir, prefix, "idle", 6f);
-            art.run = LoadClip(dir, prefix, "run", 12f);
-            art.parry = LoadClip(dir, prefix, "parry", 12f);
-            art.dash = LoadClip(dir, prefix, "dash", 20f); // 대시 0.15초 = 3프레임
-            art.counter = LoadClip(dir, prefix, "counter", 14f); // 4장 ≈ 0.29초
-            art.attack = LoadClip(dir, prefix, "attack", 14f);   // 5장 ≈ 0.36초 (공격 스킬 쿨타임 1초 안)
-            art.jump = LoadClip(dir, prefix, "jump", 6f);        // 공중은 세로 속도로 고르므로 fps는 안 쓴다
-            art.hit = LoadClip(dir, prefix, "hit", 12f);
-            art.death = LoadClip(dir, prefix, "death", 6f);
-            art.enter = LoadClip(dir, prefix, "enter", 12f);
+            string d = HeroArtDir;
+            art.kind = CharacterKind.Player;
+            art.weapon = weapon;
+            art.idle = LoadClip(d, "hero", w + "_idle", 6f);
+            art.run = LoadClip(d, "hero", w + "_run", 12f);
+            art.parry = LoadClip(d, "hero", w + "_parry", 12f);
+            art.counter = LoadClip(d, "hero", w + "_counter", 14f);
+            art.attack = LoadClip(d, "hero", w == "staff" ? "staff_skill_sweep" : "talisman_skill_fan", 14f);
+            art.dash = LoadClip(d, "hero", "dash", 20f);       // 대시 0.15초 = 3프레임
+            art.jump = LoadClip(d, "hero", "jump", 6f);        // 공중은 세로 속도로 고르므로 fps는 안 쓴다
+            art.hit = LoadClip(d, "hero", "hit", 12f);
+            art.death = LoadClip(d, "hero", "death", 6f);
+            art.enter = LoadClip(d, "hero", "swap", 12f);      // 무기를 바꿀 때
+            art.counterHitFrame = 1;  // 반격 시트: 0 준비 · 1 뻗음 · 2 거둠
+            art.attackHitFrame = 2;   // 일반공격 시트: 0 준비 · 1 웅크림 · 2 뻗음 · 3 거둠
+            art.parryImpactFrame = 1; // 패링 시트: 0 올림 · 1 막음
             EditorUtility.SetDirty(art);
         }
 
-        /// <summary>몬스터 프레임을 임포트하고 EnemyArt 에셋으로 묶는다. 그림이 없으면 null (네모로 표시).</summary>
-        private static EnemyArt CreateEnemyArt(string dir, string prefix, string assetPath)
+        /// <summary>
+        /// 몬스터 프레임(&lt;이름&gt;_&lt;시트&gt;_&lt;번호&gt;.png)을 임포트하고 EnemyArt로 묶는다.
+        /// 일반 공격 시트(6장)는 앞 3장 = 예비 모션, 뒤 3장 = 베기/발사로 나눠 쓴다. 피격 시트는 앞 2장 = 경직, 뒤 3장 = 기절.
+        /// </summary>
+        private static EnemyArt CreateEnemyArt(string dir, string prefix, string assetPath, bool FloatPivotFor)
         {
             if (!AssetDatabase.IsValidFolder(dir)) return null;
-            ImportFrames(dir, MeleeFrameW, MeleeFrameH, MeleeAnchorX, MeleeFootY);
+            ImportFrames(dir, file => file.Contains("_projectile_") ? CenterPivot : FloatPivotFor ? FloatPivot : GroundPivot);
 
             var art = AssetDatabase.LoadAssetAtPath<EnemyArt>(assetPath);
             if (art == null)
@@ -243,40 +261,25 @@ namespace ParryRL.EditorTools
                 AssetDatabase.CreateAsset(art, assetPath);
             }
             art.idle = LoadClip(dir, prefix, "idle", 6f);
-            art.walk = LoadClip(dir, prefix, "walk", 8f);
-            art.windup = LoadClip(dir, prefix, "windup", 8f);            // 예비 모션 길이에 맞추므로 fps는 안 쓴다
-            art.slash = LoadClip(dir, prefix, "slash", 12f);             // 3장 = 0.25초 (회복 0.35초 안)
-            art.heavyWindup = LoadClip(dir, prefix, "heavywindup", 8f);
-            art.heavySlash = LoadClip(dir, prefix, "heavyslash", 12f);
-            art.stun = LoadClip(dir, prefix, "stun", 6f);
-            art.hit = LoadClip(dir, prefix, "hit", 8f);                  // 2장 = 0.25초 (경직 0.35초 안)
+            art.walk = LoadClip(dir, prefix, "move", 8f);
+            art.windup = LoadClipRange(dir, prefix, "attack_normal", 0, 3, 8f);   // 예비 모션 길이에 맞추므로 fps는 안 쓴다
+            art.slash = LoadClipRange(dir, prefix, "attack_normal", 3, 3, 12f);   // 3장 = 0.25초 (회복 0.35초 안)
+            art.heavyWindup = LoadClip(dir, prefix, "heavy_windup", 8f);
+            art.heavySlash = LoadClip(dir, prefix, "heavy_attack", 12f);
+            art.stun = LoadClipRange(dir, prefix, "hurt", 2, 3, 6f);
+            art.hit = LoadClipRange(dir, prefix, "hurt", 0, 2, 12f);
             art.death = LoadClip(dir, prefix, "death", 8f);
+            art.slashHitFrame = 0;       // 베기 시트는 뻗은 장면부터
+            art.heavySlashHitFrame = 1;  // 강공격 시트: 0 내리치기 시작 · 1 맞는 순간
             EditorUtility.SetDirty(art);
             return art;
         }
 
-        /// <summary>공격 이펙트 프레임을 임포트하고 AttackFxArt로 묶는다. 그림이 없으면 아무것도 안 함 (공격은 네모).</summary>
+        /// <summary>전투 이펙트 프레임을 임포트하고 AttackFxArt로 묶는다.</summary>
         private static void CreateAttackFxArt()
         {
             if (!AssetDatabase.IsValidFolder(FxDir)) return;
-            // 피벗 가운데: 프레임마다 크기가 달라도(효과마다 판정 크기가 다름) 같은 식으로 맞춘다
-            foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { FxDir }))
-            {
-                var importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid));
-                importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
-                var settings = new TextureImporterSettings();
-                importer.ReadTextureSettings(settings);
-                settings.spriteAlignment = (int)SpriteAlignment.Center;
-                settings.spritePixelsPerUnit = PixelsPerUnit;
-                settings.spriteMeshType = SpriteMeshType.FullRect;
-                settings.filterMode = FilterMode.Point;
-                settings.mipmapEnabled = false;
-                settings.alphaIsTransparency = true;
-                importer.SetTextureSettings(settings);
-                importer.textureCompression = TextureImporterCompression.Uncompressed;
-                importer.SaveAndReimport();
-            }
+            ImportFrames(FxDir, _ => CenterPivot);
 
             var fx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
             if (fx == null)
@@ -284,18 +287,25 @@ namespace ParryRL.EditorTools
                 fx = ScriptableObject.CreateInstance<AttackFxArt>();
                 AssetDatabase.CreateAsset(fx, FxArtPath);
             }
-            fx.enemySlash = LoadClip(FxDir, "enemy", "slash", 20f);           // 부서지는 3장 = 0.15초
-            fx.enemyHeavySlash = LoadClip(FxDir, "enemy", "heavyslash", 20f);
-            fx.meleeCounter = LoadClip(FxDir, "warrior", "counter", 14f);  // 4장 ≈ 0.29초 (반격 그림과 비슷한 길이)
-            fx.meleeAttack = LoadClip(FxDir, "warrior", "attack", 14f);
+            fx.enemySlash = new SpriteClip();       // 창귀 베기는 몸 그림이 맡는다 (판정 박스만 표시)
+            fx.enemyHeavySlash = new SpriteClip();
+            fx.meleeCounter = LoadClip(FxDir, "fx", "staff_thrust", 20f);
+            fx.meleeAttack = LoadClip(FxDir, "fx", "staff_slash", 20f);
+            fx.parryMelee = LoadClip(FxDir, "fx", "parry_staff", 20f);
+            fx.parryRanged = LoadClip(FxDir, "fx", "parry_talisman", 16f);
+            fx.talismanProjectile = LoadClip(FxDir, "fx", "talisman_projectile", 16f);
+            fx.talismanBurst = LoadClip(FxDir, "fx", "talisman_burst", 16f);
+            fx.hitSpark = LoadClip(FxDir, "fx", "hit_spark", 20f);
+            fx.yokaiDissolve = LoadClip(FxDir, "fx", "yokai_dissolve", 12f);
+            fx.heavyWarning = LoadClip(FxDir, "fx", "heavy_warning", 12f);
+            fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
+            fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);
             EditorUtility.SetDirty(fx);
         }
 
-        /// <summary>도트 프레임 임포트 설정: 점 필터 · 45px/유닛 · 피벗 = 칸의 기준점(삿갓 중심 · 발끝).</summary>
-        private static void ImportFrames(string dir, int frameW, int frameH, int anchorX, int footY)
+        /// <summary>도트 프레임 임포트 설정: 점 필터 · 90px/유닛 · 압축 없음 · 피벗은 파일마다 지정.</summary>
+        private static void ImportFrames(string dir, System.Func<string, Vector2> pivotFor)
         {
-            var pivot = new Vector2((float)anchorX / frameW, (float)(frameH - footY - 1) / frameH);
-
             foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
@@ -305,7 +315,7 @@ namespace ParryRL.EditorTools
                 var settings = new TextureImporterSettings();
                 importer.ReadTextureSettings(settings);
                 settings.spriteAlignment = (int)SpriteAlignment.Custom;
-                settings.spritePivot = pivot;
+                settings.spritePivot = pivotFor(Path.GetFileName(path));
                 settings.spritePixelsPerUnit = PixelsPerUnit;
                 settings.spriteMeshType = SpriteMeshType.FullRect;
                 settings.filterMode = FilterMode.Point;
@@ -317,10 +327,14 @@ namespace ParryRL.EditorTools
             }
         }
 
-        private static SpriteClip LoadClip(string dir, string prefix, string clip, float fps)
+        private static SpriteClip LoadClip(string dir, string prefix, string clip, float fps) =>
+            LoadClipRange(dir, prefix, clip, 0, int.MaxValue, fps);
+
+        /// <summary>시트의 start번째 프레임부터 count장.</summary>
+        private static SpriteClip LoadClipRange(string dir, string prefix, string clip, int start, int count, float fps)
         {
             var frames = new System.Collections.Generic.List<Sprite>();
-            for (int i = 0; ; i++)
+            for (int i = start; frames.Count < count; i++)
             {
                 var s = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/{prefix}_{clip}_{i}.png");
                 if (s == null) break;
@@ -329,7 +343,7 @@ namespace ParryRL.EditorTools
             return new SpriteClip { frames = frames.ToArray(), fps = fps };
         }
 
-        private static void CreateEnemyPrefab(string path, string name, EnemyKind kind, Vector2 size, Color color, EnemyArt art)
+        private static void CreateEnemyPrefab(string path, string name, EnemyKind kind, Vector2 size, Color color, EnemyArt art, bool floating)
         {
             var go = CreateVisual(name, Vector2.zero, size, color, 8, null);
             var col = go.AddComponent<BoxCollider2D>();
@@ -339,13 +353,6 @@ namespace ParryRL.EditorTools
             var enemy = go.AddComponent<EnemyController>();
             var so = new SerializedObject(enemy);
             so.FindProperty("kind").enumValueIndex = (int)kind;
-            if (art == null)
-            {
-                // 도트 애니메이션이 없는 몬스터(원거리)는 Project_Game 스프라이트 3장
-                so.FindProperty("idleSprite").objectReferenceValue = LoadAsset<Sprite>(SpriteDir + "enemy_idle.png");
-                so.FindProperty("windupSprite").objectReferenceValue = LoadAsset<Sprite>(SpriteDir + "enemy_windup.png");
-                so.FindProperty("attackSprite").objectReferenceValue = LoadAsset<Sprite>(SpriteDir + "enemy_attack.png");
-            }
             if (kind == EnemyKind.Ranged)
             {
                 so.FindProperty("maxHp").intValue = 60;
@@ -356,10 +363,11 @@ namespace ParryRL.EditorTools
 
             if (art != null)
             {
-                // 도트 그림 (판정 없음). 발끝 = 네모 바닥, 부모의 늘림을 상쇄해 픽셀 비율 유지.
+                // 도트 그림 (판정 없음). 땅 몬스터는 발끝 = 네모 바닥, 떠 있는 도깨비불은 몸 중심 = 네모 가운데.
+                // 부모의 늘림을 상쇄해 픽셀 비율 유지.
                 var artGo = new GameObject("Art");
                 artGo.transform.SetParent(go.transform, false);
-                artGo.transform.localPosition = new Vector3(0f, -0.5f, 0f);
+                artGo.transform.localPosition = new Vector3(0f, floating ? 0f : -0.5f, 0f);
                 artGo.transform.localScale = new Vector3(1f / size.x, 1f / size.y, 1f);
                 var artSr = artGo.AddComponent<SpriteRenderer>();
                 artSr.sortingOrder = 8;

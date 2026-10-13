@@ -20,6 +20,12 @@ namespace ParryRL
         private Color _color;
         private readonly HashSet<EnemyController> _pierced = new();
 
+        // 부적 그림 (판정 네모 대신 보인다 — 네모는 "판정 상자 보기"에서만)
+        private const float ArtScale = 0.55f;
+        private SpriteRenderer _art;
+        private SpriteClip _artClip;
+        private float _artTime;
+
         public static PlayerProjectile Spawn(Vector2 origin, Vector2 direction, EnemyController target, bool homing,
             float speed, float maxDistance, int baseDamage, HitInfo hit, Color color, Vector2 size)
         {
@@ -34,11 +40,34 @@ namespace ParryRL
             p._hit = hit;
             p._color = color;
             p.ApplyRotation();
+            p.AttachArt(size);
             return p;
+        }
+
+        private void AttachArt(Vector2 size)
+        {
+            var clip = GameAssets.AttackFx != null ? GameAssets.AttackFx.talismanProjectile : null;
+            if (clip == null || clip.IsEmpty) return;
+            var go = new GameObject("Art");
+            go.transform.SetParent(transform, false);
+            // 부모 스케일 = 박스 크기 → 상쇄해서 그림을 원본 비율(× ArtScale)로
+            go.transform.localScale = new Vector3(ArtScale / size.x, ArtScale / size.y, 1f);
+            _art = go.AddComponent<SpriteRenderer>();
+            _art.sortingOrder = 26;
+            _artClip = clip;
+            _art.sprite = clip.frames[0];
+            GetComponent<SpriteRenderer>().enabled = GameTuning.Current.showHitboxes;
         }
 
         private void Update()
         {
+            if (_art != null)
+            {
+                _artTime += Time.deltaTime;
+                _art.sprite = _artClip.frames[(int)(_artTime * _artClip.fps) % _artClip.frames.Length];
+                _art.flipY = _direction.x < 0f; // 왼쪽으로 날아갈 때 뒤집힌 채 돌지 않게
+            }
+
             if (_homing && _target != null && !_target.IsDead)
                 _direction = ((Vector2)_target.transform.position - (Vector2)transform.position).normalized;
 
@@ -71,6 +100,7 @@ namespace ParryRL
 
                 DamageCalc.Apply(_baseDamage, _hit, enemy, Mathf.Sign(_direction.x));
                 Fx.Sparks(transform.position, _color, _hit.Heavy ? 10 : 6, 6f);
+                if (GameAssets.AttackFx != null) FxClip.PlayAt(GameAssets.AttackFx.talismanBurst, transform.position, 0.55f);
                 if (!_hit.Pierce)
                 {
                     Destroy(gameObject);

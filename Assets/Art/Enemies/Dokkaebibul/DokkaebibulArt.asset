@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b94881cd182b6043b039f623a2b6fe6, type: 3}
+  m_Name: DokkaebibulArt
+  m_EditorClassIdentifier: ParryRL::ParryRL.EnemyArt
+  idle:
+    frames:
+    - {fileID: 21300000, guid: 2dcee6655dc9544cdb103a5c9517da03, type: 3}
+    - {fileID: 21300000, guid: 3795b58f1cd8049bea3b928a73941fae, type: 3}
+    - {fileID: 21300000, guid: 1fe905bb80d264a2d89f044b02827d10, type: 3}
+    - {fileID: 21300000, guid: 4b0bd2b6a235242ef9427de0f9ebcae5, type: 3}
+    fps: 6
+  walk:
+    frames:
+    - {fileID: 21300000, guid: 1024158e62eed4cf48d5148c26f0bf05, type: 3}
+    - {fileID: 21300000, guid: ac4c1784dc5b247ce8a97fab8781f0e1, type: 3}
+    - {fileID: 21300000, guid: 690f728c9546f413ab7a828fac581c5d, type: 3}
+    - {fileID: 21300000, guid: 762a2b2a9fa584f7daab42f8463fe169, type: 3}
+    - {fileID: 21300000, guid: 3b200813f584543bd914d6f7f3976002, type: 3}
+    - {fileID: 21300000, guid: f1a1dfe256ed04425abff3fce5bfb2da, type: 3}
+    fps: 8
+  windup:
+    frames:
+    - {fileID: 21300000, guid: 8d7a60aac5ac7423a8deabfde1e1d441, type: 3}
+    - {fileID: 21300000, guid: bf3fc5047c5c942dd9e8d078f5150e7a, type: 3}
+    - {fileID: 21300000, guid: b5563f3c51ec44d12ab915b534cc0c26, type: 3}
+    fps: 8
+  slash:
+    frames:
+    - {fileID: 21300000, guid: 5ff9e01c53c5e4462b6f988c2a13e9c2, type: 3}
+    - {fileID: 21300000, guid: 716ae8b56ef124f7aad0866ec8e0cfe4, type: 3}
+    - {fileID: 21300000, guid: 4217ab011a6864668b9421c4455d03c9, type: 3}
+    fps: 12
+  heavyWindup:
+    frames:
+    - {fileID: 21300000, guid: fc9ecf924909745e58ca8fc90711dba8, type: 3}
+    - {fileID: 21300000, guid: 0cc1060a6a69f4ab2a983fff332306ba, type: 3}
+    - {fileID: 21300000, guid: 0230918a43f9d4fb99de1e00a71f5539, type: 3}
+    - {fileID: 21300000, guid: d8bd88e2631d3454e86c9890ee25feff, type: 3}
+    fps: 8
+  heavySlash:
+    frames:
+    - {fileID: 21300000, guid: 608c0ce7250734bdd84dd07695461d0a, type: 3}
+    - {fileID: 21300000, guid: e89a4b1edd0a242b5bcbe933e9aa3bc1, type: 3}
+    - {fileID: 21300000, guid: c9451e192423743f58f4a0d466e8a961, type: 3}
+    - {fileID: 21300000, guid: 773baae626f88472c93a607666198ada, type: 3}
+    fps: 12
+  stun:
+    frames:
+    - {fileID: 21300000, guid: e05efda22bdde4cc9b59a4b880802f8e, type: 3}
+    - {fileID: 21300000, guid: 898aa0de2f15d4e9b886b67341663d73, type: 3}
+    - {fileID: 21300000, guid: 2f513ed39ae3141e8af35b83bbcdeca2, type: 3}
+    fps: 6
+  hit:
+    frames:
+    - {fileID: 21300000, guid: 4b308e2a395324ac99a9fce9cbf04665, type: 3}
+    - {fileID: 21300000, guid: 1c1c29a42f49d40e291dbd78e43476b3, type: 3}
+    fps: 12
+  death:
+    frames:
+    - {fileID: 21300000, guid: fdb03f3e9e7ba44a8b910e161598f5ed, type: 3}
+    - {fileID: 21300000, guid: 85012e2777a324524ba3873140991cbe, type: 3}
+    - {fileID: 21300000, guid: 4c3422e322c1f48149d1c8827b3c5910, type: 3}
+    - {fileID: 21300000, guid: 89025f12f2f7f4512a6691abd877c92e, type: 3}
+    - {fileID: 21300000, guid: 57e29334cf2074fc3b655860f562f812, type: 3}
+    fps: 8
+  slashHitFrame: 0
+  heavySlashHitFrame: 1

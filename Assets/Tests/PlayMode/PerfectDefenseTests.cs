@@ -66,17 +66,17 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 원거리_몬스터는_도트_스프라이트_근접은_도트_애니메이션()
+        public IEnumerator 근접_원거리_몬스터_모두_도트_애니메이션을_쓴다()
         {
-            var ranged = Object.FindObjectsByType<EnemyController>().First(e => e.Kind == EnemyKind.Ranged);
-            var rsr = ranged.GetComponent<SpriteRenderer>();
-            Assert.AreEqual("enemy_idle", rsr.sprite.name);
-            Assert.AreEqual(SpriteDrawMode.Sliced, rsr.drawMode);
-            Assert.AreEqual(Vector2.one, rsr.size, "몸 크기(1×1 × 스케일)와 그림이 어긋남 — 판정-시각 일치 원칙");
-
-            var melee = Object.FindObjectsByType<EnemyController>().First(e => e.Kind == EnemyKind.Melee);
-            Assert.IsNotNull(melee.GetComponent<EnemySprite>());
-            yield return null;
+            foreach (var kind in new[] { EnemyKind.Melee, EnemyKind.Ranged })
+            {
+                var enemy = Object.FindObjectsByType<EnemyController>().First(e => e.Kind == kind);
+                var art = enemy.GetComponent<EnemySprite>();
+                Assert.IsNotNull(art, kind.ToString());
+                yield return null;
+                Assert.IsTrue(art.IsShowingArt, kind + " 그림이 보임");
+                Assert.IsFalse(enemy.GetComponent<SpriteRenderer>().enabled, kind + " 판정 네모는 숨김");
+            }
         }
 
         [UnityTest]

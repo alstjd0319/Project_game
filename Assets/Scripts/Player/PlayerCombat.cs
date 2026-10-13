@@ -178,6 +178,8 @@ namespace ParryRL
             Fx.Flash(hitPoint, heavy ? 1.2f : 0.7f, heavy ? 3.2f : 1.8f, Color.white, heavy ? 0.16f : 0.1f);
             Fx.Ring(hitPoint, Color.white, 0.4f, heavy ? 3.5f : 2f, heavy ? 0.16f : 0.1f, heavy ? 0.3f : 0.2f);
             Fx.Sparks(hitPoint, heavy ? new Color(1f, 0.85f, 0.3f) : Color.white, heavy ? 22 : 12, heavy ? 12f : 8f);
+            var art = GameAssets.AttackFx;
+            if (art != null) FxClip.PlayAt(IsRanged ? art.parryRanged : art.parryMelee, hitPoint, heavy ? 0.95f : 0.65f, false, 46);
             if (heavy) Hud.ScreenFlash(new Color(1f, 1f, 1f, 0.35f));
         }
 

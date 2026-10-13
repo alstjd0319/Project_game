@@ -14,6 +14,17 @@ namespace ParryRL
         [Tooltip("플레이어 반격 — 판정은 순간이라 첫 장을 보여주고 바로 부서짐")] public SpriteClip meleeCounter = new();
         public SpriteClip meleeAttack = new();
 
+        [Header("연출 (원본 크기 × 배율로 그림 — 판정과 무관)")]
+        [Tooltip("패링 성공 불꽃 (근접 / 원거리 무기)")] public SpriteClip parryMelee = new();
+        public SpriteClip parryRanged = new();
+        [Tooltip("원거리 무기 화살(부적) 날아가기 — 반복 / 맞는 순간 폭발")] public SpriteClip talismanProjectile = new();
+        public SpriteClip talismanBurst = new();
+        [Tooltip("몬스터가 맞는 순간 타격 / 죽을 때 소멸 / 강공격 경고 / 플레이어 착지 먼지")] public SpriteClip hitSpark = new();
+        public SpriteClip yokaiDissolve = new();
+        public SpriteClip heavyWarning = new();
+        public SpriteClip dustLand = new();
+        [Tooltip("도깨비불 불덩이 — 앞 4장 청록(일반) · 뒤 4장 빨강(강공격), 반복 재생")] public SpriteClip dokkaebiProjectile = new();
+
         public SpriteClip EnemySlash(AttackType type) => type == AttackType.Heavy ? enemyHeavySlash : enemySlash;
     }
 }

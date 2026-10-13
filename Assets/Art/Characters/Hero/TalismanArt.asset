@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e37bdc28de36e2a47ac8b9480e754840, type: 3}
+  m_Name: TalismanArt
+  m_EditorClassIdentifier: ParryRL::ParryRL.CharacterArt
+  kind: 0
+  weapon: 1
+  idle:
+    frames:
+    - {fileID: 21300000, guid: 1d7456b7c9b3a40a5a535bf9c8aaf533, type: 3}
+    - {fileID: 21300000, guid: 7fceffeaced3e4c20bf89f36427677e2, type: 3}
+    - {fileID: 21300000, guid: 8413acf24328d4ca79688db9989c021c, type: 3}
+    - {fileID: 21300000, guid: c47ab2b9aedc741b7b3e6c07e0c20bbb, type: 3}
+    fps: 6
+  run:
+    frames:
+    - {fileID: 21300000, guid: 809d42aaf685d4334a510279442b6cbb, type: 3}
+    - {fileID: 21300000, guid: 8f9997436b8224af5800ccc756a13028, type: 3}
+    - {fileID: 21300000, guid: 82bb85004964a4b0f85c6452587a7503, type: 3}
+    - {fileID: 21300000, guid: 08c34d8c8cdea436da0612ad7ef01164, type: 3}
+    - {fileID: 21300000, guid: d788bcc740b3d41759626cabe2fcfbbb, type: 3}
+    - {fileID: 21300000, guid: e5db20aad5c2d4bd5bb659043ad1af2a, type: 3}
+    fps: 12
+  parry:
+    frames:
+    - {fileID: 21300000, guid: bc73a1274915a41659d26c7528ae6451, type: 3}
+    - {fileID: 21300000, guid: e3f7a5ef4bd40448380172a0f6f980a7, type: 3}
+    - {fileID: 21300000, guid: 9be9d9478515b4c31aaaa7c71bd27b00, type: 3}
+    - {fileID: 21300000, guid: bb30d7320fafc4c81a2b6c100b67698b, type: 3}
+    fps: 12
+  dash:
+    frames:
+    - {fileID: 21300000, guid: 87116fd22ea554d3c936c33fb877fc51, type: 3}
+    - {fileID: 21300000, guid: f9ef0bd08fa244e8982d7ec890a4e1f8, type: 3}
+    - {fileID: 21300000, guid: aea9ac99995ba424ba69bce26b59d700, type: 3}
+    fps: 20
+  counter:
+    frames:
+    - {fileID: 21300000, guid: 6faec997a11c54a5a9e8469dca7d8387, type: 3}
+    - {fileID: 21300000, guid: ac5f992a1fe2f41fca087aed980f4059, type: 3}
+    - {fileID: 21300000, guid: 3e47cc620e8a84fd988ed4f7a98ec8b4, type: 3}
+    - {fileID: 21300000, guid: 0f455e7909122448fb460abf3bd9b3fb, type: 3}
+    fps: 14
+  attack:
+    frames:
+    - {fileID: 21300000, guid: 994dd5763158941ec9fd004a0eea19c0, type: 3}
+    - {fileID: 21300000, guid: 42128fdfbc09d461a9fd4d1bf4a7937d, type: 3}
+    - {fileID: 21300000, guid: b1a72ddd75319437aa510989ad326142, type: 3}
+    - {fileID: 21300000, guid: fd8031c1dc5864925bb70138690686b8, type: 3}
+    - {fileID: 21300000, guid: 6963435a01d68436ab6d0ec2326d05ff, type: 3}
+    fps: 14
+  jump:
+    frames:
+    - {fileID: 21300000, guid: 15220bb9dadb54afd868729fdf32a84d, type: 3}
+    - {fileID: 21300000, guid: 7bc01b4128a244398a13125d21624159, type: 3}
+    - {fileID: 21300000, guid: 5b5c0fd481e6d48819d74785798ea899, type: 3}
+    - {fileID: 21300000, guid: afa2a3fa1798b4f819c05a1507819adb, type: 3}
+    - {fileID: 21300000, guid: e31b439c2af06404285becdf522fc751, type: 3}
+    fps: 6
+  hit:
+    frames:
+    - {fileID: 21300000, guid: 72c11f2905df64ef593369371b2890c6, type: 3}
+    - {fileID: 21300000, guid: 63e7ed83cf0924038a87411885851f28, type: 3}
+    - {fileID: 21300000, guid: 36d151a92a1cf48218d1656d5d218303, type: 3}
+    fps: 12
+  death:
+    frames:
+    - {fileID: 21300000, guid: 2a4f7bd0833f5426b92f37dd0d1a4b97, type: 3}
+    - {fileID: 21300000, guid: cc76e52446c094dd3901577716b2cf5d, type: 3}
+    - {fileID: 21300000, guid: 1655df61d45ed478f829cb7bb0392686, type: 3}
+    - {fileID: 21300000, guid: eb88cfc0afc3b443682c8f2f23b094ef, type: 3}
+    - {fileID: 21300000, guid: 7b9d7aca15c71483fb5b0b9daaf1fb4a, type: 3}
+    fps: 6
+  enter:
+    frames:
+    - {fileID: 21300000, guid: 746bb71c1d860483a9c8ba3cd520ce43, type: 3}
+    - {fileID: 21300000, guid: 3bcf0e39b908348f0bdacf907cc57fd1, type: 3}
+    - {fileID: 21300000, guid: da8c1ce74fc7249c4b1a45824859b41a, type: 3}
+    - {fileID: 21300000, guid: 48124354dc7cb490db66b8fe0fd7eee5, type: 3}
+    fps: 12
+  airRunFrame: 3
+  counterHitFrame: 1
+  attackHitFrame: 2
+  parryImpactFrame: 1

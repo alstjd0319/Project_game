@@ -13,30 +13,89 @@ MonoBehaviour:
   m_Name: AttackFx
   m_EditorClassIdentifier: ParryRL::ParryRL.AttackFxArt
   enemySlash:
-    frames:
-    - {fileID: 21300000, guid: 6cd8cf2063a10da4cb8e494ea130ee86, type: 3}
-    - {fileID: 21300000, guid: bd1248099c5479b479ec20b9ef8f12ce, type: 3}
-    - {fileID: 21300000, guid: a8abc4dfe623e2343831f103cebb3e48, type: 3}
-    - {fileID: 21300000, guid: a42ccbe619b73be47b938e443248b6d7, type: 3}
-    fps: 20
+    frames: []
+    fps: 10
   enemyHeavySlash:
-    frames:
-    - {fileID: 21300000, guid: c36d184f489271d4eb7f1a10d6d1d1fd, type: 3}
-    - {fileID: 21300000, guid: 32b065649b45d2943b50e35a297967ee, type: 3}
-    - {fileID: 21300000, guid: d162f0371a859354fa6c72a2b87ee1a9, type: 3}
-    - {fileID: 21300000, guid: a796dd109c9dd5f42a241c350cefe941, type: 3}
-    fps: 20
+    frames: []
+    fps: 10
   meleeCounter:
     frames:
-    - {fileID: 21300000, guid: 69f6789dfcdfd204193d24c29b217aca, type: 3}
-    - {fileID: 21300000, guid: 008cf1f5706659f4ba6fdedce549dd8f, type: 3}
-    - {fileID: 21300000, guid: c993bccd6ac5f754fa156b71117cbf8d, type: 3}
-    - {fileID: 21300000, guid: fc4c989dc54eb2642bd3e8d3c43dec4a, type: 3}
-    fps: 14
+    - {fileID: 21300000, guid: 2f5fc3eec8a5840de9a9fc8862b90c65, type: 3}
+    - {fileID: 21300000, guid: 459cdede5a71e46b9876a990f193288a, type: 3}
+    - {fileID: 21300000, guid: 853c387a66bad47f1bf22b3d16bdbccc, type: 3}
+    fps: 20
   meleeAttack:
     frames:
-    - {fileID: 21300000, guid: 72d08261505e21c4cb9764cd8843463d, type: 3}
-    - {fileID: 21300000, guid: 45f395725f0ebfd4cbb40a0b4abab262, type: 3}
-    - {fileID: 21300000, guid: 8df3cd76948a27642bba37ef316340a2, type: 3}
-    - {fileID: 21300000, guid: d28ff914a9091234ca9224e8aef57f36, type: 3}
+    - {fileID: 21300000, guid: 81ea1bd486bb84bc5a6c5f9cb86c0d1f, type: 3}
+    - {fileID: 21300000, guid: a4294c8b9b27c4d6681419593325cd5a, type: 3}
+    - {fileID: 21300000, guid: af3927f69e67f46168ba177a14901509, type: 3}
+    - {fileID: 21300000, guid: d924953cc45704466a119990827ab7f0, type: 3}
+    fps: 20
+  parryMelee:
+    frames:
+    - {fileID: 21300000, guid: 7f95fb6dc0a3e4b38acd5b062b3aef92, type: 3}
+    - {fileID: 21300000, guid: 7ceb4f0c043264dfa8566e7c5c3aac19, type: 3}
+    - {fileID: 21300000, guid: c26aef618f31744c2920069279d06919, type: 3}
+    - {fileID: 21300000, guid: 21998e32151e34c738db3f8c72708e6e, type: 3}
+    fps: 20
+  parryRanged:
+    frames:
+    - {fileID: 21300000, guid: 2fa359ac19e7248b78879e186dcafb11, type: 3}
+    - {fileID: 21300000, guid: 67d21dbaf38ef4cad80bdb4e4c8c2648, type: 3}
+    - {fileID: 21300000, guid: 0ad3c0ec0c75c499eb96a0e0554fb204, type: 3}
+    - {fileID: 21300000, guid: 9bbe021c45b694c549d2006fe7491cd7, type: 3}
+    fps: 16
+  talismanProjectile:
+    frames:
+    - {fileID: 21300000, guid: 74268e2046d9e478abfde45063eb00ec, type: 3}
+    - {fileID: 21300000, guid: 15d4a6c77d53640858d7198a522cb73a, type: 3}
+    - {fileID: 21300000, guid: 01cf8a03f8ec341ab967a4ee1251b014, type: 3}
+    - {fileID: 21300000, guid: 81e5aa8c3f9584a9094c331758113fd2, type: 3}
+    fps: 16
+  talismanBurst:
+    frames:
+    - {fileID: 21300000, guid: a5961d84eeef24f6590b1ac1c45a3498, type: 3}
+    - {fileID: 21300000, guid: 20caf99d8f5b047ec97c1ea42c0087c2, type: 3}
+    - {fileID: 21300000, guid: 3b8c9325e68ed4e53bdd9b11cd86c4c5, type: 3}
+    - {fileID: 21300000, guid: fdd607a4628e84ca3b46e997c994a857, type: 3}
+    - {fileID: 21300000, guid: e650bef3647e44d7e8192f48b0883235, type: 3}
+    fps: 16
+  hitSpark:
+    frames:
+    - {fileID: 21300000, guid: 6eacb7f14ea7d4c96bfe3496ffa38f04, type: 3}
+    - {fileID: 21300000, guid: e8dda6cc908ba43bebf4bfe3dc6cd96e, type: 3}
+    - {fileID: 21300000, guid: f15ce00894e3b463583fed9445d64ab2, type: 3}
+    fps: 20
+  yokaiDissolve:
+    frames:
+    - {fileID: 21300000, guid: 9fb52f660878a4b86bf382f972d2a570, type: 3}
+    - {fileID: 21300000, guid: 77c479c4bdd404a17824b53afbd5cafc, type: 3}
+    - {fileID: 21300000, guid: 009e6dc2881e64ee1905392094038837, type: 3}
+    - {fileID: 21300000, guid: 58aad0c8380cd447c88695d8a68ac99e, type: 3}
+    - {fileID: 21300000, guid: e242354692863450c944b423a4f8ad43, type: 3}
+    - {fileID: 21300000, guid: a2e7d419595524e3196515da3d850a59, type: 3}
+    fps: 12
+  heavyWarning:
+    frames:
+    - {fileID: 21300000, guid: e91bce926d745431892f330b1a011cee, type: 3}
+    - {fileID: 21300000, guid: b119d265cd5624ad5a588f5dea1444c4, type: 3}
+    - {fileID: 21300000, guid: e403390f6dbcd4e29825fe0365bc3cea, type: 3}
+    - {fileID: 21300000, guid: 59069587e8eea45bd8c96397c8bd8585, type: 3}
+    fps: 12
+  dustLand:
+    frames:
+    - {fileID: 21300000, guid: ffe64d3607ec94c30aa5bc25d8cfe75f, type: 3}
+    - {fileID: 21300000, guid: 5c7f726725f0f4e4282e6a423f78a396, type: 3}
+    - {fileID: 21300000, guid: 0ced2ac5adf164ef8949070542a6e6f8, type: 3}
     fps: 14
+  dokkaebiProjectile:
+    frames:
+    - {fileID: 21300000, guid: b384bbec7a0104140a9c35b929f1a9f8, type: 3}
+    - {fileID: 21300000, guid: e9fa14ea0209149a4bc50c1ad917dded, type: 3}
+    - {fileID: 21300000, guid: 3f656231eafb8479b83917403c940248, type: 3}
+    - {fileID: 21300000, guid: 85a49163ed2e04c0d9892c788b23d090, type: 3}
+    - {fileID: 21300000, guid: 76a7621724efa4962a090ad023c4b38b, type: 3}
+    - {fileID: 21300000, guid: e35810dc0ae9c49c3bffec5b509b5302, type: 3}
+    - {fileID: 21300000, guid: 01ead784ad804441ab15868aff72dbaa, type: 3}
+    - {fileID: 21300000, guid: 420fa4ce391ba47f6a566f2d3313a537, type: 3}
+    fps: 12

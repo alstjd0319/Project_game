@@ -26,11 +26,6 @@ namespace ParryRL
         [SerializeField] private int normalDamage = 10;
         [SerializeField] private int heavyDamage = 20;
 
-        [Header("도트 아트 (비워두면 흰 네모) — 원본은 왼쪽을 본다. 판정-시각 일치를 위해 몸 크기(1×1 × 스케일)에 맞춰 늘려 그린다")]
-        [SerializeField] private Sprite idleSprite;
-        [SerializeField] private Sprite windupSprite;
-        [SerializeField] private Sprite attackSprite;
-
         [Header("예비 모션 (텔레그래프 전)")]
         [SerializeField] private float normalWindupScale = 1.06f;
         [SerializeField] private float heavyWindupScale = 1.25f;
@@ -111,12 +106,6 @@ namespace ParryRL
         {
             _sr = GetComponent<SpriteRenderer>();
             _rb = GetComponent<Rigidbody2D>();
-            if (idleSprite != null)
-            {
-                _sr.sprite = idleSprite;
-                _sr.drawMode = SpriteDrawMode.Sliced;
-                _sr.size = Vector2.one;
-            }
             _baseColor = _sr.color;
             _tint = _baseColor;
             _baseScale = transform.localScale;
@@ -139,7 +128,6 @@ namespace ParryRL
             _flash = Mathf.Max(0f, _flash - Time.unscaledDeltaTime * 8f);
             Color body = IsStunned ? Color.Lerp(_baseColor, StunColor, 0.65f) : _tint;
             _sr.color = Color.Lerp(body, Color.white, _flash);
-            UpdateSprite();
             ArtTint = IsStunned ? Color.Lerp(Color.white, StunColor, 0.65f) : _artTint;
 
             IsMoving = false;
@@ -151,19 +139,6 @@ namespace ParryRL
             Move();
             _cooldown -= Time.deltaTime;
             if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive) StartCoroutine(AttackRoutine());
-        }
-
-        private void UpdateSprite()
-        {
-            if (idleSprite == null) return;
-            Sprite sprite = _state switch
-            {
-                State.Windup => windupSprite != null ? windupSprite : idleSprite,
-                State.Recover => attackSprite != null ? attackSprite : idleSprite,
-                _ => idleSprite,
-            };
-            _sr.sprite = sprite;
-            if (_player != null && !IsDead) _sr.flipX = DxToPlayer > 0f;
         }
 
         private float DxToPlayer => _player.position.x - transform.position.x;
@@ -221,7 +196,14 @@ namespace ParryRL
             WindupProgress = 0f;
 
             Sfx.Play(heavy ? SfxId.HeavyCue : SfxId.NormalCue);
-            if (heavy) Hud.WorldText(transform.position + Vector3.up * (_baseScale.y * 0.5f + 0.6f), "!!", heavyAttackColor, 1.3f);
+            if (heavy)
+            {
+                // 강공격 경고: 붉은 느낌표 그림 (빨강은 적 공격 경고 전용). 그림이 없으면 글자.
+                var warn = GameAssets.AttackFx != null ? GameAssets.AttackFx.heavyWarning : null;
+                Vector2 above = transform.position + Vector3.up * (_baseScale.y * 0.5f + 0.7f);
+                if (FxClip.PlayAt(warn, above, 0.55f) == null)
+                    Hud.WorldText(transform.position + Vector3.up * (_baseScale.y * 0.5f + 0.6f), "!!", heavyAttackColor, 1.3f);
+            }
 
             // 예비 모션: 색이 공격색으로 차오르고, 몸이 커진다 (발밑 고정). 콜라이더도 같은 트랜스폼이라 함께 커짐.
             for (float t = 0f; t < windup; t += Time.deltaTime)
@@ -274,8 +256,11 @@ namespace ParryRL
             {
                 Vector2 origin = transform.position;
                 Vector2 aim = (Vector2)_player.position - origin;
-                EnemyAttack.Spawn(this, type, origin, aim, size, heavy ? T.rangedHeavySpeed : T.rangedNormalSpeed,
+                var shot = EnemyAttack.Spawn(this, type, origin, aim, size, heavy ? T.rangedHeavySpeed : T.rangedNormalSpeed,
                     rangedMaxTravel, color, damage);
+                // 도깨비불 불덩이 그림: 앞 4장 청록(일반) · 뒤 4장 빨강(강공격 — 빨강은 적 공격 경고 전용 색)
+                var fx = GameAssets.AttackFx;
+                if (fx != null) shot.AttachProjectileArt(fx.dokkaebiProjectile, heavy ? 4 : 0, 4, 2.2f);
             }
         }
 
@@ -301,6 +286,7 @@ namespace ParryRL
             _flash = 1f;
             Sfx.Play(SfxId.EnemyHit);
             Fx.Sparks(transform.position, Color.white, heavy ? 12 : 7, heavy ? 9f : 6f);
+            FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.hitSpark : null, transform.position, heavy ? 0.7f : 0.5f);
             string text = string.IsNullOrEmpty(note) ? damage.ToString() : $"{damage} <size=20><color=#8CF2FF>{note}</color></size>";
             // 머리 위 체력바(+0.3) 위에서 시작해 글자가 체력바에 가리지 않게
             Hud.WorldText(transform.position + Vector3.up * (_baseScale.y * 0.5f + 0.75f), text,
@@ -366,6 +352,7 @@ namespace ParryRL
             StopAllCoroutines();
             Sfx.Play(SfxId.EnemyDie);
             Fx.Sparks(transform.position, _baseColor, 20, 9f, 0.2f, 0.6f);
+            FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.yokaiDissolve : null, transform.position + Vector3.up * 0.2f, 0.9f);
             Fx.Ring(transform.position, _baseColor, 0.5f, 3f, 0.15f, 0.35f);
             Died?.Invoke(this);
             AnyDied?.Invoke(this);
