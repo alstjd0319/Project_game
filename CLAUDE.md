@@ -49,6 +49,12 @@
 - 남긴 것: `PlayerLevel`(경험치·레벨, `LeveledUp` 이벤트)은 그대로 — 레벨업하면 HUD에 "레벨 업!" 알림과 효과음만 나오고 **게임은 멈추지 않는다**. 스킬 트리 등 새 성장 보상은 팀 결정 뒤에 `LeveledUp`에 연결한다. 데미지 계산은 `DamageCalc`에서 기본 × 캐릭터 배율만 쓴다 (보너스 층이 필요하면 다시 붙인다). `PlayerMotor.Dash(dir, extraDistance)`의 추가 거리 인자는 남아 있다.
 - 아래 본문의 증강 관련 설명(5장 등)과 `기획서.md`의 증강 장은 더 이상 유효하지 않다.
 
+## 런처 · 빌드 (2026-10-14)
+
+- `Editor/GameBuilder.cs`: 독립 실행형 빌드. 메뉴 Tools → ParryRL → 게임 빌드 (macOS / Windows), 배치는 `-executeMethod ParryRL.EditorTools.GameBuilder.BuildMac|BuildWindows`. 씬이 없으면 `PrototypeSceneBuilder.Build`로 먼저 만들고, 씬은 Start(0) → Prototype(1). 빌드 때 PlayerSettings를 맞춘다: 제품명 "귀문", 창 모드 1600×900(크기 조절 가능). 결과는 `Builds/`(gitignore).
+- `Tools/launcher/귀문_실행.command`(macOS) · `귀문_실행.bat` → `귀문_실행.ps1`(Windows, **UTF-8 BOM 필수**): 빌드가 없으면 Unity 배치로 빌드한 뒤 실행. Unity가 프로젝트를 열고 있으면 배치 빌드가 막히니 사본에서 빌드하거나 에디터 메뉴를 쓴다. `바탕화면에_설치.command`(macOS)는 빌드를 `~/Desktop/귀문.app`으로 복사하고, `바탕화면에_설치.bat`(Windows)는 `귀문.lnk` 바로가기를 만든다. Mac 빌드·바탕화면 설치는 이 PC에서 확인됨(14초, 177MB, 앱이 뜨고 예외 없음), **Windows 빌드는 이 PC에 모듈이 없어 확인 못 했다.**
+- 빌드에서 튜닝 파일은 `Tuning/tuning.json`이 아니라 `persistentDataPath`(제품명 폴더)의 `tuning.json`을 쓴다 (`GameTuning.FilePath`).
+
 ## 시작 화면 (2026-10-14)
 
 - `Assets/Scenes/Start.unity`가 빌드 **0번 씬**, 게임(`Prototype.unity`)이 1번. `PrototypeSceneBuilder.Build`가 둘 다 만들고(`BuildStartScene`만 따로: 메뉴 Tools → ParryRL → 시작 씬 생성), 씬 직접 편집 금지(생성물).

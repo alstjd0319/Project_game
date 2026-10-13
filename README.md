@@ -82,6 +82,19 @@
 2. 메뉴 **Tools → ParryRL → 프로토타입 씬 생성** (씬·프리팹·그림 에셋 묶음을 코드로 만든다. 씬은 생성물이라 직접 편집하지 않는다).
 3. `Assets/Scenes/Start.unity`(시작 화면 — 게임 시작 / 종료하기)를 열고 Play. 게임 씬만 바로 보려면 `Assets/Scenes/Prototype.unity`를 연다. 빌드 설정에는 Start(0) → Prototype(1) 순서로 들어 있다.
 
+### 런처로 실행 (Unity 에디터 없이 게임만)
+
+`Tools/launcher/`의 런처를 더블클릭하면 게임이 시작 화면부터 뜬다. 빌드(`Builds/`)가 없으면 Unity로 먼저 빌드하고(처음 한 번, 1~몇 분) 실행한다.
+
+| 환경 | 파일 | 비고 |
+|---|---|---|
+| macOS | `Tools/launcher/귀문_실행.command` | 터미널에서 `--rebuild`를 붙이면 다시 빌드 |
+| Windows | `Tools/launcher/귀문_실행.bat` | Unity Hub의 *Windows Build Support (Mono)* 모듈 필요. 다시 빌드는 `.ps1 -Rebuild` |
+
+- **바탕화면에서 바로 실행**: `Tools/launcher/바탕화면에_설치.command`(macOS)를 한 번 실행하면 바탕화면에 `귀문.app`이 생긴다 — 이후엔 그걸 더블클릭하면 Unity·프로젝트 폴더 없이 게임이 뜬다 (코드·그림을 바꾼 뒤엔 다시 실행해 갱신, `--rebuild`로 새로 빌드). Windows는 `바탕화면에_설치.bat`이 바탕화면에 `귀문.lnk` 바로가기를 만든다 (빌드 폴더를 지우면 끊김).
+- Unity가 이 프로젝트를 열고 있으면 배치 빌드가 잠금으로 실패한다 → 에디터를 닫거나, 에디터 메뉴 **Tools → ParryRL → 게임 빌드 (macOS / Windows)** 를 쓴다 (결과: `Builds/Mac/귀문.app`, `Builds/Windows/귀문.exe`).
+- Unity 위치가 다르면 `UNITY_PATH` 환경변수에 Unity 실행 파일 경로를 넣는다. 빌드는 `.gitignore`의 `Builds/`라 저장소에 올라가지 않는다.
+
 ### 테스트
 
 PlayMode 테스트 약 90개(판정·게이지·레벨·몬스터·튜닝·그림 연동·무기 전환)와 화면 캡처(`Captures/`)가 있다.
@@ -113,13 +126,13 @@ Assets/
 │   ├── Enemy/          # EnemyController · EnemySpawner · EnemySprite/EnemyArt · EnemyCorpse
 │   ├── Progression/    # PlayerLevel (경험치·레벨)
 │   ├── UI/             # StartMenu(시작 화면) · Hud · SkillBar · TuningPanel(F1) · UiKit
-│   └── Editor/         # PrototypeSceneBuilder (시작 씬·게임 씬·프리팹·에셋 묶음 생성)
+│   └── Editor/         # PrototypeSceneBuilder (시작 씬·게임 씬·프리팹·에셋 묶음 생성) · GameBuilder (실행 파일 빌드)
 ├── Tests/PlayMode/     # 판정·증강·몬스터·튜닝·그림·캡처 테스트
 ├── Art/                # Characters/Hero · Enemies/(Changgwi, Dokkaebibul) · Fx/ (도트 프레임) · Square.png
 ├── Audio/              # 패링 성공음
 └── Scenes/ Prefabs/    # 생성물 (Start.unity · Prototype.unity)
 ArtSource/              # 그림 원본 시트 · gwimun/안내.md(귀문 에셋 안내)
-Tools/                  # run_tests.ps1 · sprites/(프레임 자르기)
+Tools/                  # launcher/(런처) · run_tests.ps1 · sprites/(프레임 자르기)
 Tuning/tuning.json      # F1 패널로 바꾼 수치 (팀 공유)
 Captures/               # 테스트가 찍는 화면 캡처
 ```
