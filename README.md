@@ -95,7 +95,7 @@
 | macOS | `Tools/launcher/귀문_실행.command` | 터미널에서 `--rebuild`를 붙이면 다시 빌드 |
 | Windows | `Tools/launcher/귀문_실행.bat` | Unity Hub의 *Windows Build Support (Mono)* 모듈 필요. 다시 빌드는 `.ps1 -Rebuild` |
 
-- **바탕화면에서 바로 실행**: `Tools/launcher/바탕화면에_설치.command`(macOS)를 한 번 실행하면 바탕화면에 `귀문.app` 바로가기가 생긴다 — 더블클릭하면 프로젝트가 마지막 빌드보다 새로울 때 자동으로 다시 빌드한 뒤(터미널 창) 최신 상태로 실행한다. 다른 사람에게 줄 때는 `--copy`로 빌드 통째로 복사(Unity·프로젝트 없이 실행, 자동 갱신 없음). Windows는 `바탕화면에_설치.bat`이 바탕화면에 `귀문.lnk` 바로가기를 만든다 (빌드 폴더를 지우면 끊김).
+- **바탕화면에서 바로 실행**: `Tools/launcher/바탕화면에_설치.command`(macOS)를 한 번 실행하면 바탕화면에 `귀문.app` 바로가기가 생긴다 — 더블클릭하면 바로 실행되고, 프로젝트가 마지막 빌드보다 새로울 때만 터미널 창에서 자동으로 다시 빌드한 뒤 최신 상태로 실행한다(Unity 에디터는 닫아 둘 것). **프로젝트 폴더를 데스크탑·문서·다운로드 안에 두면** macOS 개인정보 보호가 바로가기 앱의 검사를 막아 항상 터미널을 거친다 — 홈 폴더 바로 아래(`~/ParryRoguelike-main`) 같은 곳에 둘 것. 다른 사람에게 줄 때는 `--copy`로 빌드 통째로 복사(Unity·프로젝트 없이 실행, 자동 갱신 없음). Windows는 `바탕화면에_설치.bat`이 바탕화면에 `귀문.lnk` 바로가기를 만든다 (빌드 폴더를 지우면 끊김).
 - Unity가 이 프로젝트를 열고 있으면 배치 빌드가 잠금으로 실패한다 → 에디터를 닫거나, 에디터 메뉴 **Tools → ParryRL → 게임 빌드 (macOS / Windows)** 를 쓴다 (결과: `Builds/Mac/귀문.app`, `Builds/Windows/귀문.exe`).
 - Unity 위치가 다르면 `UNITY_PATH` 환경변수에 Unity 실행 파일 경로를 넣는다. 빌드는 `.gitignore`의 `Builds/`라 저장소에 올라가지 않는다.
 

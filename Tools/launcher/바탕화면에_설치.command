@@ -40,9 +40,11 @@ cat > "$DEST/Contents/Info.plist" <<PL
 PL
 cat > "$DEST/Contents/MacOS/launch" <<SH
 #!/bin/bash
-# 귀문 바로가기: 프로젝트가 바뀌었으면 터미널에서 런처로 새로 빌드해 실행, 아니면 바로 실행
+# 귀문 바로가기: 프로젝트가 빌드보다 새로우면 터미널에서 런처로 새로 빌드해 실행, 아니면 바로 실행.
+# (프로젝트가 데스크탑·문서·다운로드 폴더 안에 있으면 macOS 개인정보 보호가 이 앱의 폴더 검사를 막아 "바뀐 게 없다"고 잘못 판단한다 → 그런 폴더 밖에 둘 것)
 ROOT="$ROOT"
 APP="\$ROOT/Builds/Mac/귀문.app"
+case "\$ROOT" in "\$HOME/Desktop"*|"\$HOME/Documents"*|"\$HOME/Downloads"*) open -a Terminal "\$ROOT/Tools/launcher/귀문_실행.command"; exit;; esac
 if [ ! -d "\$APP" ] || [ -n "\$(find "\$ROOT/Assets" "\$ROOT/Packages" "\$ROOT/ProjectSettings" -type f -newer "\$APP" -print -quit 2>/dev/null)" ]; then
   open -a Terminal "\$ROOT/Tools/launcher/귀문_실행.command"
 else

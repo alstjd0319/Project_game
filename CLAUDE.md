@@ -194,3 +194,4 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 부적: **부채꼴**(`PlayerProjectile` 5발, 48°, 장당 10) · **봉인진**(`SealZone`: 3.2×1.6 박스, 3.5초, 0.2초마다 기절 갱신 + 0.7초마다 8 데미지(밀치지 않음), 그림 3장→반복→끝 2장, `AttackFxArt.talismanSeal`).
 - 모션: `CharacterArt.skill1/skill2`(+`skillNStartFrame`) — 빌더가 `staff_skill_sweep/slam`, `talisman_skill_fan/seal` 시트를 넣는다. 일반공격(A)도 같은 휩쓸기/부채꼴 모션을 쓴다(시트가 4개뿐).
 - 스킬바는 6칸(Shift·A·D·F·S·Q). 수치는 `PlayerCombat` 인스펙터 필드(F1 패널엔 아직 없음).
+- (수정) 바로가기 앱이 프로젝트 폴더를 `find`로 검사할 때 프로젝트가 Desktop/Documents/Downloads 안에 있으면 macOS 개인정보 보호에 막혀 "바뀐 게 없다"고 오판해 옛 빌드를 열었다. → 프로젝트를 `~/ParryRoguelike-main`(홈 바로 아래)으로 옮겼고, 바로가기는 바뀐 게 있을 때만 터미널에서 런처를 실행한다(보호 폴더 안에 있으면 항상 터미널 경유).
