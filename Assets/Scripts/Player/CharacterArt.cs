@@ -26,6 +26,8 @@ namespace ParryRL
         [Tooltip("대시 시간 동안 한 번 재생")] public SpriteClip dash = new();
         [Tooltip("방어 성공 직후 반격 (한 번 재생)")] public SpriteClip counter = new();
         [Tooltip("공격 스킬 (한 번 재생)")] public SpriteClip attack = new();
+        [Tooltip("D 스킬 (봉 휩쓸기 / 부적 부채꼴) · F 스킬 (봉 내려찍기 / 부적 봉인) 모션 — 한 번 재생")] public SpriteClip skill1 = new();
+        public SpriteClip skill2 = new();
         [Tooltip("도약·상승·정점·낙하·착지 5장. 공중에서는 세로 속도로 1~3번을 고르고, 착지 순간 4번을 잠깐 보여준다")] public SpriteClip jump = new();
         public SpriteClip hit = new();
         [Tooltip("한 번 재생하고 마지막 장면에서 멈춤")] public SpriteClip death = new();
@@ -35,6 +37,8 @@ namespace ParryRL
         [Tooltip("반격·공격 스킬은 누르는 순간 판정이 생기므로 칼을 뻗은 이 장면부터 재생한다. 앞 장면(준비 자세)은 선딜이 생기면 쓴다")]
         public int counterHitFrame = 1;
         public int attackHitFrame = 2;
+        [Tooltip("스킬 모션을 시작하는 장면 (D / F). 스킬은 이 장면부터 재생하고 판정은 스킬 정의의 지연 뒤에 생긴다")] public int skill1StartFrame = 2;
+        public int skill2StartFrame = 2;
         [Tooltip("패링 성공 순간 잠깐 멈춰 보여줄 패링 프레임 번호 (막아서 밀리는 장면)")] public int parryImpactFrame = 2;
     }
 }

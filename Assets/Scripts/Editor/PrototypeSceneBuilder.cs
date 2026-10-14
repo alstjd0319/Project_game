@@ -301,6 +301,8 @@ namespace ParryRL.EditorTools
             art.parry = LoadClip(d, "hero", w + "_parry", 12f);
             art.counter = LoadClip(d, "hero", w + "_counter", 14f);
             art.attack = LoadClip(d, "hero", w == "staff" ? "staff_skill_sweep" : "talisman_skill_fan", 14f);
+            art.skill1 = LoadClip(d, "hero", w == "staff" ? "staff_skill_sweep" : "talisman_skill_fan", 14f);
+            art.skill2 = LoadClip(d, "hero", w == "staff" ? "staff_skill_slam" : "talisman_skill_seal", w == "staff" ? 12f : 10f);
             art.dash = LoadClip(d, "hero", "dash", 20f);       // 대시 0.15초 = 3프레임
             art.jump = LoadClip(d, "hero", "jump", 6f);        // 공중은 세로 속도로 고르므로 fps는 안 쓴다
             art.hit = LoadClip(d, "hero", "hit", 12f);
@@ -308,6 +310,9 @@ namespace ParryRL.EditorTools
             art.enter = LoadClip(d, "hero", "swap", 12f);      // 무기를 바꿀 때
             art.counterHitFrame = 1;  // 반격 시트: 0 준비 · 1 뻗음 · 2 거둠
             art.attackHitFrame = 2;   // 일반공격 시트: 0 준비 · 1 웅크림 · 2 뻗음 · 3 거둠
+            // 스킬 시트: 휩쓸기/부채꼴은 2 = 뻗음·던짐, 내려찍기는 2 = 공중 정점 → 3에서 내리꽂음, 봉인은 2 = 부적을 바닥에 놓음
+            art.skill1StartFrame = 2;
+            art.skill2StartFrame = 2;
             art.parryImpactFrame = 1; // 패링 시트: 0 올림 · 1 막음
             EditorUtility.SetDirty(art);
         }
@@ -367,6 +372,8 @@ namespace ParryRL.EditorTools
             fx.heavyWarning = LoadClip(FxDir, "fx", "heavy_warning", 12f);
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
             fx.yogiAbsorb = LoadClip(FxDir, "fx", "yogi_absorb", 14f);
+            fx.staffSlam = LoadClip(FxDir, "fx", "staff_slam", 16f);
+            fx.talismanSeal = LoadClip(FxDir, "fx", "talisman_seal", 12f);
             fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);
             EditorUtility.SetDirty(fx);
         }

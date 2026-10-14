@@ -24,6 +24,8 @@ namespace ParryRL
         public SpriteClip heavyWarning = new();
         public SpriteClip dustLand = new();
         [Tooltip("패링 성공 시 플레이어 몸 주변에 겹쳐 재생 (요기 흡수)")] public SpriteClip yogiAbsorb = new();
+        [Tooltip("F 스킬: 봉 내려찍기 충격파 / 부적 봉인진")] public SpriteClip staffSlam = new();
+        public SpriteClip talismanSeal = new();
         [Tooltip("도깨비불 불덩이 — 앞 4장 청록(일반) · 뒤 4장 빨강(강공격), 반복 재생")] public SpriteClip dokkaebiProjectile = new();
 
         public SpriteClip EnemySlash(AttackType type) => type == AttackType.Heavy ? enemyHeavySlash : enemySlash;

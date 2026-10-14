@@ -105,6 +105,8 @@ namespace ParryRL
         private void OnActionUsed(PlayerAction action)
         {
             if (action == PlayerAction.Attack) PlayOnce("attack");
+            else if (action == PlayerAction.Skill1) PlayOnce("skill1");
+            else if (action == PlayerAction.Skill2) PlayOnce("skill2");
             else if (action == PlayerAction.Move) _oneShot = null;
         }
 
@@ -286,6 +288,8 @@ namespace ParryRL
             {
                 "counter" => art.counter,
                 "attack" => art.attack,
+                "skill1" => art.skill1,
+                "skill2" => art.skill2,
                 "hit" => art.hit,
                 "enter" => art.enter,
                 _ => null,
@@ -300,6 +304,8 @@ namespace ParryRL
             {
                 "counter" => art.counterHitFrame,
                 "attack" => art.attackHitFrame,
+                "skill1" => art.skill1StartFrame,
+                "skill2" => art.skill2StartFrame,
                 _ => 0,
             };
             frame = Mathf.Clamp(start, 0, source.frames.Length - 1) + (int)(_oneShotTime * source.fps);

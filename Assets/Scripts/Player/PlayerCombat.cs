@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace ParryRL
@@ -77,6 +78,33 @@ namespace ParryRL
         [SerializeField, Tooltip("켜면 대시(Shift)가 도력을 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool moveSkillFree = true;
         [SerializeField, Tooltip("기획서 4.4 — 0.1초에서 1초로 변경 (도력 1칸당 딜 효율 관리)")] private float moveSkillCooldown = 1f;
 
+        [Header("스킬 D / F — 도력을 쓴다. 무기마다 내용이 다르다 (D 휩쓸기·부채꼴 / F 내려찍기·봉인진)")]
+        [SerializeField] private int skill1Cost = 3;
+        [SerializeField] private float skill1Cooldown = 3f;
+        [SerializeField] private int skill2Cost = 5;
+        [SerializeField] private float skill2Cooldown = 6f;
+        [Header("봉 D: 휩쓸기 — 앞쪽 넓은 박스를 한 번에 쓸어 데미지 + 짧은 기절")]
+        [SerializeField] private int sweepDamage = 30;
+        [SerializeField] private Vector2 sweepBox = new(4f, 2.2f);
+        [SerializeField] private float sweepStun = 0.5f;
+        [Header("봉 F: 내려찍기 — 공중에서 내리꽂아 앞쪽 바닥 충격파, 큰 데미지 + 긴 기절")]
+        [SerializeField] private int slamDamage = 45;
+        [SerializeField] private Vector2 slamBox = new(3.8f, 1.6f);
+        [SerializeField] private float slamStun = 1.2f;
+        [SerializeField, Tooltip("모션 시작(공중 정점)에서 내리꽂는 순간까지 (판정-시각 일치)")] private float slamDelay = 0.083f;
+        [Header("부적 D: 부채꼴 — 앞쪽으로 부적 여러 장을 부채꼴로 던진다")]
+        [SerializeField] private int fanDamage = 10;
+        [SerializeField] private int fanCount = 5;
+        [SerializeField, Tooltip("부채꼴 전체 각도 (도)")] private float fanSpread = 48f;
+        [SerializeField] private float fanSpeed = 14f;
+        [SerializeField] private float fanRange = 9f;
+        [Header("부적 F: 봉인진 — 앞쪽 바닥에 진을 깔아 안의 적을 묶고 약하게 태운다")]
+        [SerializeField] private int sealTickDamage = 8;
+        [SerializeField] private float sealTickInterval = 0.7f;
+        [SerializeField] private float sealDuration = 3.5f;
+        [SerializeField, Tooltip("플레이어 앞 진 가운데까지 거리")] private float sealDistance = 3.2f;
+        [SerializeField] private Vector2 sealBox = new(3.2f, 1.6f);
+
         /// <summary>지금 들고 있는 무기 (Q로 전환).</summary>
         public WeaponMode Weapon { get; private set; } = WeaponMode.Melee;
         public bool IsRanged => Weapon == WeaponMode.Ranged;
@@ -97,6 +125,14 @@ namespace ParryRL
         public float AttackSkillCooldown => IsRanged ? arrowCooldown : attackSkillCooldown;
         public float AttackSkillCooldownLeft => _attackCd;
         public float MoveSkillCooldown => moveSkillCooldown;
+        public int Skill1Cost => skill1Cost;
+        public int Skill2Cost => skill2Cost;
+        public float Skill1Cooldown => skill1Cooldown;
+        public float Skill2Cooldown => skill2Cooldown;
+        public float Skill1CooldownLeft => _skill1Cd;
+        public float Skill2CooldownLeft => _skill2Cd;
+        public string Skill1Name => IsRanged ? "부채꼴" : "휩쓸기";
+        public string Skill2Name => IsRanged ? "봉인진" : "내려찍기";
         /// <summary>대시를 쓸 수 없을 때(충전 0) 다음 1회분이 찰 때까지 남은 시간. 충전이 남아 있으면 0.</summary>
         public float MoveSkillCooldownLeft => _moveCharges <= 0 ? _moveCd : 0f;
         public int MoveSkillCharges => _moveCharges;
@@ -121,6 +157,8 @@ namespace ParryRL
         private float _moveCd;        // 다음 충전까지 남은 시간 (충전이 가득이면 0)
         private int _moveCharges = -1; // -1 = 아직 초기화 안 됨 (Awake에서 최대치로)
         private float _weaponCd;
+        private float _skill1Cd;
+        private float _skill2Cd;
 
         private void Awake()
         {
@@ -146,9 +184,13 @@ namespace ParryRL
                 }
             }
             _weaponCd = Mathf.Max(0f, _weaponCd - Time.deltaTime);
+            _skill1Cd = Mathf.Max(0f, _skill1Cd - Time.deltaTime);
+            _skill2Cd = Mathf.Max(0f, _skill2Cd - Time.deltaTime);
 
             if (GameManager.InputBlocked || _party.IsDead) return;
             if (Input.GetKeyDown(Controls.AttackSkill)) TryAttackSkill();
+            if (Input.GetKeyDown(Controls.Skill1)) TrySkill(1);
+            if (Input.GetKeyDown(Controls.Skill2)) TrySkill(2);
             if (Input.GetKeyDown(Controls.MoveSkill)) TryMoveSkill();
             if (Input.GetKeyDown(Controls.Weapon)) TrySwitchWeapon();
         }
@@ -269,6 +311,98 @@ namespace ParryRL
                 _motor.Lunge(dir);
             }
             return true;
+        }
+
+        // ───────────── 스킬 D / F ─────────────
+
+        /// <summary>D(1) / F(2) 스킬. 무기에 따라 봉(휩쓸기·내려찍기) / 부적(부채꼴·봉인진). 도력과 쿨타임이 있다.</summary>
+        public bool TrySkill(int slot)
+        {
+            var action = slot == 1 ? PlayerAction.Skill1 : PlayerAction.Skill2;
+            int cost = slot == 1 ? skill1Cost : skill2Cost;
+            // 패링을 막 켠 동안(아직 못 막음)은 못 쓴다 — 막은 뒤에는 바로 쓸 수 있다 (일반공격과 같은 규칙)
+            bool parrying = _defense.State == DefenseState.Active && !_defense.SucceededThisActive;
+            if (_party.IsDead || parrying || (slot == 1 ? _skill1Cd : _skill2Cd) > 0f)
+            {
+                ActionDenied?.Invoke(action);
+                return false;
+            }
+            if (!_gauge.TrySpend(cost))
+            {
+                Denied(action, $"도력 부족 ({cost})");
+                return false;
+            }
+
+            if (slot == 1) _skill1Cd = skill1Cooldown; else _skill2Cd = skill2Cooldown;
+            ActionUsed?.Invoke(action);
+            Sfx.Play(SfxId.Skill);
+            int dir = _motor.Facing;
+            Vector2 pos = transform.position;
+            if (slot == 1)
+            {
+                if (IsRanged) FanSkill(pos, dir); else SweepSkill(pos, dir);
+            }
+            else
+            {
+                if (IsRanged) SealSkill(pos, dir); else StartCoroutine(SlamSkill(pos, dir));
+            }
+            return true;
+        }
+
+        private float GroundY => transform.position.y - transform.localScale.y * 0.5f;
+
+        private void SweepSkill(Vector2 pos, int dir)
+        {
+            var center = new Vector2(pos.x + dir * sweepBox.x * 0.5f, pos.y);
+            var hit = NewHit(DamageSource.AttackSkill, false);
+            int hits = MeleeStrike.Spawn(center, sweepBox, new Color(WeaponColor.r, WeaponColor.g, WeaponColor.b, 0.45f), sweepDamage, hit,
+                e => e.Stun(sweepStun), GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeAttack : null, dir, stretchArt: true);
+            if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
+            _motor.Lunge(dir);
+        }
+
+        private IEnumerator SlamSkill(Vector2 pos, int dir)
+        {
+            // 공중 정점에서 내리꽂는 순간까지 기다린 뒤 충격파 (모션 3번째 장면)
+            if (slamDelay > 0f) yield return new WaitForSeconds(slamDelay);
+            if (_party.IsDead) yield break;
+            pos = transform.position;
+            var center = new Vector2(pos.x + dir * (transform.localScale.x * 0.5f + slamBox.x * 0.5f), pos.y);
+            var hit = NewHit(DamageSource.AttackSkill, true);
+            int hits = MeleeStrike.Spawn(center, slamBox, new Color(0.6f, 1f, 0.95f, 0.45f), slamDamage, hit, e => e.Stun(slamStun));
+            var art = GameAssets.AttackFx != null ? GameAssets.AttackFx.staffSlam : null;
+            if (art != null && !art.IsEmpty)
+            {
+                const float scale = 1.8f;
+                var at = new Vector2(center.x, GroundY + 0.8f * scale);
+                FxClip.PlayAt(art, at, scale, dir < 0, 11);
+            }
+            Fx.Sparks(new Vector2(center.x, GroundY + 0.1f), new Color(0.6f, 1f, 0.95f), 14, 8f);
+            if (HitFeel.Instance != null)
+                HitFeel.Instance.Play(new HitFeelProfile { hitStop = hits > 0 ? 0.05f : 0f, slowMotion = 0f, slowScale = 1f, shake = 0.22f, shakeDuration = 0.18f });
+        }
+
+        private void FanSkill(Vector2 pos, int dir)
+        {
+            var hit = NewHit(DamageSource.AttackSkill, false);
+            int n = Mathf.Max(1, fanCount);
+            for (int i = 0; i < n; i++)
+            {
+                float t = n == 1 ? 0f : (i / (float)(n - 1) - 0.5f);
+                float angle = t * fanSpread * Mathf.Deg2Rad;
+                var d = new Vector2(Mathf.Cos(angle) * dir, Mathf.Sin(angle));
+                PlayerProjectile.Spawn(pos + new Vector2(dir * 0.5f, 0.1f), d, null, false, fanSpeed, fanRange, fanDamage, hit,
+                    Color.Lerp(WeaponColor, Color.white, 0.2f), new Vector2(0.8f, 0.18f));
+            }
+            _motor.Lunge(dir);
+        }
+
+        private void SealSkill(Vector2 pos, int dir)
+        {
+            var hit = NewHit(DamageSource.AttackSkill, false);
+            var ground = new Vector2(pos.x + dir * sealDistance, GroundY);
+            var art = GameAssets.AttackFx != null ? GameAssets.AttackFx.talismanSeal : null;
+            SealZone.Spawn(ground, sealBox, sealDuration, sealTickInterval, sealTickDamage, hit, art, 2f);
         }
 
         /// <summary>Q: 근접 ↔ 원거리. 방어 활성 중이거나 쿨타임이면 안 된다. 도력은 쓰지 않는다.</summary>

@@ -12,6 +12,6 @@ namespace ParryRL
 
     public enum EnemyKind { Melee, Ranged }
 
-    /// <summary>플레이어 입력 행동 4종 (스킬바 슬롯과 1:1).</summary>
-    public enum PlayerAction { Move, Attack, Defend, Weapon }
+    /// <summary>플레이어 입력 행동 (스킬바 슬롯과 1:1). Skill1 = D 스킬, Skill2 = F 스킬.</summary>
+    public enum PlayerAction { Move, Attack, Defend, Weapon, Skill1, Skill2 }
 }

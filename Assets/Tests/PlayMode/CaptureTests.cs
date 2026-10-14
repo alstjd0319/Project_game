@@ -26,6 +26,53 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 스킬_D_F_연출()
+        {
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            var combat = defense.GetComponent<PlayerCombat>();
+            var gauge = defense.GetComponent<SkillGauge>();
+            var enemies = Object.FindObjectsByType<EnemyController>();
+            void Put(float dx)
+            {
+                foreach (var e in enemies)
+                {
+                    var pos = new Vector3(defense.transform.position.x + dx, e.transform.localScale.y * 0.5f, 0f);
+                    e.transform.position = pos;
+                    e.GetComponent<Rigidbody2D>().position = pos;
+                    dx += 1.3f;
+                }
+            }
+            GameTuning.Current.enemyInvincible = true; // 여러 번 맞아도 살아 있게
+            gauge.Add(20);
+            Put(2.2f);
+            yield return new WaitForSeconds(0.3f);
+
+            combat.TrySkill(1);                         // 봉 휩쓸기
+            yield return new WaitForSeconds(0.1f);
+            yield return Capture("skill_staff_sweep");
+
+            yield return new WaitForSeconds(2.9f);
+            Put(2.2f);
+            combat.TrySkill(2);                         // 봉 내려찍기
+            yield return new WaitForSeconds(0.2f);
+            yield return Capture("skill_staff_slam");
+
+            yield return new WaitForSeconds(0.5f);
+            combat.TrySwitchWeapon();
+            yield return new WaitForSeconds(0.6f);
+            Put(3.0f);
+            combat.TrySkill(1);                         // 부적 부채꼴
+            yield return new WaitForSeconds(0.12f);
+            yield return Capture("skill_talisman_fan");
+
+            yield return new WaitForSeconds(5.2f);      // 내려찍기 쿨타임(6초)이 지나도록
+            Put(3.0f);
+            combat.TrySkill(2);                         // 부적 봉인진
+            yield return new WaitForSeconds(0.9f);
+            yield return Capture("skill_talisman_seal");
+        }
+
+        [UnityTest]
         public IEnumerator Hud_전투중()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

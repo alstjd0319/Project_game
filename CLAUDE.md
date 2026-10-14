@@ -187,3 +187,10 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 ## 런처 자동 갱신 (2026-10-14)
 - `귀문_실행.command`는 Assets/Packages/ProjectSettings에 빌드(`Builds/Mac/귀문.app`)보다 새로운 파일이 있으면 자동으로 다시 빌드한다(에디터가 열려 있으면 이전 빌드로 실행).
 - `바탕화면에_설치.command`는 이제 빌드 복사본이 아니라 **바로가기 앱**을 만든다(프로젝트 경로 고정, 바뀐 게 있으면 터미널에서 런처 실행). 배포용 복사는 `--copy`. 윈도우(`.bat/.ps1`)는 아직 이전 방식.
+
+## 스킬 D / F (2026-10-14)
+- `Controls.Skill1=D`, `Skill2=F`, `PlayerAction.Skill1/Skill2`, `PlayerCombat.TrySkill(1|2)`. 도력 D 3 / F 5 (`TrySpend`라 연습 스위치 "도력 무한"이 적용), 쿨타임 D 3초 / F 6초(무기를 바꿔도 공유). 패링을 막 켠 동안(못 막음)은 못 쓰고, 막은 뒤엔 바로 가능(일반공격과 같은 규칙).
+- 봉: **휩쓸기**(`MeleeStrike` 4.0×2.2, 30, 기절 0.5, 그림은 박스에 꽉 차게 `stretchArt`) · **내려찍기**(모션 정점에서 0.083초 뒤 충격파 박스 3.8×1.6, 45, 기절 1.2, `AttackFxArt.staffSlam`).
+- 부적: **부채꼴**(`PlayerProjectile` 5발, 48°, 장당 10) · **봉인진**(`SealZone`: 3.2×1.6 박스, 3.5초, 0.2초마다 기절 갱신 + 0.7초마다 8 데미지(밀치지 않음), 그림 3장→반복→끝 2장, `AttackFxArt.talismanSeal`).
+- 모션: `CharacterArt.skill1/skill2`(+`skillNStartFrame`) — 빌더가 `staff_skill_sweep/slam`, `talisman_skill_fan/seal` 시트를 넣는다. 일반공격(A)도 같은 휩쓸기/부채꼴 모션을 쓴다(시트가 4개뿐).
+- 스킬바는 6칸(Shift·A·D·F·S·Q). 수치는 `PlayerCombat` 인스펙터 필드(F1 패널엔 아직 없음).

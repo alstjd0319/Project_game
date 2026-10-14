@@ -58,6 +58,22 @@ MonoBehaviour:
     - {fileID: 21300000, guid: da7d4e98856e84658bf748558c8fa02b, type: 3}
     - {fileID: 21300000, guid: 68ac7f004e6984d9d9421108691860fc, type: 3}
     fps: 14
+  skill1:
+    frames:
+    - {fileID: 21300000, guid: c05e3c7def95b403286918df9f55e0a7, type: 3}
+    - {fileID: 21300000, guid: bf4d8edef7fc8497c81f3170fff8cba3, type: 3}
+    - {fileID: 21300000, guid: b3896dae9d9b24fcbb93cfe0634b77c3, type: 3}
+    - {fileID: 21300000, guid: da7d4e98856e84658bf748558c8fa02b, type: 3}
+    - {fileID: 21300000, guid: 68ac7f004e6984d9d9421108691860fc, type: 3}
+    fps: 14
+  skill2:
+    frames:
+    - {fileID: 21300000, guid: e462bdee145834b3ca1c5adf3ada9f1d, type: 3}
+    - {fileID: 21300000, guid: cf0bf199f2eda4748af29ff864bcec9a, type: 3}
+    - {fileID: 21300000, guid: f7a9870d553fb45149f798aad098923a, type: 3}
+    - {fileID: 21300000, guid: 36ca3d938ffee4a69b0ebe230924bae2, type: 3}
+    - {fileID: 21300000, guid: 93d7394d204a14ebeb5d4ddf4ae7b931, type: 3}
+    fps: 12
   jump:
     frames:
     - {fileID: 21300000, guid: 15220bb9dadb54afd868729fdf32a84d, type: 3}
@@ -90,4 +106,6 @@ MonoBehaviour:
   airRunFrame: 3
   counterHitFrame: 1
   attackHitFrame: 2
+  skill1StartFrame: 2
+  skill2StartFrame: 2
   parryImpactFrame: 1

@@ -15,6 +15,9 @@ namespace ParryRL
         public const KeyCode Defend = KeyCode.S;
         public const KeyCode AttackSkill = KeyCode.A;
         public const KeyCode MoveSkill = KeyCode.LeftShift;
+        /// <summary>D = 스킬 1 (봉 휩쓸기 / 부적 부채꼴), F = 스킬 2 (봉 내려찍기 / 부적 봉인진). 도력을 쓴다.</summary>
+        public const KeyCode Skill1 = KeyCode.D;
+        public const KeyCode Skill2 = KeyCode.F;
         public const KeyCode Confirm = KeyCode.Return;
         public const KeyCode Pause = KeyCode.Escape;
         public const KeyCode Restart = KeyCode.R;
