@@ -14,7 +14,7 @@ namespace ParryRL
     /// </summary>
     public class StartMenu : MonoBehaviour
     {
-        public const string GameSceneName = "Prototype";
+        public const string GameSceneName = GameManager.HubSceneName; // 게임 시작 → 사당 (거기서 포탈로 플레이 씬)
 
         /// <summary>메뉴 항목 하나. 비활성(enabled=false)은 회색으로 보이고 선택되지 않는다 — 아직 없는 기능 자리 표시용.</summary>
         public sealed class Entry

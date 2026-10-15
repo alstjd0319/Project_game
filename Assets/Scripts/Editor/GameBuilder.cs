@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ParryRL.EditorTools
 {
     /// <summary>
-    /// 실행 파일(독립 실행형 게임) 빌드. 시작 화면(Start) → 게임(Prototype) 순서로 빌드 설정에 이미 들어 있다.
+    /// 실행 파일(독립 실행형 게임) 빌드. 시작 화면(Start) → 사당(Hub) → 게임(Prototype) 순서로 빌드한다.
     /// 에디터: Tools → ParryRL → 게임 빌드 (macOS / Windows)
     /// 배치모드: -executeMethod ParryRL.EditorTools.GameBuilder.BuildMac  (또는 BuildWindows)
     /// 런처 스크립트(Tools/launcher/)가 이 메서드를 불러 빌드하고 실행한다.
@@ -23,10 +23,22 @@ namespace ParryRL.EditorTools
         [MenuItem("Tools/ParryRL/게임 빌드 (Windows)")]
         public static void BuildWindows() => Build(BuildTarget.StandaloneWindows64, WindowsPath);
 
+        /// <summary>
+        /// 빌드할 씬 = 빌드 설정(씬 빌더가 Start → Hub → Prototype 순서로 맞춘다)의 켜진 씬 전부.
+        /// 목록을 여기 따로 적어 두면 씬이 늘어날 때 빠뜨려 "게임 시작"이 안 넘어가므로(사당 추가 때 실제로 그랬다) 한 곳(빌드 설정)만 쓴다.
+        /// </summary>
+        private static string[] BuildScenes()
+        {
+            var list = new System.Collections.Generic.List<string>();
+            foreach (var scene in EditorBuildSettings.scenes)
+                if (scene.enabled && File.Exists(scene.path)) list.Add(scene.path);
+            return list.ToArray();
+        }
+
         private static void Build(BuildTarget target, string relativePath)
         {
-            // 씬이 아직 없으면(처음 받은 직후 등) 만들어 둔다. 빌드 설정(Start 0 → Prototype 1)도 이때 맞춰진다.
-            if (!File.Exists(PrototypeSceneBuilder.StartScenePath) || !File.Exists(PrototypeSceneBuilder.ScenePath))
+            // 씬이 아직 없으면(처음 받은 직후 등) 만들어 둔다. 빌드 설정(Start 0 → Hub 1 → Prototype 2)도 이때 맞춰진다.
+            if (!File.Exists(PrototypeSceneBuilder.StartScenePath) || !File.Exists(PrototypeSceneBuilder.HubScenePath) || !File.Exists(PrototypeSceneBuilder.ScenePath))
                 PrototypeSceneBuilder.Build();
 
             PlayerSettings.productName = GameName;
@@ -40,7 +52,7 @@ namespace ParryRL.EditorTools
 
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { PrototypeSceneBuilder.StartScenePath, PrototypeSceneBuilder.ScenePath },
+                scenes = BuildScenes(),
                 locationPathName = fullPath,
                 target = target,
                 options = BuildOptions.None,

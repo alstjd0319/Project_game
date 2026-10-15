@@ -31,6 +31,8 @@ namespace ParryRL
         private Text _xpText;
         private float _xpFlash;
         private Text _popupText;
+        private Text _promptText;
+        private Image _promptBacking;
         private float _popupTimer;
         private float _popupScale;
         private Image _screenFlash;
@@ -108,6 +110,15 @@ namespace ParryRL
             {
                 text = text, worldPos = worldPos, life = 0.8f, color = color, scale = scale,
             });
+        }
+
+        /// <summary>화면 아래쪽 안내 문구 (상호작용 등). null이면 숨긴다.</summary>
+        public static void SetPrompt(string message)
+        {
+            if (_instance == null || _instance._promptText == null) return;
+            bool show = !string.IsNullOrEmpty(message);
+            _instance._promptBacking.gameObject.SetActive(show);
+            if (show) _instance._promptText.text = message;
         }
 
         public static void ScreenFlash(Color color)
@@ -316,6 +327,16 @@ namespace ParryRL
             // 하단 스킬바 (Shift / A / S / D)
             _skillBar = new SkillBar(_root);
 
+            // 상호작용 안내 (스킬바 위)
+            _promptBacking = UiKit.Image("PromptBacking", _root, new Color(0.05f, 0.03f, 0.12f, 0.8f));
+            _promptBacking.rectTransform.anchorMin = _promptBacking.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+            _promptBacking.rectTransform.anchoredPosition = new Vector2(0, 330);
+            _promptBacking.rectTransform.sizeDelta = new Vector2(620, 64);
+            _promptText = UiKit.Text("Prompt", _promptBacking.rectTransform, 34, TextAnchor.MiddleCenter);
+            UiKit.Stretch(_promptText.rectTransform);
+            _promptText.color = new Color(0.85f, 0.78f, 1f);
+            _promptBacking.gameObject.SetActive(false);
+
             // 판정 팝업
             _popupText = UiKit.Text("Popup", _root, 52, TextAnchor.MiddleCenter);
             _popupText.rectTransform.anchorMin = _popupText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -332,13 +353,25 @@ namespace ParryRL
             // F1 튜닝 패널
             _tuningPanel = new TuningPanel(_root);
 
-            _pausePanel = CreateOverlay("PausePanel", "일시 정지\n<size=28>ESC 계속   R 다시 시작   M 시작 화면</size>",
+            // 플레이 씬에서만 "사당으로" 버튼이 있다 (사당에서는 이미 사당)
+            bool hubButton = !GameManager.InHub;
+            var toHub = ("사당으로  (H)", (Action)(() => GameManager.LoadHub()));
+            var pauseButtons = new List<(string, Action)>
+            {
                 ("계속  (ESC)", () => GameManager.Instance?.SetPaused(false)),
                 ("다시 시작  (R)", () => GameManager.Instance?.Restart()),
-                ("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
-            _gameOverPanel = CreateOverlay("GameOverPanel", "쓰러졌다\n<size=28>R 다시 시작   M 시작 화면</size>",
-                ("다시 시작  (R)", () => GameManager.Instance?.Restart()),
-                ("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
+            };
+            var overButtons = new List<(string, Action)> { ("다시 시작  (R)", () => GameManager.Instance?.Restart()) };
+            if (hubButton)
+            {
+                pauseButtons.Add(toHub);
+                overButtons.Add(toHub);
+            }
+            pauseButtons.Add(("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
+            overButtons.Add(("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
+            string hubHint = hubButton ? "   H 사당" : "";
+            _pausePanel = CreateOverlay("PausePanel", $"일시 정지\n<size=28>ESC 계속   R 다시 시작{hubHint}   M 시작 화면</size>", pauseButtons.ToArray());
+            _gameOverPanel = CreateOverlay("GameOverPanel", $"쓰러졌다\n<size=28>R 다시 시작{hubHint}   M 시작 화면</size>", overButtons.ToArray());
         }
 
         /// <summary>화면 전체를 덮는 안내 + 아래 버튼들 (키로도 되고 마우스로도 된다). 버튼은 가운데 줄로 늘어선다.</summary>

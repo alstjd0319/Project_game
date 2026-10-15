@@ -57,7 +57,8 @@
 | Q | 무기 전환 (근접 ↔ 원거리) |
 | Shift | 이동 스킬: 돌진 (대시 중 무적, 도력 소모 없음, **연속 2번** — 쿨타임 1초마다 1회분씩 충전) |
 | F1 | 튜닝 패널 (판정·타격감·몬스터·연습 스위치) |
-| ESC | 일시정지 — 화면에서 계속(ESC) · 다시 시작(R) · **시작 화면(M)** (마우스 클릭도 된다). 게임오버 화면에서도 R / M |
+| E | 상호작용 (사당의 포탈 · NPC 만신) |
+| ESC | 일시정지 — 화면에서 계속(ESC) · 다시 시작(R) · **사당으로(H)** · **시작 화면(M)** (마우스 클릭도 된다). 게임오버 화면에서도 R / H / M. 사당에서는 "사당으로"가 없다 |
 
 ## 게임 규칙 요약
 
@@ -69,6 +70,15 @@
   - 원거리: 사정거리 안이면 그 자리에서 쏘고, 벗어나면 다가온다.
   - 피격 경직 0.15초. F1 몬스터 탭에서 종류별 마릿수 1~10 조절.
 - **증강은 폐지됐다** (2026-10-13). 레벨업은 "레벨 업!" 알림만 나오고 게임은 멈추지 않는다. 성장 보상(스킬 트리)은 아직 정하지 않았다.
+
+## 사당 (대기 씬)
+
+시작 화면에서 **게임 시작**을 누르면 먼저 사당(`Hub.unity`)에 선다. 적이 없는 대기 공간이다.
+
+- **오른쪽 끝 포탈**(귀문 소용돌이): 가까이 가서 **E** → 플레이(귀문 안) 씬으로 넘어간다.
+- **NPC 만신**: **E**로 말을 걸면 스킬 트리 창이 열린다. 지금은 창의 틀만 있고 스킬 노드는 아직 없다 (E · ESC로 닫기, 열려 있는 동안 게임은 멈춘다).
+- 플레이 씬에서는 일시정지(ESC)·게임오버 화면의 **사당으로 (H)** 버튼으로 돌아올 수 있다.
+- 상호작용은 플레이어 몸이 대상의 트리거 박스와 겹쳐야 되고, 화면 아래쪽에 `[E] …` 안내가 뜬다.
 
 ## 아트 · 사운드
 
@@ -84,7 +94,7 @@
 
 1. **Unity 6000.6.0f1**로 이 폴더를 연다.
 2. 메뉴 **Tools → ParryRL → 프로토타입 씬 생성** (씬·프리팹·그림 에셋 묶음을 코드로 만든다. 씬은 생성물이라 직접 편집하지 않는다).
-3. `Assets/Scenes/Start.unity`(시작 화면 — 게임 시작 / 종료하기)를 열고 Play. 게임 씬만 바로 보려면 `Assets/Scenes/Prototype.unity`를 연다. 빌드 설정에는 Start(0) → Prototype(1) 순서로 들어 있다.
+3. `Assets/Scenes/Start.unity`(시작 화면 — 게임 시작 / 종료하기)를 열고 Play. 게임 씬만 바로 보려면 `Assets/Scenes/Prototype.unity`를 연다. 빌드 설정에는 Start(0) → Hub(1, 사당) → Prototype(2, 플레이) 순서로 들어 있다.
 
 ### 런처로 실행 (Unity 에디터 없이 게임만)
 
@@ -155,6 +165,7 @@ $UNITY -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults r
 ```
 Assets/
 ├── Scripts/            # asmdef ParryRL (네임스페이스 ParryRL)
+│   ├── World/          # 사당: Interactable · PlayerInteractor(E) · ShrinePortal · ShrineNpc · NpcArt · ClipPlayer
 │   ├── Core/           # GameManager · GameTuning(튜닝·JSON) · CameraRig · Controls · GameEnums
 │   ├── Player/         # PlayerMotor(이동·점프·대시·내딛기) · PlayerDefense(패링 판정) · PlayerCombat(무기·반격·스킬)
 │   │                   # PlayerParty(체력·피격) · PlayerSprite/CharacterArt(도트 애니메이션) · SkillGauge
@@ -162,12 +173,12 @@ Assets/
 │   │                   # Fx · FxClip/AttackFxArt(공격 이펙트 그림) · Sfx(합성음) · WorldBar
 │   ├── Enemy/          # EnemyController · EnemySpawner · EnemySprite/EnemyArt · EnemyCorpse
 │   ├── Progression/    # PlayerLevel (경험치·레벨)
-│   ├── UI/             # StartMenu(시작 화면) · Hud · SkillBar · TuningPanel(F1) · UiKit
-│   └── Editor/         # PrototypeSceneBuilder (시작 씬·게임 씬·프리팹·에셋 묶음 생성) · GameBuilder (실행 파일 빌드)
+│   ├── UI/             # StartMenu(시작 화면) · SkillTreePanel(스킬 트리 창 틀) · Hud · SkillBar · TuningPanel(F1) · UiKit
+│   └── Editor/         # PrototypeSceneBuilder (시작·사당·게임 씬·프리팹·에셋 묶음 생성) · GameBuilder (실행 파일 빌드)
 ├── Tests/PlayMode/     # 판정·몬스터·튜닝·그림·시작 화면·캡처 테스트
 ├── Art/                # Characters/Hero · Enemies/(Changgwi, Dokkaebibul) · Fx/ (도트 프레임) · Square.png
 ├── Audio/              # 패링 성공음
-└── Scenes/ Prefabs/    # 생성물 (Start.unity · Prototype.unity)
+└── Scenes/ Prefabs/    # 생성물 (Start.unity · Hub.unity · Prototype.unity)
 ArtSource/              # 그림 원본 시트 · gwimun/안내.md(귀문 에셋 안내)
 Tools/                  # launcher/(런처) · run_tests.ps1 · sprites/(프레임 자르기)
 Tuning/tuning.json      # F1 패널로 바꾼 수치 (팀 공유)

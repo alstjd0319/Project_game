@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 193f8d94401744b0d8c05bb49024ac96, type: 3}
+  m_Name: MentorArt
+  m_EditorClassIdentifier: ParryRL::ParryRL.NpcArt
+  idle:
+    frames:
+    - {fileID: 21300000, guid: e9099ffb006d1436bb4b7ea10f5fd58a, type: 3}
+    - {fileID: 21300000, guid: 1d7f31a5f879946c3a1f08b43ff0f23f, type: 3}
+    - {fileID: 21300000, guid: ac031d44229aa44dc8502311189b88be, type: 3}
+    - {fileID: 21300000, guid: 443c671fc8d884b27ac7b0dd7b5ba726, type: 3}
+    fps: 5
+  talk:
+    frames:
+    - {fileID: 21300000, guid: 16a1096fa2ae74a48936f02da7854c31, type: 3}
+    - {fileID: 21300000, guid: c08098e3ebf964461a54047bc4255eb2, type: 3}
+    - {fileID: 21300000, guid: 4b07fe798e61e4ccca1b0e09ed685ae5, type: 3}
+    - {fileID: 21300000, guid: 40b7ad7e371584c0783046b7225eb990, type: 3}
+    fps: 6
+  bless:
+    frames:
+    - {fileID: 21300000, guid: 36266ce4cbda7480ba0eef4e2821f6f5, type: 3}
+    - {fileID: 21300000, guid: 8f54b8b93e1eb429ba122f430cbd16c5, type: 3}
+    - {fileID: 21300000, guid: 2d42b0639d8e44057b64837bc95bfafd, type: 3}
+    - {fileID: 21300000, guid: f2859b966f1104c869f3c1174d38ee63, type: 3}
+    - {fileID: 21300000, guid: 1bb74c1502f70401485bf129d6d25098, type: 3}
+    - {fileID: 21300000, guid: b89e8fd89591644b8ba15e7c6c9d44e5, type: 3}
+    fps: 8

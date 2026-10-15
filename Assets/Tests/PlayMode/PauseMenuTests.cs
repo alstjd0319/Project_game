@@ -28,10 +28,10 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 일시정지_화면에는_계속_다시시작_시작화면_버튼이_있다()
+        public IEnumerator 일시정지_화면에는_계속_다시시작_사당_시작화면_버튼이_있다()
         {
-            Assert.AreEqual(3, ButtonsOf("PausePanel").Length);
-            Assert.AreEqual(2, ButtonsOf("GameOverPanel").Length, "게임오버 화면: 다시 시작 · 시작 화면");
+            Assert.AreEqual(4, ButtonsOf("PausePanel").Length, "계속 · 다시 시작 · 사당으로 · 시작 화면");
+            Assert.AreEqual(3, ButtonsOf("GameOverPanel").Length, "게임오버 화면: 다시 시작 · 사당으로 · 시작 화면");
             yield return null;
         }
 
@@ -41,7 +41,7 @@ namespace ParryRL.Tests
             GameManager.Instance.SetPaused(true);
             Assert.AreEqual(0f, Time.timeScale);
             var buttons = ButtonsOf("PausePanel");
-            buttons[2].onClick.Invoke();
+            buttons[3].onClick.Invoke();
             yield return null;
             yield return null;
             yield return null;
@@ -65,11 +65,44 @@ namespace ParryRL.Tests
         {
             GameManager.Instance.TriggerGameOver();
             yield return null;
-            ButtonsOf("GameOverPanel")[1].onClick.Invoke();
+            ButtonsOf("GameOverPanel")[2].onClick.Invoke();
             yield return null;
             yield return null;
             yield return null;
             Assert.AreEqual(GameManager.StartSceneName, SceneManager.GetActiveScene().name);
+        }
+
+        [UnityTest]
+        public IEnumerator 사당으로_버튼을_누르면_사당으로_가고_시간이_복귀한다()
+        {
+            GameManager.Instance.SetPaused(true);
+            ButtonsOf("PausePanel")[2].onClick.Invoke();
+            yield return null;
+            yield return null;
+            yield return null;
+            Assert.AreEqual(GameManager.HubSceneName, SceneManager.GetActiveScene().name);
+            Assert.AreEqual(1f, Time.timeScale);
+            Assert.IsNotNull(Object.FindAnyObjectByType<ShrinePortal>(), "사당 씬");
+        }
+
+        [UnityTest]
+        public IEnumerator 게임오버_화면에서도_사당으로_갈_수_있다()
+        {
+            GameManager.Instance.TriggerGameOver();
+            yield return null;
+            ButtonsOf("GameOverPanel")[1].onClick.Invoke();
+            yield return null;
+            yield return null;
+            yield return null;
+            Assert.AreEqual(GameManager.HubSceneName, SceneManager.GetActiveScene().name);
+        }
+
+        [UnityTest]
+        public IEnumerator 사당에서는_사당으로_버튼이_없다()
+        {
+            yield return TestScene.LoadHub();
+            Assert.AreEqual(3, ButtonsOf("PausePanel").Length, "계속 · 다시 시작 · 시작 화면");
+            Assert.AreEqual(2, ButtonsOf("GameOverPanel").Length);
         }
 
         [UnityTest]

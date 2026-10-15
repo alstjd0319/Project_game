@@ -19,6 +19,16 @@ namespace ParryRL.Tests
             SetMoveSkillCharges(1); // 기존 규칙 테스트는 대시 1회 기준 — 2회 충전은 따로 검증
         }
 
+        /// <summary>사당(대기) 씬을 연다.</summary>
+        public static IEnumerator LoadHub()
+        {
+            GameTuning.UseDefaultsForTests();
+            UnityEngine.Time.timeScale = 1f;
+            SceneManager.LoadScene("Hub");
+            yield return null;
+            yield return null;
+        }
+
         public static void SetMoveSkillCharges(int charges)
         {
             var combat = UnityEngine.Object.FindAnyObjectByType<PlayerCombat>();

@@ -195,3 +195,12 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 모션: `CharacterArt.skill1/skill2`(+`skillNStartFrame`) — 빌더가 `staff_skill_sweep/slam`, `talisman_skill_fan/seal` 시트를 넣는다. 일반공격(A)도 같은 휩쓸기/부채꼴 모션을 쓴다(시트가 4개뿐).
 - 스킬바는 6칸(Shift·A·D·F·S·Q). 수치는 `PlayerCombat` 인스펙터 필드(F1 패널엔 아직 없음).
 - (수정) 바로가기 앱이 프로젝트 폴더를 `find`로 검사할 때 프로젝트가 Desktop/Documents/Downloads 안에 있으면 macOS 개인정보 보호에 막혀 "바뀐 게 없다"고 오판해 옛 빌드를 열었다. → 프로젝트를 `~/ParryRoguelike-main`(홈 바로 아래)으로 옮겼고, 바로가기는 바뀐 게 있을 때만 터미널에서 런처를 실행한다(보호 폴더 안에 있으면 항상 터미널 경유).
+
+## 사당(대기 씬) (2026-10-15)
+- 빌드 순서가 **Start(0) → Hub(1) → Prototype(2)** 로 바뀌었다 (`PrototypeSceneBuilder.SetBuildScenes`, 없는 씬은 건너뜀). `StartMenu.GameSceneName`은 이제 `Hub`("게임 시작" → 사당), 플레이 씬 이름은 `GameManager.RunSceneName`, `GameManager.LoadRun()/LoadHub()`. 씬은 빌더가 만든다: `Build()`가 Hub도 만들고(`BuildHubScene`, 메뉴 Tools → ParryRL → 사당 씬 생성), 씬 직접 편집 금지.
+- Hub = 폭 ±16, 사당 배경 고정(`forcedZone 0`), 적·스포너 없음, 플레이어(전투 포함)는 플레이 씬과 같은 `CreatePlayer` 헬퍼로 만든다(좌측 x=-10에서 시작해 NPC를 지나 오른쪽으로). 오른쪽 끝 `ShrinePortal`(x=14, `gate_portal` 반복) · `Npc_Mentor`(x=-2, 만신 `NpcArt` idle/talk).
+- 상호작용(`World/`): `Interactable`(트리거 박스, 기본 크기 1×1 × localScale, 안내 문구) · `PlayerInteractor`(플레이어에 붙음, **몸 콜라이더와 트리거의 실제 오버랩**, E=`Controls.Interact`, 가장 가까운 대상 하나, `Hud.SetPrompt`로 `[E] …` 안내) · `ShrinePortal`(상호작용 → 화면 보라 플래시 + `GameManager.LoadRun`) · `ShrineNpc`(→ `SkillTreePanel.Open`, 항상 플레이어 쪽을 바라봄, 창이 열려 있으면 대화 모션) · `ClipPlayer`(판정 없는 그림 반복 재생).
+- `SkillTreePanel`(UI): **창의 틀만** — "스킬 트리는 아직 준비 중입니다" 안내와 닫기. `ContentRoot`가 나중에 스킬 노드를 올릴 자리. 열리면 `GameManager.SetMenuOpen(true)`(입력 차단·시간 정지), E · ESC · 버튼으로 닫는다. **스킬 트리 내용(노드·도력으로 스킬 습득)은 아직 구현하지 않는다 — 사용자 요청.**
+- 만신 그림: `귀문_에셋_공유_1013/미리보기/mentor_*_strip.png`를 384×224로 잘라 `Assets/Art/Characters/Mentor/mentor_<시트>_<번호>.png`로 둔다(PIL 한 줄 스크립트로 잘랐다). 초상(`bg/mentor_portraits`)은 아직 안 쓴다.
+- 사당으로 돌아오기: 플레이 씬의 일시정지·게임오버 화면에 **"사당으로 (H)"** 버튼/키(`Controls.Hub`, `GameManager.LoadHub`)가 있다. 사당 씬(`GameManager.InHub`)에서는 이 버튼이 없다 (일시정지 버튼 4개 → 사당에서는 3개, 게임오버 3개 → 2개).
+- (수정, 2026-10-15) 사당을 넣고도 `GameBuilder`가 씬 목록을 Start·Prototype 두 개로 고정해 둬서 **빌드된 게임에서 "게임 시작"이 안 넘어갔다**(Hub가 빌드에 없어 로드 실패; 에디터 테스트는 빌드 설정을 써서 통과했다). 이제 `GameBuilder.BuildScenes()`가 빌드 설정(`SetBuildScenes`가 Start → Hub → Prototype으로 맞춤)의 켜진 씬을 그대로 쓴다 — 씬을 추가할 땐 `SetBuildScenes`의 목록만 고치면 된다.

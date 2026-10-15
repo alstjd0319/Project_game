@@ -73,6 +73,40 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 사당_포탈_NPC_스킬트리()
+        {
+            yield return TestScene.LoadHub();
+            var interactor = Object.FindAnyObjectByType<PlayerInteractor>();
+            var body = interactor.GetComponent<Rigidbody2D>();
+            void MoveTo(float x)
+            {
+                var pos = new Vector3(x, interactor.transform.position.y, 0f);
+                interactor.transform.position = pos;
+                body.position = pos;
+                body.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+            }
+            var portal = Object.FindAnyObjectByType<ShrinePortal>();
+            var npc = Object.FindAnyObjectByType<ShrineNpc>();
+
+            yield return new WaitForSeconds(1.2f);
+            yield return Capture("hub_start");
+
+            MoveTo(npc.transform.position.x - 0.5f);
+            yield return new WaitForSeconds(1.2f);
+            yield return Capture("hub_npc_prompt");
+
+            interactor.TryInteract();
+            yield return new WaitForSecondsRealtime(0.3f);
+            yield return Capture("hub_skilltree_panel");
+            SkillTreePanel.Close();
+
+            MoveTo(portal.transform.position.x + 0.6f);
+            yield return new WaitForSeconds(1.5f);
+            yield return Capture("hub_portal_prompt");
+        }
+
+        [UnityTest]
         public IEnumerator Hud_전투중()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

@@ -120,7 +120,7 @@ namespace ParryRL
         private SlotState MoveState() => new()
         {
             color = _party.Current.color,
-            name = _combat.MoveSkillMaxCharges > 1 ? $"이동 · 돌진 {_combat.MoveSkillCharges}/{_combat.MoveSkillMaxCharges}" : "이동 · 돌진",
+            name = _combat.MoveSkillMaxCharges > 1 ? $"돌진 {_combat.MoveSkillCharges}/{_combat.MoveSkillMaxCharges}" : "이동 · 돌진",
             cost = _combat.MoveSkillGaugeCost,
             affordable = _gauge.CanSpend(_combat.MoveSkillGaugeCost),
             cooldownLeft = _combat.MoveSkillCooldownLeft,

@@ -18,11 +18,15 @@ namespace ParryRL
         /// <summary>D = 스킬 1 (봉 휩쓸기 / 부적 부채꼴), F = 스킬 2 (봉 내려찍기 / 부적 봉인진). 도력을 쓴다.</summary>
         public const KeyCode Skill1 = KeyCode.D;
         public const KeyCode Skill2 = KeyCode.F;
+        /// <summary>E = 상호작용 (사당의 포탈·NPC).</summary>
+        public const KeyCode Interact = KeyCode.E;
         public const KeyCode Confirm = KeyCode.Return;
         public const KeyCode Pause = KeyCode.Escape;
         public const KeyCode Restart = KeyCode.R;
         /// <summary>M = 시작 화면으로 (일시정지·게임오버 화면에서).</summary>
         public const KeyCode MainMenu = KeyCode.M;
+        /// <summary>H = 사당으로 (플레이 씬의 일시정지·게임오버 화면에서).</summary>
+        public const KeyCode Hub = KeyCode.H;
 
         // 보조 창 (평소엔 접혀 있음)
         public const KeyCode TuningPanel = KeyCode.F1;

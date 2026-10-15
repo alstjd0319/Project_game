@@ -14,6 +14,10 @@ namespace ParryRL.EditorTools
     {
         public const string ScenePath = "Assets/Scenes/Prototype.unity";
         public const string StartScenePath = "Assets/Scenes/Start.unity"; // 첫 화면 (게임 시작 · 종료하기)
+        public const string HubScenePath = "Assets/Scenes/Hub.unity";     // 사당: 시작 화면과 플레이 씬 사이 대기 씬 (포탈 · 만신)
+        private const string MentorArtDir = "Assets/Art/Characters/Mentor";
+        private const string MentorArtPath = MentorArtDir + "/MentorArt.asset";
+        private const float HubHalfWidth = 16f;
         private const string SquarePath = "Assets/Art/Square.png";
         private const string NoFrictionPath = "Assets/Art/NoFriction.physicsMaterial2D";
         private const string MeleePrefabPath = "Assets/Prefabs/Enemy_Melee.prefab";
@@ -66,6 +70,7 @@ namespace ParryRL.EditorTools
             CreateHeroArt(WeaponMode.Melee, StaffArtPath, "staff");
             CreateHeroArt(WeaponMode.Ranged, TalismanArtPath, "talisman");
             CreateAttackFxArt();
+            CreateMentorArt();
             var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
 
@@ -113,7 +118,40 @@ namespace ParryRL.EditorTools
             bgSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             // ── 플레이어 ──
-            var player = CreateVisual("Player", new Vector2(-3f, 0.7f), new Vector2(0.8f, 1.4f), new Color(0.95f, 0.38f, 0.32f), 10, null);
+            var player = CreatePlayer(new Vector2(-3f, 0.7f), noFriction, staffArt, talismanArt);
+
+            // ── 적 스포너 ──
+            var spawner = new GameObject("EnemySpawner").AddComponent<EnemySpawner>();
+            Set(spawner, "meleePrefab", meleePrefab);
+            Set(spawner, "rangedPrefab", rangedPrefab);
+            SetFloat(spawner, "arenaMinX", -ArenaHalfWidth);
+            SetFloat(spawner, "arenaMaxX", ArenaHalfWidth);
+
+            // ── 카메라 ──
+            var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
+            camGo.transform.position = new Vector3(0f, 3.5f, -10f);
+            var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = 6f;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.09f, 0.1f, 0.13f);
+            camGo.AddComponent<AudioListener>();
+            var rig = camGo.AddComponent<CameraRig>();
+            Set(rig, "target", player.transform);
+            SetFloat(rig, "arenaMinX", -ArenaHalfWidth - 1f);
+            SetFloat(rig, "arenaMaxX", ArenaHalfWidth + 1f);
+
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            BuildHubScene();
+            BuildStartScene();
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[ParryRL] 프로토타입 씬 생성 완료: {ScenePath}");
+        }
+
+        /// <summary>플레이어 한 명 (사당·플레이 씬 공용): 몸 네모·물리·전투 컴포넌트·도트 그림.</summary>
+        private static GameObject CreatePlayer(Vector2 position, PhysicsMaterial2D noFriction, CharacterArt staffArt, CharacterArt talismanArt)
+        {
+            var player = CreateVisual("Player", position, new Vector2(0.8f, 1.4f), new Color(0.95f, 0.38f, 0.32f), 10, null);
             var rb = player.AddComponent<Rigidbody2D>();
             rb.gravityScale = 1.6f;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -154,32 +192,8 @@ namespace ParryRL.EditorTools
             list.arraySize = heroArts.Count;
             for (int a = 0; a < heroArts.Count; a++) list.GetArrayElementAtIndex(a).objectReferenceValue = heroArts[a];
             artsProp.ApplyModifiedPropertiesWithoutUndo();
-
-            // ── 적 스포너 ──
-            var spawner = new GameObject("EnemySpawner").AddComponent<EnemySpawner>();
-            Set(spawner, "meleePrefab", meleePrefab);
-            Set(spawner, "rangedPrefab", rangedPrefab);
-            SetFloat(spawner, "arenaMinX", -ArenaHalfWidth);
-            SetFloat(spawner, "arenaMaxX", ArenaHalfWidth);
-
-            // ── 카메라 ──
-            var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
-            camGo.transform.position = new Vector3(0f, 3.5f, -10f);
-            var cam = camGo.AddComponent<Camera>();
-            cam.orthographic = true;
-            cam.orthographicSize = 6f;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.09f, 0.1f, 0.13f);
-            camGo.AddComponent<AudioListener>();
-            var rig = camGo.AddComponent<CameraRig>();
-            Set(rig, "target", player.transform);
-            SetFloat(rig, "arenaMinX", -ArenaHalfWidth - 1f);
-            SetFloat(rig, "arenaMaxX", ArenaHalfWidth + 1f);
-
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            BuildStartScene();
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[ParryRL] 프로토타입 씬 생성 완료: {ScenePath}");
+            player.AddComponent<PlayerInteractor>(); // 사당의 포탈·NPC 상호작용 (E). 다른 씬엔 대상이 없어 아무 일도 안 한다
+            return player;
         }
 
         /// <summary>
@@ -220,12 +234,117 @@ namespace ParryRL.EditorTools
             new GameObject("StartMenu").AddComponent<StartMenu>();
 
             EditorSceneManager.SaveScene(scene, StartScenePath);
-            EditorBuildSettings.scenes = new[]
-            {
-                new EditorBuildSettingsScene(StartScenePath, true), // 0: 시작 화면
-                new EditorBuildSettingsScene(ScenePath, true),      // 1: 게임
-            };
+            SetBuildScenes();
             Debug.Log($"[ParryRL] 시작 씬 생성 완료: {StartScenePath}");
+        }
+
+        /// <summary>빌드 순서: 0 시작 화면 → 1 사당(대기) → 2 플레이. 아직 없는 씬은 건너뛴다.</summary>
+        private static void SetBuildScenes()
+        {
+            var list = new System.Collections.Generic.List<EditorBuildSettingsScene>();
+            foreach (string path in new[] { StartScenePath, HubScenePath, ScenePath })
+                if (File.Exists(path)) list.Add(new EditorBuildSettingsScene(path, true));
+            EditorBuildSettings.scenes = list.ToArray();
+        }
+
+        /// <summary>
+        /// 사당(대기) 씬: 시작 화면과 플레이 씬 사이. 플레이어가 서 있고, 오른쪽 끝 포탈(E)로 플레이 씬에 들어가며,
+        /// NPC 만신(E)이 스킬 트리 창을 연다 (창의 틀만 — 스킬 트리 내용은 아직 없음). 적은 없다.
+        /// 메뉴: Tools → ParryRL → 사당 씬 생성 (그림 에셋이 이미 있어야 한다).
+        /// </summary>
+        [MenuItem("Tools/ParryRL/사당 씬 생성")]
+        public static void BuildHubScene()
+        {
+            EnsureFolder("Assets/Scenes");
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            // NewScene 뒤에 에셋을 로드한다 (안 그러면 씬에 null이 들어간다)
+            _square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
+            var noFriction = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(NoFrictionPath);
+            var bgSets = LoadBackgroundSets();
+            var staffArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(StaffArtPath);
+            var talismanArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(TalismanArtPath);
+            var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
+            var mentorArt = AssetDatabase.LoadAssetAtPath<NpcArt>(MentorArtPath);
+
+            var systems = new GameObject("Systems");
+            systems.AddComponent<GameManager>();
+            var gameAssets = systems.AddComponent<GameAssets>();
+            Set(gameAssets, "square", _square);
+            if (attackFx != null) Set(gameAssets, "attackFx", attackFx);
+            systems.AddComponent<HitFeel>();
+            systems.AddComponent<AudioSource>();
+            var sfx = systems.AddComponent<Sfx>();
+            SetOptional(sfx, "parryClip", LoadAsset<AudioClip>(AudioDir + "parry_normal_success.wav"));
+            SetOptional(sfx, "perfectParryClip", LoadAsset<AudioClip>(AudioDir + "parry_success.wav"));
+            systems.AddComponent<Hud>();
+
+            var level = new GameObject("Level").transform;
+            var solid = new Color(0.3f, 0.32f, 0.38f, 0.55f);
+            CreateSolid("Ground", new Vector2(0f, -0.5f), new Vector2(HubHalfWidth * 2f + 2f, 1f), solid, level);
+            CreateSolid("Wall_L", new Vector2(-HubHalfWidth - 0.5f, 5f), new Vector2(1f, 12f), solid, level);
+            CreateSolid("Wall_R", new Vector2(HubHalfWidth + 0.5f, 5f), new Vector2(1f, 12f), solid, level);
+
+            // 사당 배경 고정
+            var background = new GameObject("Background").AddComponent<ParallaxBackground>();
+            var bgSerialized = new SerializedObject(background);
+            var bgList = bgSerialized.FindProperty("sets");
+            bgList.arraySize = bgSets.Length;
+            for (int b = 0; b < bgSets.Length; b++) bgList.GetArrayElementAtIndex(b).objectReferenceValue = bgSets[b];
+            bgSerialized.FindProperty("forcedZone").intValue = 0;
+            bgSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            var player = CreatePlayer(new Vector2(-HubHalfWidth + 6f, 0.7f), noFriction, staffArt, talismanArt); // 왼쪽에서 시작 → 오른쪽 끝 포탈
+
+            // 오른쪽 끝 포탈 (귀문 소용돌이): 상호작용 판정 2.6×3.2, 그림은 원본 비율 ×1.5
+            var portal = CreateVisual("ShrinePortal", new Vector2(HubHalfWidth - 2f, 1.6f), new Vector2(2.6f, 3.2f), new Color(0.6f, 0.45f, 1f, 0.3f), 9, null);
+            portal.GetComponent<SpriteRenderer>().enabled = false;
+            var portalArt = CreateArtChild(portal, new Vector2(1.5f, 1.5f), 0.1875f, 9);
+            var shrinePortal = portal.AddComponent<ShrinePortal>(); // Interactable·트리거 콜라이더가 함께 붙는다
+            portal.GetComponent<BoxCollider2D>().isTrigger = true;
+            Set(shrinePortal, "artPlayer", portalArt);
+
+            // 스승 만신: 상호작용 판정 2.8×2.2, 발이 땅에 오도록 그림을 내린다
+            var npc = CreateVisual("Npc_Mentor", new Vector2(-2f, 1.1f), new Vector2(2.8f, 2.2f), new Color(0.3f, 0.4f, 0.8f, 0.3f), 9, null);
+            npc.GetComponent<SpriteRenderer>().enabled = false;
+            var npcArt = CreateArtChild(npc, Vector2.one, -0.5f, 11);
+            var shrineNpc = npc.AddComponent<ShrineNpc>();
+            npc.GetComponent<BoxCollider2D>().isTrigger = true;
+            if (mentorArt != null) Set(shrineNpc, "art", mentorArt);
+            Set(shrineNpc, "artPlayer", npcArt);
+
+            var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
+            camGo.transform.position = new Vector3(0f, 3.5f, -10f);
+            var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = 6f;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.09f, 0.1f, 0.13f);
+            camGo.AddComponent<AudioListener>();
+            var rig = camGo.AddComponent<CameraRig>();
+            Set(rig, "target", player.transform);
+            SetFloat(rig, "arenaMinX", -HubHalfWidth - 1f);
+            SetFloat(rig, "arenaMaxX", HubHalfWidth + 1f);
+
+            EditorSceneManager.SaveScene(scene, HubScenePath);
+            SetBuildScenes();
+            Debug.Log($"[ParryRL] 사당 씬 생성 완료: {HubScenePath}");
+        }
+
+        /// <summary>
+        /// 판정 네모(부모) 안에 그림 자식을 만든다: 부모의 늘림을 상쇄해 픽셀 비율을 유지하고(× <paramref name="scale"/>),
+        /// 세로 위치는 부모 로컬 y(<paramref name="localY"/>)로 둔다. 반환값은 그림을 반복 재생할 ClipPlayer.
+        /// </summary>
+        private static ClipPlayer CreateArtChild(GameObject parent, Vector2 scale, float localY, int order)
+        {
+            var art = new GameObject("Art");
+            art.transform.SetParent(parent.transform, false);
+            var ps = parent.transform.localScale;
+            art.transform.localPosition = new Vector3(0f, localY, 0f);
+            art.transform.localScale = new Vector3(scale.x / ps.x, scale.y / ps.y, 1f);
+            var sr = art.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = order;
+            return art.AddComponent<ClipPlayer>();
         }
 
         private static BackgroundSet[] LoadBackgroundSets()
@@ -347,6 +466,23 @@ namespace ParryRL.EditorTools
             return art;
         }
 
+        /// <summary>만신(사당 NPC) 프레임(mentor_&lt;시트&gt;_&lt;번호&gt;.png)을 임포트하고 NpcArt로 묶는다.</summary>
+        private static void CreateMentorArt()
+        {
+            if (!AssetDatabase.IsValidFolder(MentorArtDir)) return;
+            ImportFrames(MentorArtDir, _ => GroundPivot);
+            var art = AssetDatabase.LoadAssetAtPath<NpcArt>(MentorArtPath);
+            if (art == null)
+            {
+                art = ScriptableObject.CreateInstance<NpcArt>();
+                AssetDatabase.CreateAsset(art, MentorArtPath);
+            }
+            art.idle = LoadClip(MentorArtDir, "mentor", "idle", 5f);
+            art.talk = LoadClip(MentorArtDir, "mentor", "talk", 6f);
+            art.bless = LoadClip(MentorArtDir, "mentor", "bless", 8f);
+            EditorUtility.SetDirty(art);
+        }
+
         /// <summary>전투 이펙트 프레임을 임포트하고 AttackFxArt로 묶는다.</summary>
         private static void CreateAttackFxArt()
         {
@@ -372,6 +508,7 @@ namespace ParryRL.EditorTools
             fx.heavyWarning = LoadClip(FxDir, "fx", "heavy_warning", 12f);
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
             fx.yogiAbsorb = LoadClip(FxDir, "fx", "yogi_absorb", 14f);
+            fx.gatePortal = LoadClip(FxDir, "fx", "gate_portal", 10f);
             fx.staffSlam = LoadClip(FxDir, "fx", "staff_slam", 16f);
             fx.talismanSeal = LoadClip(FxDir, "fx", "talisman_seal", 12f);
             fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);

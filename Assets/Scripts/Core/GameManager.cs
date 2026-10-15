@@ -9,8 +9,15 @@ namespace ParryRL
     {
         /// <summary>시작 화면 씬 이름 (빌드 0번).</summary>
         public const string StartSceneName = "Start";
+        /// <summary>사당(대기 씬) 이름 — 시작 화면과 플레이 씬 사이 (빌드 1번).</summary>
+        public const string HubSceneName = "Hub";
+        /// <summary>플레이(귀문 안) 씬 이름 (빌드 2번).</summary>
+        public const string RunSceneName = "Prototype";
 
         public static GameManager Instance { get; private set; }
+
+        /// <summary>지금 사당 씬인가 (사당에서는 "사당으로" 버튼·키가 없다).</summary>
+        public static bool InHub => SceneManager.GetActiveScene().name == HubSceneName;
 
         public bool IsPaused { get; private set; }
         public bool IsGameOver { get; private set; }
@@ -35,6 +42,7 @@ namespace ParryRL
             if (Input.GetKeyDown(Controls.Pause) && !IsGameOver && !IsMenuOpen) SetPaused(!IsPaused);
             if (Input.GetKeyDown(Controls.Restart) && (IsPaused || IsGameOver)) Restart();
             if (Input.GetKeyDown(Controls.MainMenu) && (IsPaused || IsGameOver)) GoToStartMenu();
+            if (Input.GetKeyDown(Controls.Hub) && (IsPaused || IsGameOver) && !InHub) LoadHub();
         }
 
         public void SetPaused(bool paused)
@@ -71,6 +79,20 @@ namespace ParryRL
         {
             Time.timeScale = 1f;
             SceneManager.LoadScene(StartSceneName);
+        }
+
+        /// <summary>사당에서 귀문 안(플레이 씬)으로 들어간다.</summary>
+        public static void LoadRun()
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(RunSceneName);
+        }
+
+        /// <summary>사당(대기 씬)으로 간다.</summary>
+        public static void LoadHub()
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(HubSceneName);
         }
 
         public void Restart()
