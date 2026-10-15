@@ -101,6 +101,10 @@ namespace ParryRL.Tests
             yield return Capture("hub_skilltree_panel");
             SkillTreePanel.Close();
 
+            MoveTo(portal.transform.position.x - 7f);   // 멀리서 본 문 (은은하게)
+            yield return new WaitForSeconds(1.5f);
+            yield return Capture("hub_portal_far");
+
             MoveTo(portal.transform.position.x + 0.6f);
             yield return new WaitForSeconds(1.5f);
             yield return Capture("hub_portal_prompt");

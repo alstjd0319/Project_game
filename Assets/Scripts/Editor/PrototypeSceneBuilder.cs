@@ -18,6 +18,10 @@ namespace ParryRL.EditorTools
         private const string MentorArtDir = "Assets/Art/Characters/Mentor";
         private const string MentorArtPath = MentorArtDir + "/MentorArt.asset";
         private const float HubHalfWidth = 16f;
+        // 사당 소품(포탈 문): 원본 시트(원본/bg/shrine/props.png)에서 오려 바깥 마젠타만 투명하게 한 그림. 90px/유닛, 피벗 = 아래 가운데(바닥)
+        private const string PropsDir = "Assets/Art/Props";
+        private const string GateSpritePath = PropsDir + "/shrine_gate.png";
+        private static readonly Vector2 BottomPivot = new(0.5f, 0f);
         private const string SquarePath = "Assets/Art/Square.png";
         private const string NoFrictionPath = "Assets/Art/NoFriction.physicsMaterial2D";
         private const string MeleePrefabPath = "Assets/Prefabs/Enemy_Melee.prefab";
@@ -71,6 +75,7 @@ namespace ParryRL.EditorTools
             CreateHeroArt(WeaponMode.Ranged, TalismanArtPath, "talisman");
             CreateAttackFxArt();
             CreateMentorArt();
+            if (AssetDatabase.IsValidFolder(PropsDir)) ImportFrames(PropsDir, _ => BottomPivot);
             var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
 
@@ -267,6 +272,7 @@ namespace ParryRL.EditorTools
             var talismanArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(TalismanArtPath);
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
             var mentorArt = AssetDatabase.LoadAssetAtPath<NpcArt>(MentorArtPath);
+            var gateSprite = AssetDatabase.LoadAssetAtPath<Sprite>(GateSpritePath);
 
             var systems = new GameObject("Systems");
             systems.AddComponent<GameManager>();
@@ -297,13 +303,25 @@ namespace ParryRL.EditorTools
 
             var player = CreatePlayer(new Vector2(-HubHalfWidth + 6f, 0.7f), noFriction, staffArt, talismanArt); // 왼쪽에서 시작 → 오른쪽 끝 포탈
 
-            // 오른쪽 끝 포탈 (귀문 소용돌이): 상호작용 판정 2.6×3.2, 그림은 원본 비율 ×1.5
+            // 오른쪽 끝 포탈(문): 상호작용 판정 2.6×3.2
             var portal = CreateVisual("ShrinePortal", new Vector2(HubHalfWidth - 2f, 1.6f), new Vector2(2.6f, 3.2f), new Color(0.6f, 0.45f, 1f, 0.3f), 9, null);
             portal.GetComponent<SpriteRenderer>().enabled = false;
-            var portalArt = CreateArtChild(portal, new Vector2(1.5f, 1.5f), 0.1875f, 9);
             var shrinePortal = portal.AddComponent<ShrinePortal>(); // Interactable·트리거 콜라이더가 함께 붙는다
             portal.GetComponent<BoxCollider2D>().isTrigger = true;
-            Set(shrinePortal, "artPlayer", portalArt);
+            if (gateSprite != null)
+            {
+                // 문 그림(정지 그림): 바닥(판정 네모 아래)에 세운다. 판정 네모(2.6×3.2)는 문 안쪽 소용돌이 자리에 맞춘다
+                var gateArt = CreateArtChild(portal, Vector2.one * 1.25f, -0.5f, 9); // 플레이어가 문 안으로 들어서 보이게 ×1.25
+                var gateRenderer = gateArt.GetComponent<SpriteRenderer>();
+                gateRenderer.sprite = gateSprite;
+                Set(shrinePortal, "gateArt", gateRenderer); // 소용돌이·빛무리 연출은 ShrinePortal이 시작할 때 문 안쪽에 겹쳐 그린다
+            }
+            else
+            {
+                // 그림이 없으면 귀문 소용돌이 이펙트를 반복 재생
+                var portalArt = CreateArtChild(portal, new Vector2(1.5f, 1.5f), 0.1875f, 9);
+                Set(shrinePortal, "artPlayer", portalArt);
+            }
 
             // 스승 만신: 상호작용 판정 2.8×2.2, 발이 땅에 오도록 그림을 내린다
             var npc = CreateVisual("Npc_Mentor", new Vector2(-2f, 1.1f), new Vector2(2.8f, 2.2f), new Color(0.3f, 0.4f, 0.8f, 0.3f), 9, null);

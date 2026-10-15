@@ -65,6 +65,24 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 포탈은_일렁이는_소용돌이를_겹치고_가까이_갈수록_밝아진다()
+        {
+            Assert.IsTrue(_portal.HasDoorEffects, "문 안쪽 소용돌이·빛무리");
+            MoveTo(0f); // 멀리
+            yield return new WaitForSeconds(1.2f);
+            float far = _portal.Brightness;
+            MoveTo(_portal.transform.position.x + 0.5f); // 문 앞
+            yield return new WaitForSeconds(1.2f);
+            Assert.Greater(_portal.Brightness, far + 0.5f, "가까이 가면 밝아진다");
+            Assert.Greater(_portal.Brightness, 0.9f);
+            var swirl = GameObject.Find("PortalSwirl");
+            Assert.IsNotNull(swirl);
+            int f0 = swirl.GetComponent<ClipPlayer>().Frame;
+            yield return new WaitForSeconds(0.35f);
+            Assert.AreNotEqual(f0, swirl.GetComponent<ClipPlayer>().Frame, "소용돌이가 일렁인다(프레임이 바뀐다)");
+        }
+
+        [UnityTest]
         public IEnumerator 포탈_앞에서_상호작용하면_플레이_씬으로_넘어간다()
         {
             MoveTo(_portal.transform.position.x + 0.5f);
