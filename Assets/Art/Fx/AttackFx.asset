@@ -123,6 +123,25 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 2815a4e5936b9426e8296dc80081697e, type: 3}
     - {fileID: 21300000, guid: aedea9946ee0f4c5285e4618fa028ec7, type: 3}
     fps: 10
+  portalSwirl:
+    frames:
+    - {fileID: 21300000, guid: d8abf60201e0c4e68a483a1ce63753cb, type: 3}
+    - {fileID: 21300000, guid: 9202bc95099864bb9874d49789361893, type: 3}
+    - {fileID: 21300000, guid: 1ceb9c0aa97704d259d7c1980682a473, type: 3}
+    - {fileID: 21300000, guid: 011dba283910a4bb5b5cc05ef0b15549, type: 3}
+    - {fileID: 21300000, guid: ee58878f2caf044da8fd4f32021386b9, type: 3}
+    - {fileID: 21300000, guid: 416a41106d8704a4292f820ff1d73b23, type: 3}
+    - {fileID: 21300000, guid: a4226b64831a74f8f8777efbe064bc80, type: 3}
+    - {fileID: 21300000, guid: 4044d95d4ff434eec87b7702245174bd, type: 3}
+    - {fileID: 21300000, guid: 9535911d7bf2740478139ebb4a850e08, type: 3}
+    - {fileID: 21300000, guid: 3e248f27ddf1f4fd691f9aecc0a0be63, type: 3}
+    - {fileID: 21300000, guid: d04a65530230844bea6cd21282af4381, type: 3}
+    - {fileID: 21300000, guid: 0298e6fc0a65a4e1fa54a84e8bf24d4e, type: 3}
+    - {fileID: 21300000, guid: 9650c1da226b74d80a17be40ce260fb5, type: 3}
+    - {fileID: 21300000, guid: 9ab510dd489854aa08d46b8fd9074c5d, type: 3}
+    - {fileID: 21300000, guid: e750f9dab84a34fe69c7d6e863613340, type: 3}
+    - {fileID: 21300000, guid: 67865fc09cc2f4a3d8501d5196753ec0, type: 3}
+    fps: 14
   dokkaebiProjectile:
     frames:
     - {fileID: 21300000, guid: b384bbec7a0104140a9c35b929f1a9f8, type: 3}

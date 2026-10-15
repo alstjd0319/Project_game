@@ -65,9 +65,10 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 포탈은_일렁이는_소용돌이를_겹치고_가까이_갈수록_밝아진다()
+        public IEnumerator 포탈은_문_안쪽_소용돌이가_일렁이고_가까이_갈수록_밝아진다()
         {
             Assert.IsTrue(_portal.HasDoorEffects, "문 안쪽 소용돌이·빛무리");
+            Assert.AreEqual(1, Object.FindObjectsByType<ShrinePortal>().Length, "포탈은 하나");
             MoveTo(0f); // 멀리
             yield return new WaitForSeconds(1.2f);
             float far = _portal.Brightness;
@@ -77,9 +78,11 @@ namespace ParryRL.Tests
             Assert.Greater(_portal.Brightness, 0.9f);
             var swirl = GameObject.Find("PortalSwirl");
             Assert.IsNotNull(swirl);
-            int f0 = swirl.GetComponent<ClipPlayer>().Frame;
-            yield return new WaitForSeconds(0.35f);
-            Assert.AreNotEqual(f0, swirl.GetComponent<ClipPlayer>().Frame, "소용돌이가 일렁인다(프레임이 바뀐다)");
+            var player = swirl.GetComponent<ClipPlayer>();
+            Assert.AreEqual(16, player.Clip.frames.Length, "일렁이는 소용돌이 16장 (줄마다 물결치게 만든 프레임)");
+            int f0 = player.Frame;
+            yield return new WaitForSeconds(0.25f);
+            Assert.AreNotEqual(f0, player.Frame, "소용돌이가 일렁인다(프레임이 바뀐다)");
         }
 
         [UnityTest]

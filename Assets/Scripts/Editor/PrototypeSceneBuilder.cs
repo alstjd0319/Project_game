@@ -528,6 +528,7 @@ namespace ParryRL.EditorTools
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
             fx.yogiAbsorb = LoadClip(FxDir, "fx", "yogi_absorb", 14f);
             fx.gatePortal = LoadClip(FxDir, "fx", "gate_portal", 10f);
+            fx.portalSwirl = LoadClip(FxDir, "fx", "portal_swirl", 14f); // 16장 (Tools/gwimun_sprites/make_portal_swirl.py), 한 바퀴 약 1.1초
             fx.staffSlam = LoadClip(FxDir, "fx", "staff_slam", 16f);
             fx.talismanSeal = LoadClip(FxDir, "fx", "talisman_seal", 12f);
             fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);

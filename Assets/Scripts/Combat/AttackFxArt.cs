@@ -27,6 +27,7 @@ namespace ParryRL
         [Tooltip("F 스킬: 봉 내려찍기 충격파 / 부적 봉인진")] public SpriteClip staffSlam = new();
         public SpriteClip talismanSeal = new();
         [Tooltip("사당 포탈 (반복 재생)")] public SpriteClip gatePortal = new();
+        [Tooltip("사당 문 안쪽에 겹치는 일렁이는 소용돌이 (16장 반복, 칸 192×224 · 내용 138×181 — 원본 8장을 줄마다 물결치게 밀어 만든 것)")] public SpriteClip portalSwirl = new();
         [Tooltip("도깨비불 불덩이 — 앞 4장 청록(일반) · 뒤 4장 빨강(강공격), 반복 재생")] public SpriteClip dokkaebiProjectile = new();
 
         public SpriteClip EnemySlash(AttackType type) => type == AttackType.Heavy ? enemyHeavySlash : enemySlash;
