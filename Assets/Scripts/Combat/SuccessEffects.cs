@@ -51,7 +51,6 @@ namespace ParryRL
                     shake = p.shake * k, shakeDuration = p.shakeDuration,
                 });
             Fx.Sparks(hitPoint, color, Mathf.RoundToInt(18 * k), 11f * k);
-            Fx.Ring(hitPoint, color, 0.3f, 2.2f * k, 0.1f, 0.35f);
 
             if (_highlight != null) StopCoroutine(_highlight);
             _highlight = StartCoroutine(Highlight((p.hitStop + p.slowMotion) * k + 0.15f));

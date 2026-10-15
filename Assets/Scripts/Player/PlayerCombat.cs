@@ -232,11 +232,9 @@ namespace ParryRL
         {
             Sfx.Play(perfect ? SfxId.PerfectParry : heavy ? SfxId.HeavyParry : SfxId.Parry);
             if (HitFeel.Instance != null) HitFeel.Instance.ParrySuccess(heavy);
-            Fx.Flash(hitPoint, heavy ? 1.2f : 0.7f, heavy ? 3.2f : 1.8f, Color.white, heavy ? 0.16f : 0.1f);
-            Fx.Ring(hitPoint, Color.white, 0.4f, heavy ? 3.5f : 2f, heavy ? 0.16f : 0.1f, heavy ? 0.3f : 0.2f);
             Fx.Sparks(hitPoint, heavy ? new Color(1f, 0.85f, 0.3f) : Color.white, heavy ? 22 : 12, heavy ? 12f : 8f);
             var art = GameAssets.AttackFx;
-            if (art != null) FxClip.PlayAt(IsRanged ? art.parryRanged : art.parryMelee, hitPoint, heavy ? 0.95f : 0.65f, false, 46);
+            if (art != null) FxClip.PlayAt(IsRanged ? art.parryRanged : art.parryMelee, hitPoint, heavy ? 1.5f : 1.05f, false, 46); // 둥근 섬광·고리 대신 패링 그림이 성공 이펙트
             // 성공 연출: 플레이어 몸 주변에 요기 흡수 (플레이어 뒤쪽 레이어)
             if (art != null) FxClip.PlayAt(art.yogiAbsorb, transform.position + Vector3.up * 0.7f, heavy ? 0.9f : 0.7f, false, 8);
             if (heavy) Hud.ScreenFlash(new Color(1f, 1f, 1f, 0.35f));
