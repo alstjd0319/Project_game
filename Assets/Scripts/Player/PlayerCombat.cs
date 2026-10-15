@@ -403,6 +403,9 @@ namespace ParryRL
             SealZone.Spawn(ground, sealBox, sealDuration, sealTickInterval, sealTickDamage, hit, art, 2f);
         }
 
+        /// <summary>씬을 넘어 이어받은 무기를 조용히 맞춘다 (전환 쿨타임·교체 모션·효과 없음).</summary>
+        public void SetWeapon(WeaponMode weapon) => Weapon = weapon;
+
         /// <summary>Q: 근접 ↔ 원거리. 방어 활성 중이거나 쿨타임이면 안 된다. 도력은 쓰지 않는다.</summary>
         public bool TrySwitchWeapon()
         {

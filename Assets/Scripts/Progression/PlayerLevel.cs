@@ -30,6 +30,13 @@ namespace ParryRL
             AddXp(enemy.XpReward);
         }
 
+        /// <summary>씬을 넘어 이어받은 레벨·경험치를 되돌린다 (알림·이벤트 없음).</summary>
+        public void Restore(int level, int xp)
+        {
+            Level = Mathf.Max(1, level);
+            Xp = Mathf.Clamp(xp, 0, Mathf.Max(0, XpToNext - 1));
+        }
+
         public void AddXp(int amount)
         {
             if (amount <= 0) return;

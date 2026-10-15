@@ -204,3 +204,9 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 만신 그림: `귀문_에셋_공유_1013/미리보기/mentor_*_strip.png`를 384×224로 잘라 `Assets/Art/Characters/Mentor/mentor_<시트>_<번호>.png`로 둔다(PIL 한 줄 스크립트로 잘랐다). 초상(`bg/mentor_portraits`)은 아직 안 쓴다.
 - 사당으로 돌아오기: 플레이 씬의 일시정지·게임오버 화면에 **"사당으로 (H)"** 버튼/키(`Controls.Hub`, `GameManager.LoadHub`)가 있다. 사당 씬(`GameManager.InHub`)에서는 이 버튼이 없다 (일시정지 버튼 4개 → 사당에서는 3개, 게임오버 3개 → 2개).
 - (수정, 2026-10-15) 사당을 넣고도 `GameBuilder`가 씬 목록을 Start·Prototype 두 개로 고정해 둬서 **빌드된 게임에서 "게임 시작"이 안 넘어갔다**(Hub가 빌드에 없어 로드 실패; 에디터 테스트는 빌드 설정을 써서 통과했다). 이제 `GameBuilder.BuildScenes()`가 빌드 설정(`SetBuildScenes`가 Start → Hub → Prototype으로 맞춤)의 켜진 씬을 그대로 쓴다 — 씬을 추가할 땐 `SetBuildScenes`의 목록만 고치면 된다.
+
+## 씬을 넘는 플레이어 데이터 (2026-10-15)
+- `PlayerSession`(static, Player/): 체력 · 레벨/경험치 · 도력 · 무기를 `Capture()`로 담고 `Apply()`로 되돌린다. `GameManager.LoadRun/LoadHub`가 떠나기 직전 `Capture`, 새 씬의 플레이어에 붙은 **`PlayerPersistence`**(빌더 `CreatePlayer`가 붙임, `Start`에서 적용)가 `Apply`. 되돌리는 API: `PlayerParty.SetHp`, `PlayerLevel.Restore`, `SkillGauge.SetValue`, `PlayerCombat.SetWeapon`(모두 조용히 — 알림·모션·쿨타임 없음).
+- 비우는 곳(`Reset`): `GameManager.Restart`(다시 시작) · `GoToStartMenu` · `StartMenu.StartGame`(새 게임). 쓰러진 채(체력 0) 떠나면 새 씬에서 체력은 가득. **사당 자동 회복**: `PlayerPersistence.Start`가 사당(`GameManager.InHub`)이면 체력을 `Heal`로 가득 채운다("+N" 표시, 도력·레벨·무기는 그대로, 플레이 씬에선 회복 없음). 쿨타임·진행 중인 판 상태(적 등)는 이어지지 않는다.
+- 주의: MonoBehaviour는 **파일 이름 = 클래스 이름**이어야 씬에 저장된다 (`PlayerPersistence`를 `PlayerSession.cs`에 같이 두었다가 씬에서 스크립트가 빠지는 문제가 있었다 → 별도 파일).
+- 테스트: `TestScene.LoadPrototype/LoadHub`가 `PlayerSession.Reset()`부터 한다. 스킬 트리로 습득한 스킬을 이어갈 땐 `PlayerSession.Data`에 필드를 더하면 된다.

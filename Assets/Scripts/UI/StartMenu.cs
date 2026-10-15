@@ -123,6 +123,7 @@ namespace ParryRL
         {
             if (_starting) return;
             _starting = true;
+            PlayerSession.Reset(); // 게임 시작 = 새 게임 (이전에 이어받던 체력·레벨 등을 비운다)
             SceneManager.LoadScene(GameSceneName);
         }
 

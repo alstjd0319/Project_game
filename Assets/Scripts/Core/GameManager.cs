@@ -77,6 +77,7 @@ namespace ParryRL
         /// <summary>시작 화면으로 돌아간다 (진행 중인 판은 버려진다).</summary>
         public void GoToStartMenu()
         {
+            PlayerSession.Reset(); // 시작 화면으로 나가면 이어지는 데이터는 비운다 (다음 게임 시작은 새 게임)
             Time.timeScale = 1f;
             SceneManager.LoadScene(StartSceneName);
         }
@@ -84,6 +85,7 @@ namespace ParryRL
         /// <summary>사당에서 귀문 안(플레이 씬)으로 들어간다.</summary>
         public static void LoadRun()
         {
+            PlayerSession.Capture(); // 체력·레벨·도력·무기를 가져간다
             Time.timeScale = 1f;
             SceneManager.LoadScene(RunSceneName);
         }
@@ -91,12 +93,14 @@ namespace ParryRL
         /// <summary>사당(대기 씬)으로 간다.</summary>
         public static void LoadHub()
         {
+            PlayerSession.Capture();
             Time.timeScale = 1f;
             SceneManager.LoadScene(HubSceneName);
         }
 
         public void Restart()
         {
+            PlayerSession.Reset(); // 다시 시작 = 이 씬을 처음 상태로
             Time.timeScale = 1f;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }

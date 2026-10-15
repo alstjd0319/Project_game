@@ -87,6 +87,9 @@ namespace ParryRL
         /// <summary>연습용 (튜닝 패널).</summary>
         public void RestoreFullHp() => Hp = maxHp;
 
+        /// <summary>씬을 넘어 이어받은 체력을 되돌린다 (연출 없음). 1~최대 체력으로 맞춘다.</summary>
+        public void SetHp(int hp) => Hp = Mathf.Clamp(hp, 1, maxHp);
+
         /// <summary>도트 애니메이션(PlayerSprite)에 곱할 색 (흰색 = 원본). 피격·쿨타임 표시는 네모와 같다.</summary>
         public Color ArtTint { get; private set; } = Color.white;
 

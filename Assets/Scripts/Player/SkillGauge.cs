@@ -15,6 +15,13 @@ namespace ParryRL
 
         private void Awake() => Value = Mathf.Clamp(startValue, 0, max);
 
+        /// <summary>씬을 넘어 이어받은 도력을 되돌린다.</summary>
+        public void SetValue(int value)
+        {
+            Value = Mathf.Clamp(value, 0, max);
+            Changed?.Invoke(Value);
+        }
+
         public void Add(int amount)
         {
             Value = Mathf.Clamp(Value + amount, 0, max);

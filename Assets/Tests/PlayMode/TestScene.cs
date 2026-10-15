@@ -10,6 +10,7 @@ namespace ParryRL.Tests
         {
             // 사용자가 F1 패널로 바꿔 저장한 값이 테스트 기대값을 흔들지 않도록
             GameTuning.UseDefaultsForTests();
+            PlayerSession.Reset(); // 앞선 테스트가 이어받던 상태가 새 씬에 새지 않게
             UnityEngine.Time.timeScale = 1f; // 앞선 테스트(게임오버·히트스탑)가 시간을 멈춘 채 끝나도 영향이 없게
             SceneManager.LoadScene("Prototype");
             yield return null;
@@ -23,6 +24,7 @@ namespace ParryRL.Tests
         public static IEnumerator LoadHub()
         {
             GameTuning.UseDefaultsForTests();
+            PlayerSession.Reset();
             UnityEngine.Time.timeScale = 1f;
             SceneManager.LoadScene("Hub");
             yield return null;

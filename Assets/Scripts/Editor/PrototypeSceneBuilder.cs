@@ -192,6 +192,7 @@ namespace ParryRL.EditorTools
             list.arraySize = heroArts.Count;
             for (int a = 0; a < heroArts.Count; a++) list.GetArrayElementAtIndex(a).objectReferenceValue = heroArts[a];
             artsProp.ApplyModifiedPropertiesWithoutUndo();
+            player.AddComponent<PlayerPersistence>(); // 사당 ↔ 플레이 씬을 넘어 체력·레벨·도력·무기를 이어받는다
             player.AddComponent<PlayerInteractor>(); // 사당의 포탈·NPC 상호작용 (E). 다른 씬엔 대상이 없어 아무 일도 안 한다
             return player;
         }
