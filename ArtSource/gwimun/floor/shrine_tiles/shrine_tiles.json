@@ -1,0 +1,451 @@
+{
+ "set": "shrine",
+ "cellPx": 90,
+ "spritePx": 150,
+ "pixelsPerUnit": 90,
+ "pivot": [
+  0.5,
+  0.5
+ ],
+ "note": "타일 그림은 칸(90px)보다 사방 30px 크다(풀·매달린 뿌리가 칸 밖으로 나옴). 피벗 가운데 + PPU 90이면 칸에 딱 맞는다. ground_NN의 NN = 상하좌우 이웃이 땅인지 비트(N=1, E=2, S=4, W=8). Unity Rule Tile(2D Tilemap Extras 패키지)로 만들면 칠할 때 자동으로 맞춰진다. 경사로·얇은 발판의 판정은 그림 모양대로 따로 잡을 것.",
+ "tiles": [
+  {
+   "name": "ground_00",
+   "file": "ground_00.png",
+   "kind": "ground",
+   "mask": 0,
+   "N": 0,
+   "E": 0,
+   "S": 0,
+   "W": 0,
+   "atlasRect": [
+    0,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_01",
+   "file": "ground_01.png",
+   "kind": "ground",
+   "mask": 1,
+   "N": 1,
+   "E": 0,
+   "S": 0,
+   "W": 0,
+   "atlasRect": [
+    150,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_02",
+   "file": "ground_02.png",
+   "kind": "ground",
+   "mask": 2,
+   "N": 0,
+   "E": 1,
+   "S": 0,
+   "W": 0,
+   "atlasRect": [
+    300,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_03",
+   "file": "ground_03.png",
+   "kind": "ground",
+   "mask": 3,
+   "N": 1,
+   "E": 1,
+   "S": 0,
+   "W": 0,
+   "atlasRect": [
+    450,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_04",
+   "file": "ground_04.png",
+   "kind": "ground",
+   "mask": 4,
+   "N": 0,
+   "E": 0,
+   "S": 1,
+   "W": 0,
+   "atlasRect": [
+    600,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_05",
+   "file": "ground_05.png",
+   "kind": "ground",
+   "mask": 5,
+   "N": 1,
+   "E": 0,
+   "S": 1,
+   "W": 0,
+   "atlasRect": [
+    750,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_06",
+   "file": "ground_06.png",
+   "kind": "ground",
+   "mask": 6,
+   "N": 0,
+   "E": 1,
+   "S": 1,
+   "W": 0,
+   "atlasRect": [
+    900,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_07",
+   "file": "ground_07.png",
+   "kind": "ground",
+   "mask": 7,
+   "N": 1,
+   "E": 1,
+   "S": 1,
+   "W": 0,
+   "atlasRect": [
+    1050,
+    0,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_08",
+   "file": "ground_08.png",
+   "kind": "ground",
+   "mask": 8,
+   "N": 0,
+   "E": 0,
+   "S": 0,
+   "W": 1,
+   "atlasRect": [
+    0,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_09",
+   "file": "ground_09.png",
+   "kind": "ground",
+   "mask": 9,
+   "N": 1,
+   "E": 0,
+   "S": 0,
+   "W": 1,
+   "atlasRect": [
+    150,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_10",
+   "file": "ground_10.png",
+   "kind": "ground",
+   "mask": 10,
+   "N": 0,
+   "E": 1,
+   "S": 0,
+   "W": 1,
+   "atlasRect": [
+    300,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_11",
+   "file": "ground_11.png",
+   "kind": "ground",
+   "mask": 11,
+   "N": 1,
+   "E": 1,
+   "S": 0,
+   "W": 1,
+   "atlasRect": [
+    450,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_12",
+   "file": "ground_12.png",
+   "kind": "ground",
+   "mask": 12,
+   "N": 0,
+   "E": 0,
+   "S": 1,
+   "W": 1,
+   "atlasRect": [
+    600,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_13",
+   "file": "ground_13.png",
+   "kind": "ground",
+   "mask": 13,
+   "N": 1,
+   "E": 0,
+   "S": 1,
+   "W": 1,
+   "atlasRect": [
+    750,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_14",
+   "file": "ground_14.png",
+   "kind": "ground",
+   "mask": 14,
+   "N": 0,
+   "E": 1,
+   "S": 1,
+   "W": 1,
+   "atlasRect": [
+    900,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_15",
+   "file": "ground_15.png",
+   "kind": "ground",
+   "mask": 15,
+   "N": 1,
+   "E": 1,
+   "S": 1,
+   "W": 1,
+   "atlasRect": [
+    1050,
+    150,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "thin_left",
+   "file": "thin_left.png",
+   "kind": "oneway",
+   "part": "left",
+   "atlasRect": [
+    0,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "thin_mid",
+   "file": "thin_mid.png",
+   "kind": "oneway",
+   "part": "middle",
+   "atlasRect": [
+    150,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "thin_right",
+   "file": "thin_right.png",
+   "kind": "oneway",
+   "part": "right",
+   "atlasRect": [
+    300,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "thin_single",
+   "file": "thin_single.png",
+   "kind": "oneway",
+   "part": "single",
+   "atlasRect": [
+    450,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "slope45_up_right",
+   "file": "slope45_up_right.png",
+   "kind": "slope",
+   "angle": 45,
+   "rises": "right",
+   "atlasRect": [
+    600,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "slope45_up_left",
+   "file": "slope45_up_left.png",
+   "kind": "slope",
+   "angle": 45,
+   "rises": "left",
+   "atlasRect": [
+    750,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "slope22_up_right_low",
+   "file": "slope22_up_right_low.png",
+   "kind": "slope",
+   "angle": 22.5,
+   "rises": "right",
+   "part": "low",
+   "atlasRect": [
+    900,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "slope22_up_right_high",
+   "file": "slope22_up_right_high.png",
+   "kind": "slope",
+   "angle": 22.5,
+   "rises": "right",
+   "part": "high",
+   "atlasRect": [
+    1050,
+    300,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "slope22_up_left_high",
+   "file": "slope22_up_left_high.png",
+   "kind": "slope",
+   "angle": 22.5,
+   "rises": "left",
+   "part": "high",
+   "atlasRect": [
+    0,
+    450,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "slope22_up_left_low",
+   "file": "slope22_up_left_low.png",
+   "kind": "slope",
+   "angle": 22.5,
+   "rises": "left",
+   "part": "low",
+   "atlasRect": [
+    150,
+    450,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_15_var0",
+   "file": "ground_15_var0.png",
+   "kind": "ground",
+   "mask": 15,
+   "variantOf": "ground_15",
+   "atlasRect": [
+    300,
+    450,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_15_var1",
+   "file": "ground_15_var1.png",
+   "kind": "ground",
+   "mask": 15,
+   "variantOf": "ground_15",
+   "atlasRect": [
+    450,
+    450,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_15_var2",
+   "file": "ground_15_var2.png",
+   "kind": "ground",
+   "mask": 15,
+   "variantOf": "ground_15",
+   "atlasRect": [
+    600,
+    450,
+    150,
+    150
+   ]
+  },
+  {
+   "name": "ground_15_var3",
+   "file": "ground_15_var3.png",
+   "kind": "ground",
+   "mask": 15,
+   "variantOf": "ground_15",
+   "atlasRect": [
+    750,
+    450,
+    150,
+    150
+   ]
+  }
+ ]
+}

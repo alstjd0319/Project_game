@@ -567,6 +567,7 @@ namespace ParryRL.EditorTools
                 set.top = Role("top"); set.fill = Role("fill");
                 set.platL = Role("platL"); set.platM = Role("platM"); set.platR = Role("platR");
                 set.unitScale = PixelsPerUnit / Mathf.Max(1, zm.bodyPx); // 윗면 타일의 몸통 높이 = 판정 두께 1유닛
+                set.fillDarken = 0f;
                 EditorUtility.SetDirty(set);
             }
         }

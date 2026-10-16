@@ -39,3 +39,4 @@ MonoBehaviour:
   platR:
   - {fileID: 21300000, guid: 1ab0c6e2ee3604637b9504c963b99da9, type: 3}
   unitScale: 0.9
+  fillDarken: 0

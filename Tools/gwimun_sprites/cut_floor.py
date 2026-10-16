@@ -144,20 +144,22 @@ def main():
         }
         print(zone, meta[zone], 'top tile heights', top_h)
 
-    # 사당: 땅 한 줄(소품 시트 아래쪽 긴 조각)을 그대로 쓴다 (반복해 이어 붙임)
-    shrine = Image.open(f'{SRC}/shrine_props.png').convert('RGB')
-    from sys import path
-    path.insert(0, os.path.dirname(__file__))
-    from ui_cutter import remove_magenta
-    rgba = remove_magenta(shrine)
-    strip = rgba.crop((0, 915, 1536, 1024))
-    bb = strip.getchannel('A').point(lambda v: 255 if v > 128 else 0).getbbox()
-    strip = strip.crop(bb)
-    strip = strip.crop((INSET, 0, strip.width - INSET, strip.height))
-    strip.save(f'{OUT}/shrine_top_0.png')
-    sr = surface_row(strip)
-    meta['shrine'] = {'files': [{'name': 'shrine_top_0.png', 'height': strip.height, 'surface': sr}],
-                      'bodyPx': strip.height - sr, 'platSurfacePx': 0, 'tileWidthPx': strip.width, 'roles': {'top': 1}}
+    # 사당: 에셋 지형 타일 세트(shrine_tiles.json) — 윗면 = ground_14(위만 풀, 좌우 이웃 있음), 속 채움 = ground_15 + 무늬 변형 4장.
+    # 그림은 칸(90px)보다 사방 30px 크므로 불투명 영역만 잘라(약 90px) 이어 붙인다.
+    TD = 'ArtSource/gwimun/floor/shrine_tiles'
+    def trim(name):
+        im = Image.open(f'{TD}/{name}.png').convert('RGBA')
+        return im.crop(im.getchannel('A').point(lambda v: 255 if v > 128 else 0).getbbox())
+    top = trim('ground_14')
+    top.save(f'{OUT}/shrine_top_0.png')
+    fills = [trim(n) for n in ('ground_15', 'ground_15_var0', 'ground_15_var1', 'ground_15_var2', 'ground_15_var3')]
+    w = min(f.width for f in fills); h = min(f.height for f in fills)
+    files = [{'name': 'shrine_top_0.png', 'height': top.height, 'surface': surface_row(top)}]
+    for i, f in enumerate(fills):
+        f.crop((0, 0, w, h)).save(f'{OUT}/shrine_fill_{i}.png')
+        files.append({'name': f'shrine_fill_{i}.png', 'height': h, 'surface': 0})
+    sr = surface_row(top)
+    meta['shrine'] = {'files': files, 'bodyPx': top.height - sr, 'platSurfacePx': 0, 'tileWidthPx': top.width, 'roles': {'top': 1, 'fill': len(fills)}}
     print('shrine', meta['shrine'])
     # Unity JsonUtility는 사전을 못 읽으므로 {"zones":[{zone, bodyPx, files:[...]}]} 목록으로 쓴다
     zones = [{'zone': z, 'bodyPx': v['bodyPx'], 'files': v['files']} for z, v in meta.items()]

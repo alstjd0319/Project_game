@@ -262,3 +262,6 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - (다듬기, 2026-10-16) 봉인진: 빛기둥 층(`SealZone.MakePillars`)은 그림 맨 위 `RingTop`(0.506)까지만 잘라 아래 22%를 알파로 서서히 흐리고(읽기 가능 텍스처 필요 → 빌더가 `fxhero_seal_*`를 `isReadable`로 임포트, 못 읽으면 흐림 없이 자름) 세로 `PillarHeight` 1.5배로 세운다. 진 층은 `RingTop` 아래 전부를 `RingFlatten` 0.4배로 눌러 뒤쪽 호도 함께 눌린다. 진 아래에 `FxSprites.Glow` 납작 타원 빛(`GroundGlow`)이 시작·끝에 서서히 켜지고 꺼진다.
 - (수정, 2026-10-16) **이동하며 공격하면 베기 이펙트가 뒤에 처지던 문제**: `MeleeStrike.Spawn`이 베기 그림(`FxClip`)을 월드 한 자리에 만들어 두기만 했다 → `FxClip.Follow(target)`(생길 때의 오프셋을 유지하며 `LateUpdate`에서 target을 따라감)을 `MeleeStrike.Spawn(..., follow: transform)`으로 쓴다. 일반공격 1~3단·반격·D 휩쓸기가 플레이어를 따라가고, 땅 이펙트(F 내려찍기·봉인진)는 따라가지 않는다. 판정은 여전히 공격이 나간 순간 그 자리의 박스 한 번. 테스트 `SkillTests`(수정 전엔 실패), 캡처 `봉_베기_이동하며_공격해도_이펙트가_따라간다`.
 - (조정, 2026-10-16) 원거리 몬스터(도깨비불) 사정거리 `EnemyController.fireRange` 11 → **7**, 불덩이 최대 비행 `rangedMaxTravel` 16 → 10. 화면 반폭이 약 10.7이라 11이면 화면 끝에서도 쐈다. 사정거리 안이면 그 자리에서 쏘고 벗어나면 7 안으로 다가오는 규칙은 그대로. 프리팹 값이라 인스펙터에서도 바꾼다(빌더가 프리팹을 새로 만들 때 코드 기본값이 들어간다).
+
+## 사당 바닥 채움 (2026-10-16)
+- 사당 바닥은 에셋 지형 타일 세트(`ArtSource/gwimun/floor/shrine_tiles/`, 원본 `1016/미리보기/tiles/shrine/`)를 쓴다: `cut_floor.py`가 윗면 `ground_14` → `shrine_top_0`, 속 `ground_15`+변형 4장 → `shrine_fill_0~4`로 불투명 영역만 잘라 만든다(약 90px = 1유닛, `fillDarken` 0). 사당엔 발판이 없다. 옛 "땅 한 줄" 방식은 폐기.

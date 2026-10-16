@@ -132,7 +132,9 @@ namespace ParryRL
                     {
                         var s = set.fill[(i * 7 + row * 3) % set.fill.Length];
                         float w = Width(s, scale);
-                        Tile(s, new Vector2(x + w * 0.5f, y), scale, FillOrder);
+                        var tile = Tile(s, new Vector2(x + w * 0.5f, y), scale, FillOrder);
+                        if (set.fillDarken > 0f) // 깊어질수록 어둡게 (채움이 한 줄 반복인 구간이 아래로 갈수록 자연스럽게 가라앉는다)
+                            tile.color = Color.Lerp(Color.white, new Color(0.14f, 0.13f, 0.22f), Mathf.Clamp01((rowTop - y) / (rowTop - bottom)) * set.fillDarken);
                         x += w;
                         h = s.bounds.size.y * scale;
                     }

@@ -235,12 +235,37 @@
   },
   {
    "zone": "shrine",
-   "bodyPx": 70,
+   "bodyPx": 90,
    "files": [
     {
      "name": "shrine_top_0.png",
-     "height": 88,
-     "surface": 18
+     "height": 100,
+     "surface": 10
+    },
+    {
+     "name": "shrine_fill_0.png",
+     "height": 90,
+     "surface": 0
+    },
+    {
+     "name": "shrine_fill_1.png",
+     "height": 90,
+     "surface": 0
+    },
+    {
+     "name": "shrine_fill_2.png",
+     "height": 90,
+     "surface": 0
+    },
+    {
+     "name": "shrine_fill_3.png",
+     "height": 90,
+     "surface": 0
+    },
+    {
+     "name": "shrine_fill_4.png",
+     "height": 90,
+     "surface": 0
     }
    ]
   }

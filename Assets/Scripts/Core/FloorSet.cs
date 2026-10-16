@@ -16,6 +16,7 @@ namespace ParryRL
         public Sprite[] platM = new Sprite[0];
         public Sprite[] platR = new Sprite[0];
         [Tooltip("스프라이트(90px/유닛)에 곱할 배율")] public float unitScale = 1f;
+        [Tooltip("속 채움이 깊어질수록 어두워지는 정도 (0 = 그대로, 1 = 맨 아래가 거의 검게). 사당처럼 채움 그림이 한 줄뿐일 때 아래가 자연스럽게 가라앉게 한다")] [Range(0f, 1f)] public float fillDarken = 0f;
 
         public bool HasPlatforms => platL.Length > 0 && platM.Length > 0 && platR.Length > 0;
     }
