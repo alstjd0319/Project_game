@@ -37,6 +37,67 @@ namespace ParryRL.Tests
             Physics2D.SyncTransforms();
         }
 
+        private IEnumerator ComboHit(float enemyDx, System.Action<int> report)
+        {
+            // 적을 앞에 세워 두고 A를 한 번 친 뒤 줄어든 체력(= 그 단의 데미지)을 알려 준다
+            Place(_enemy, enemyDx);
+            float before = _enemy.HpRatio;
+            Assert.IsTrue(_combat.TryAttackSkill(), "쿨타임이 끝났으니 공격 가능");
+            yield return null;
+            report(Mathf.RoundToInt((before - _enemy.HpRatio) * 100f));
+        }
+
+        [UnityTest]
+        public IEnumerator 봉_일반공격은_이어_누르면_1_2_3단으로_커지고_3단은_양옆을_휩쓸며_기절시킨다()
+        {
+            GameTuning.Current.enemyInvincible = false;
+            TestScene.SetAttackSkillFree(true);
+            Assert.AreEqual(1, _combat.NextComboStage);
+            int d1 = 0, d2 = 0, d3 = 0;
+            yield return ComboHit(1.5f, d => d1 = d);
+            Assert.AreEqual(2, _combat.NextComboStage, "1단을 치면 다음은 2단");
+            yield return new WaitForSeconds(0.4f);
+            yield return ComboHit(1.5f, d => d2 = d);
+            Assert.AreEqual(3, _combat.NextComboStage);
+            yield return new WaitForSeconds(0.4f);
+            _enemy.Stun(0f);
+            yield return ComboHit(-1.2f, d => d3 = d); // 3단은 플레이어 뒤쪽(반대편) 적도 맞는다
+            Assert.AreEqual(1, _combat.NextComboStage, "마무리 뒤에는 다시 1단");
+            Assert.Less(d1, d2, "2단이 1단보다 세다");
+            Assert.Less(d2, d3, "3단 마무리가 가장 세다");
+            Assert.IsTrue(_enemy.IsStunned, "3단은 기절시킨다");
+            Assert.Greater(d1, 0);
+        }
+
+        [UnityTest]
+        public IEnumerator 이어치기_시간이_지나거나_무기를_바꾸면_1단부터_다시()
+        {
+            TestScene.SetAttackSkillFree(true);
+            Assert.IsTrue(_combat.TryAttackSkill());
+            Assert.AreEqual(2, _combat.NextComboStage);
+            yield return new WaitForSeconds(1.2f); // 쿨타임 0.35 + 이어치기 0.6 이 지난다
+            Assert.AreEqual(1, _combat.NextComboStage, "늦으면 1단부터");
+
+            Assert.IsTrue(_combat.TryAttackSkill());
+            Assert.AreEqual(2, _combat.NextComboStage);
+            yield return new WaitForSeconds(0.1f);
+            // 무기를 바꾸면 처음부터 (바꾸기 쿨타임·방어 조건은 통과한다)
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            yield return new WaitForSeconds(0.6f);
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            Assert.AreEqual(1, _combat.NextComboStage, "무기를 바꾸면 처음부터");
+        }
+
+        [UnityTest]
+        public IEnumerator 부적을_들면_단계_없이_화살_한_종류다()
+        {
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            TestScene.SetAttackSkillFree(true);
+            yield return null;
+            Assert.IsTrue(_combat.TryAttackSkill());
+            Assert.AreEqual(1, _combat.NextComboStage, "원거리는 단계가 없다");
+        }
+
         [UnityTest]
         public IEnumerator D스킬은_도력_3을_쓰고_부족하면_안_나간다()
         {

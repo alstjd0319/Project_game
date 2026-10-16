@@ -198,6 +198,36 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 봉_일반공격_단계별()
+        {
+            GameTuning.Current.enemyInvincible = true; // 여러 번 맞아도 살아 있게
+            TestScene.SetAttackSkillFree(true);
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            var combat = defense.GetComponent<PlayerCombat>();
+            var enemies = Object.FindObjectsByType<EnemyController>();
+            void Put()
+            {
+                float dx = 1.6f;
+                foreach (var e in enemies)
+                {
+                    var pos = new Vector3(defense.transform.position.x + dx, e.transform.localScale.y * 0.5f, 0f);
+                    e.transform.position = pos;
+                    e.GetComponent<Rigidbody2D>().position = pos;
+                    dx += 1.2f;
+                }
+            }
+            yield return new WaitForSeconds(0.3f);
+            for (int stage = 1; stage <= 3; stage++)
+            {
+                Put();
+                combat.TryAttackSkill();
+                yield return new WaitForSecondsRealtime(0.17f);   // 베기가 가장 크게 펼쳐지는 중간 장면
+                yield return Capture("combo_stage" + stage);
+                yield return new WaitForSeconds(0.45f);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator Hud_전투중()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

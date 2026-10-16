@@ -65,6 +65,23 @@ namespace ParryRL
             return fx;
         }
 
+        /// <summary>
+        /// 연출용 그림을 maxSize(유닛) 안에 비율을 지켜 꼭 맞게 재생한다 (크기가 다른 이펙트 그림을 "화면에서 이만큼"으로 쓰기 위한 것).
+        /// 그림은 가운데 피벗이고 pos가 그 가운데다. 반환된 scale은 위치를 맞출 때(예: 바닥에 붙이기) 쓸 수 있다.
+        /// </summary>
+        public static FxClip PlayFit(SpriteClip clip, Vector2 pos, Vector2 maxSize, bool flipX = false, int order = 45, Color? tint = null)
+        {
+            if (clip == null || clip.IsEmpty) return null;
+            return PlayAt(clip, pos, FitScale(clip, maxSize), flipX, order, tint);
+        }
+
+        /// <summary>그림(첫 장 기준)을 maxSize 안에 비율 유지로 넣는 배율.</summary>
+        public static float FitScale(SpriteClip clip, Vector2 maxSize)
+        {
+            Vector2 s = clip.frames[0].bounds.size;
+            return Mathf.Min(maxSize.x / s.x, maxSize.y / s.y);
+        }
+
         private void Update()
         {
             _t += Time.unscaledDeltaTime;

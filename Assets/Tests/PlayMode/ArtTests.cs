@@ -208,9 +208,11 @@ namespace ParryRL.Tests
             Vector2 p = _sprite.transform.position;
             int facing = _sprite.GetComponent<PlayerMotor>().Facing;
             Assert.AreEqual(facing < 0, clip.Renderer.flipX, "바라보는 쪽으로 베기");
-            // 정사각 칸에 그린 이펙트라 일그러뜨리지 않고 비율을 유지한 채 박스(2.4×1.6) 안에 맞춘다
+            // 일그러뜨리지 않고 그림 비율을 유지한 채 박스(2.4×1.6) 안에 맞춘다 (1016 이펙트는 가로로 긴 그림)
+            Vector2 art = clip.Renderer.sprite.bounds.size;
             Assert.AreEqual(1.6f, clip.Renderer.bounds.size.y, 0.01f, "높이는 박스 높이");
-            Assert.AreEqual(clip.Renderer.bounds.size.y, clip.Renderer.bounds.size.x, 0.01f, "정사각 비율 유지");
+            Assert.AreEqual(art.x / art.y, clip.Renderer.bounds.size.x / clip.Renderer.bounds.size.y, 0.01f, "그림 비율 유지");
+            Assert.LessOrEqual(clip.Renderer.bounds.size.x, 2.4f + 0.01f, "박스 폭 안");
             Assert.AreEqual(p.x + facing * 1.2f, clip.Renderer.bounds.center.x, 0.01f, "박스 가운데");
             Object.Destroy(clip.gameObject);
             yield return null;
@@ -221,7 +223,7 @@ namespace ParryRL.Tests
                 new Vector2(0.6f, 0.6f), 10f, 6f, Color.white, 10);
             FxClip counter = null;
             float t = 0f;
-            // 패링 성공 불꽃(parry_staff)도 FxClip이라, 반격 그림(staff_thrust)만 골라낸다
+            // 패링 성공 이펙트도 FxClip이라, 반격 그림(counter_big)만 골라낸다
             while (counter == null && t < 1f)
             {
                 foreach (var candidate in Object.FindObjectsByType<FxClip>())
@@ -232,7 +234,11 @@ namespace ParryRL.Tests
             Assert.IsNotNull(counter, "반격 그림");
             Assert.AreSame(GameAssets.AttackFx.meleeCounter.frames[0], counter.Renderer.sprite);
             Assert.IsTrue(counter.Renderer.flipX, "왼쪽으로 반격");
-            Assert.AreEqual(1.6f, counter.Renderer.bounds.size.y, 0.01f, "반격 박스(1.8×1.6) 높이에 맞춤");
+            // 반격 그림은 가로로 긴 그림이라 박스(1.8×1.6)의 폭에 맞춰지고 비율은 유지된다
+            Vector2 cArt = counter.Renderer.sprite.bounds.size;
+            Assert.AreEqual(1.8f, counter.Renderer.bounds.size.x, 0.01f, "반격 박스 폭에 맞춤");
+            Assert.AreEqual(cArt.x / cArt.y, counter.Renderer.bounds.size.x / counter.Renderer.bounds.size.y, 0.01f, "그림 비율 유지");
+            Assert.LessOrEqual(counter.Renderer.bounds.size.y, 1.6f + 0.01f, "박스 높이 안");
         }
 
         // ───────────── 근접 몬스터 ─────────────

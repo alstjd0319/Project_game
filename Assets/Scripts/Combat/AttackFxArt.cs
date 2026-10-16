@@ -12,7 +12,9 @@ namespace ParryRL
         [Tooltip("근접 몬스터 일반 베기 — 판정이 살아 있는 동안 첫 장, 꺼진 뒤 나머지(부서짐)")] public SpriteClip enemySlash = new();
         public SpriteClip enemyHeavySlash = new();
         [Tooltip("플레이어 반격 — 판정은 순간이라 첫 장을 보여주고 바로 부서짐")] public SpriteClip meleeCounter = new();
-        public SpriteClip meleeAttack = new();
+        [Tooltip("봉 일반공격 1단(= D 휩쓸기 그림) / 2단 / 3단 마무리")] public SpriteClip meleeAttack = new();
+        public SpriteClip meleeAttack2 = new();
+        public SpriteClip meleeAttack3 = new();
 
         [Header("연출 (원본 크기 × 배율로 그림 — 판정과 무관)")]
         [Tooltip("패링 성공 불꽃 (근접 / 원거리 무기)")] public SpriteClip parryMelee = new();
@@ -24,8 +26,11 @@ namespace ParryRL
         public SpriteClip heavyWarning = new();
         public SpriteClip dustLand = new();
         [Tooltip("패링 성공 시 플레이어 몸 주변에 겹쳐 재생 (요기 흡수)")] public SpriteClip yogiAbsorb = new();
-        [Tooltip("F 스킬: 봉 내려찍기 충격파 / 부적 봉인진")] public SpriteClip staffSlam = new();
-        public SpriteClip talismanSeal = new();
+        [Tooltip("F 스킬: 봉 내려찍기 충격파 (땅 충격파 6장)")] public SpriteClip staffSlam = new();
+        [Tooltip("F 스킬: 부적 봉인진 — 시작(한 번) → 반복(지속 시간만큼) → 끝(한 번)")] public SpriteClip sealStart = new();
+        public SpriteClip sealLoop = new();
+        public SpriteClip sealEnd = new();
+        [Tooltip("퍼펙트 패링 때 플레이어 앞에 한 번 재생")] public SpriteClip perfectParry = new();
         [Tooltip("사당 포탈 (반복 재생)")] public SpriteClip gatePortal = new();
         [Tooltip("사당 문 안쪽에 겹치는 일렁이는 소용돌이 (16장 반복, 칸 192×224 · 내용 138×181 — 원본 8장을 줄마다 물결치게 밀어 만든 것)")] public SpriteClip portalSwirl = new();
         [Tooltip("도깨비불 불덩이 — 앞 4장 청록(일반) · 뒤 4장 빨강(강공격), 반복 재생")] public SpriteClip dokkaebiProjectile = new();

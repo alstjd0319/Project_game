@@ -100,7 +100,7 @@ namespace ParryRL
 
                 DamageCalc.Apply(_baseDamage, _hit, enemy, Mathf.Sign(_direction.x));
                 Fx.Sparks(transform.position, _color, _hit.Heavy ? 10 : 6, 6f);
-                if (GameAssets.AttackFx != null) FxClip.PlayAt(GameAssets.AttackFx.talismanBurst, transform.position, 0.55f);
+                if (GameAssets.AttackFx != null) FxClip.PlayFit(GameAssets.AttackFx.talismanBurst, transform.position, new Vector2(1.5f, 1.5f));
                 if (!_hit.Pierce)
                 {
                     Destroy(gameObject);

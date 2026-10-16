@@ -1,0 +1,2059 @@
+{
+    "character":  "fxhero",
+    "pixelsPerUnit":  90,
+    "note":  "가로 한 줄 스트립. 칸(cellW×cellH)을 왼쪽부터 frames개로 자르면 프레임. 그림은 오른쪽을 봄(왼쪽은 좌우 반전). pivotPx는 칸 왼쪽 위 기준 px, unityPivot은 Unity 스프라이트 피벗(0~1, 아래가 0).",
+    "sheets":  [
+                   {
+                       "sheet":  "air_dive_a",
+                       "label":  "air_dive_a",
+                       "file":  "fxhero_air_dive_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "air_dive_b",
+                       "label":  "air_dive_b",
+                       "file":  "fxhero_air_dive_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "barrier_wall_end_a",
+                       "label":  "barrier_wall_end_a",
+                       "file":  "fxhero_barrier_wall_end_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "barrier_wall_end_b",
+                       "label":  "barrier_wall_end_b",
+                       "file":  "fxhero_barrier_wall_end_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "barrier_wall_loop_a",
+                       "label":  "barrier_wall_loop_a",
+                       "file":  "fxhero_barrier_wall_loop_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "barrier_wall_loop_b",
+                       "label":  "barrier_wall_loop_b",
+                       "file":  "fxhero_barrier_wall_loop_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "barrier_wall_start_a",
+                       "label":  "barrier_wall_start_a",
+                       "file":  "fxhero_barrier_wall_start_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "barrier_wall_start_b",
+                       "label":  "barrier_wall_start_b",
+                       "file":  "fxhero_barrier_wall_start_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "counter_slash_big",
+                       "label":  "counter_slash_big",
+                       "file":  "fxhero_counter_slash_big_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "dash_trail",
+                       "label":  "dash_trail",
+                       "file":  "fxhero_dash_trail_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "dust_jump",
+                       "label":  "dust_jump",
+                       "file":  "fxhero_dust_jump_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  342,
+                       "pivotPx":  [
+                                       128,
+                                       171
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "dust_land_heavy",
+                       "label":  "dust_land_heavy",
+                       "file":  "fxhero_dust_land_heavy_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  362,
+                       "cellH":  242,
+                       "pivotPx":  [
+                                       181,
+                                       121
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "dust_run",
+                       "label":  "dust_run",
+                       "file":  "fxhero_dust_run_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  342,
+                       "pivotPx":  [
+                                       128,
+                                       171
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "fire_talisman",
+                       "label":  "fire_talisman",
+                       "file":  "fxhero_fire_talisman_strip.png",
+                       "frames":  6,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "fire_talisman_plus",
+                       "label":  "fire_talisman_plus",
+                       "file":  "fxhero_fire_talisman_plus_strip.png",
+                       "frames":  6,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "orbit_talismans_loop_a",
+                       "label":  "orbit_talismans_loop_a",
+                       "file":  "fxhero_orbit_talismans_loop_a_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "orbit_talismans_loop_b",
+                       "label":  "orbit_talismans_loop_b",
+                       "file":  "fxhero_orbit_talismans_loop_b_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "orbit_talismans_loop_plus_a",
+                       "label":  "orbit_talismans_loop_plus_a",
+                       "file":  "fxhero_orbit_talismans_loop_plus_a_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "orbit_talismans_loop_plus_b",
+                       "label":  "orbit_talismans_loop_plus_b",
+                       "file":  "fxhero_orbit_talismans_loop_plus_b_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "paper_clone_appear_a",
+                       "label":  "paper_clone_appear_a",
+                       "file":  "fxhero_paper_clone_appear_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "paper_clone_appear_b",
+                       "label":  "paper_clone_appear_b",
+                       "file":  "fxhero_paper_clone_appear_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "paper_clone_vanish_a",
+                       "label":  "paper_clone_vanish_a",
+                       "file":  "fxhero_paper_clone_vanish_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "paper_clone_vanish_b",
+                       "label":  "paper_clone_vanish_b",
+                       "file":  "fxhero_paper_clone_vanish_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "parry_shockwave",
+                       "label":  "parry_shockwave",
+                       "file":  "fxhero_parry_shockwave_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "perfect_parry",
+                       "label":  "perfect_parry",
+                       "file":  "fxhero_perfect_parry_strip.png",
+                       "frames":  6,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_end",
+                       "label":  "seal_circle_end",
+                       "file":  "fxhero_seal_circle_end_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_end_plus",
+                       "label":  "seal_circle_end_plus",
+                       "file":  "fxhero_seal_circle_end_plus_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  542,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       271,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_loop_a",
+                       "label":  "seal_circle_loop_a",
+                       "file":  "fxhero_seal_circle_loop_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_loop_b",
+                       "label":  "seal_circle_loop_b",
+                       "file":  "fxhero_seal_circle_loop_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_loop_plus_a",
+                       "label":  "seal_circle_loop_plus_a",
+                       "file":  "fxhero_seal_circle_loop_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_loop_plus_b",
+                       "label":  "seal_circle_loop_plus_b",
+                       "file":  "fxhero_seal_circle_loop_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_start",
+                       "label":  "seal_circle_start",
+                       "file":  "fxhero_seal_circle_start_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "seal_circle_start_plus",
+                       "label":  "seal_circle_start_plus",
+                       "file":  "fxhero_seal_circle_start_plus_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_end_a",
+                       "label":  "staff_barrier_end_a",
+                       "file":  "fxhero_staff_barrier_end_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_end_b",
+                       "label":  "staff_barrier_end_b",
+                       "file":  "fxhero_staff_barrier_end_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_end_plus_a",
+                       "label":  "staff_barrier_end_plus_a",
+                       "file":  "fxhero_staff_barrier_end_plus_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_end_plus_b",
+                       "label":  "staff_barrier_end_plus_b",
+                       "file":  "fxhero_staff_barrier_end_plus_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_loop_a",
+                       "label":  "staff_barrier_loop_a",
+                       "file":  "fxhero_staff_barrier_loop_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_loop_b",
+                       "label":  "staff_barrier_loop_b",
+                       "file":  "fxhero_staff_barrier_loop_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_loop_plus_a",
+                       "label":  "staff_barrier_loop_plus_a",
+                       "file":  "fxhero_staff_barrier_loop_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_loop_plus_b",
+                       "label":  "staff_barrier_loop_plus_b",
+                       "file":  "fxhero_staff_barrier_loop_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_start_a",
+                       "label":  "staff_barrier_start_a",
+                       "file":  "fxhero_staff_barrier_start_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_start_b",
+                       "label":  "staff_barrier_start_b",
+                       "file":  "fxhero_staff_barrier_start_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_start_plus_a",
+                       "label":  "staff_barrier_start_plus_a",
+                       "file":  "fxhero_staff_barrier_start_plus_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_barrier_start_plus_b",
+                       "label":  "staff_barrier_start_plus_b",
+                       "file":  "fxhero_staff_barrier_start_plus_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_charge",
+                       "label":  "staff_charge",
+                       "file":  "fxhero_staff_charge_strip.png",
+                       "frames":  6,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_charged_swing",
+                       "label":  "staff_charged_swing",
+                       "file":  "fxhero_staff_charged_swing_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_combo1",
+                       "label":  "staff_combo1",
+                       "file":  "fxhero_staff_combo1_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_combo2",
+                       "label":  "staff_combo2",
+                       "file":  "fxhero_staff_combo2_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_combo3",
+                       "label":  "staff_combo3",
+                       "file":  "fxhero_staff_combo3_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_flurry_a",
+                       "label":  "staff_flurry_a",
+                       "file":  "fxhero_staff_flurry_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_flurry_b",
+                       "label":  "staff_flurry_b",
+                       "file":  "fxhero_staff_flurry_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_flurry_plus_a",
+                       "label":  "staff_flurry_plus_a",
+                       "file":  "fxhero_staff_flurry_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_flurry_plus_b",
+                       "label":  "staff_flurry_plus_b",
+                       "file":  "fxhero_staff_flurry_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_quake_wave_a",
+                       "label":  "staff_quake_wave_a",
+                       "file":  "fxhero_staff_quake_wave_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_quake_wave_b",
+                       "label":  "staff_quake_wave_b",
+                       "file":  "fxhero_staff_quake_wave_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_quake_wave_plus_a",
+                       "label":  "staff_quake_wave_plus_a",
+                       "file":  "fxhero_staff_quake_wave_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_quake_wave_plus_b",
+                       "label":  "staff_quake_wave_plus_b",
+                       "file":  "fxhero_staff_quake_wave_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_rising_dragon_a",
+                       "label":  "staff_rising_dragon_a",
+                       "file":  "fxhero_staff_rising_dragon_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_rising_dragon_b",
+                       "label":  "staff_rising_dragon_b",
+                       "file":  "fxhero_staff_rising_dragon_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_rising_dragon_plus_a",
+                       "label":  "staff_rising_dragon_plus_a",
+                       "file":  "fxhero_staff_rising_dragon_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_rising_dragon_plus_b",
+                       "label":  "staff_rising_dragon_plus_b",
+                       "file":  "fxhero_staff_rising_dragon_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_thunder_call_a",
+                       "label":  "staff_thunder_call_a",
+                       "file":  "fxhero_staff_thunder_call_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_thunder_call_b",
+                       "label":  "staff_thunder_call_b",
+                       "file":  "fxhero_staff_thunder_call_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_thunder_call_plus_a",
+                       "label":  "staff_thunder_call_plus_a",
+                       "file":  "fxhero_staff_thunder_call_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_thunder_call_plus_b",
+                       "label":  "staff_thunder_call_plus_b",
+                       "file":  "fxhero_staff_thunder_call_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_whirlwind_end",
+                       "label":  "staff_whirlwind_end",
+                       "file":  "fxhero_staff_whirlwind_end_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_whirlwind_end_plus",
+                       "label":  "staff_whirlwind_end_plus",
+                       "file":  "fxhero_staff_whirlwind_end_plus_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_whirlwind_loop",
+                       "label":  "staff_whirlwind_loop",
+                       "file":  "fxhero_staff_whirlwind_loop_strip.png",
+                       "frames":  6,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_whirlwind_loop_plus",
+                       "label":  "staff_whirlwind_loop_plus",
+                       "file":  "fxhero_staff_whirlwind_loop_plus_strip.png",
+                       "frames":  6,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_whirlwind_start",
+                       "label":  "staff_whirlwind_start",
+                       "file":  "fxhero_staff_whirlwind_start_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "staff_whirlwind_start_plus",
+                       "label":  "staff_whirlwind_start_plus",
+                       "file":  "fxhero_staff_whirlwind_start_plus_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_chain_a",
+                       "label":  "talisman_chain_a",
+                       "file":  "fxhero_talisman_chain_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_chain_b",
+                       "label":  "talisman_chain_b",
+                       "file":  "fxhero_talisman_chain_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_chain_plus_a",
+                       "label":  "talisman_chain_plus_a",
+                       "file":  "fxhero_talisman_chain_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_chain_plus_b",
+                       "label":  "talisman_chain_plus_b",
+                       "file":  "fxhero_talisman_chain_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_charge",
+                       "label":  "talisman_charge",
+                       "file":  "fxhero_talisman_charge_strip.png",
+                       "frames":  6,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_charged_shot_a",
+                       "label":  "talisman_charged_shot_a",
+                       "file":  "fxhero_talisman_charged_shot_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_charged_shot_b",
+                       "label":  "talisman_charged_shot_b",
+                       "file":  "fxhero_talisman_charged_shot_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_hit",
+                       "label":  "talisman_hit",
+                       "file":  "fxhero_talisman_hit_strip.png",
+                       "frames":  5,
+                       "fps":  12,
+                       "cellW":  384,
+                       "cellH":  512,
+                       "pivotPx":  [
+                                       192,
+                                       256
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_end",
+                       "label":  "talisman_storm_end",
+                       "file":  "fxhero_talisman_storm_end_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_end_plus",
+                       "label":  "talisman_storm_end_plus",
+                       "file":  "fxhero_talisman_storm_end_plus_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_loop_a",
+                       "label":  "talisman_storm_loop_a",
+                       "file":  "fxhero_talisman_storm_loop_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_loop_b",
+                       "label":  "talisman_storm_loop_b",
+                       "file":  "fxhero_talisman_storm_loop_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  363,
+                       "pivotPx":  [
+                                       272,
+                                       182
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.4986
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_loop_plus_a",
+                       "label":  "talisman_storm_loop_plus_a",
+                       "file":  "fxhero_talisman_storm_loop_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_loop_plus_b",
+                       "label":  "talisman_storm_loop_plus_b",
+                       "file":  "fxhero_talisman_storm_loop_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_start",
+                       "label":  "talisman_storm_start",
+                       "file":  "fxhero_talisman_storm_start_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "talisman_storm_start_plus",
+                       "label":  "talisman_storm_start_plus",
+                       "file":  "fxhero_talisman_storm_start_plus_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "thunder_talisman_a",
+                       "label":  "thunder_talisman_a",
+                       "file":  "fxhero_thunder_talisman_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "thunder_talisman_b",
+                       "label":  "thunder_talisman_b",
+                       "file":  "fxhero_thunder_talisman_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "thunder_talisman_plus_a",
+                       "label":  "thunder_talisman_plus_a",
+                       "file":  "fxhero_thunder_talisman_plus_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "thunder_talisman_plus_b",
+                       "label":  "thunder_talisman_plus_b",
+                       "file":  "fxhero_thunder_talisman_plus_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  543,
+                       "cellH":  362,
+                       "pivotPx":  [
+                                       272,
+                                       181
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5009,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_baekho_a",
+                       "label":  "ult_baekho_a",
+                       "file":  "fxhero_ult_baekho_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  776,
+                       "cellH":  518,
+                       "pivotPx":  [
+                                       388,
+                                       259
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_baekho_b",
+                       "label":  "ult_baekho_b",
+                       "file":  "fxhero_ult_baekho_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  776,
+                       "cellH":  518,
+                       "pivotPx":  [
+                                       388,
+                                       259
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_cheongryong_a",
+                       "label":  "ult_cheongryong_a",
+                       "file":  "fxhero_ult_cheongryong_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  776,
+                       "cellH":  518,
+                       "pivotPx":  [
+                                       388,
+                                       259
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_cheongryong_b",
+                       "label":  "ult_cheongryong_b",
+                       "file":  "fxhero_ult_cheongryong_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  776,
+                       "cellH":  518,
+                       "pivotPx":  [
+                                       388,
+                                       259
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_gate_seal_a",
+                       "label":  "ult_gate_seal_a",
+                       "file":  "fxhero_ult_gate_seal_a_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  448,
+                       "cellH":  896,
+                       "pivotPx":  [
+                                       224,
+                                       448
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_gate_seal_b",
+                       "label":  "ult_gate_seal_b",
+                       "file":  "fxhero_ult_gate_seal_b_strip.png",
+                       "frames":  4,
+                       "fps":  12,
+                       "cellW":  448,
+                       "cellH":  896,
+                       "pivotPx":  [
+                                       224,
+                                       448
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_girin_a",
+                       "label":  "ult_girin_a",
+                       "file":  "fxhero_ult_girin_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  776,
+                       "cellH":  518,
+                       "pivotPx":  [
+                                       388,
+                                       259
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_girin_b",
+                       "label":  "ult_girin_b",
+                       "file":  "fxhero_ult_girin_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  776,
+                       "cellH":  518,
+                       "pivotPx":  [
+                                       388,
+                                       259
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_hyeonmu_a",
+                       "label":  "ult_hyeonmu_a",
+                       "file":  "fxhero_ult_hyeonmu_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  448,
+                       "cellH":  896,
+                       "pivotPx":  [
+                                       224,
+                                       448
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_hyeonmu_b",
+                       "label":  "ult_hyeonmu_b",
+                       "file":  "fxhero_ult_hyeonmu_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  448,
+                       "cellH":  896,
+                       "pivotPx":  [
+                                       224,
+                                       448
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_jujak_a",
+                       "label":  "ult_jujak_a",
+                       "file":  "fxhero_ult_jujak_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  448,
+                       "cellH":  896,
+                       "pivotPx":  [
+                                       224,
+                                       448
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "ult_jujak_b",
+                       "label":  "ult_jujak_b",
+                       "file":  "fxhero_ult_jujak_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  448,
+                       "cellH":  896,
+                       "pivotPx":  [
+                                       224,
+                                       448
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_burst_a",
+                       "label":  "yogi_burst_a",
+                       "file":  "fxhero_yogi_burst_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_burst_b",
+                       "label":  "yogi_burst_b",
+                       "file":  "fxhero_yogi_burst_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  314,
+                       "cellH":  627,
+                       "pivotPx":  [
+                                       157,
+                                       314
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.4992
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_full_aura_end_a",
+                       "label":  "yogi_full_aura_end_a",
+                       "file":  "fxhero_yogi_full_aura_end_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_full_aura_end_b",
+                       "label":  "yogi_full_aura_end_b",
+                       "file":  "fxhero_yogi_full_aura_end_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_full_aura_loop_a",
+                       "label":  "yogi_full_aura_loop_a",
+                       "file":  "fxhero_yogi_full_aura_loop_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_full_aura_loop_b",
+                       "label":  "yogi_full_aura_loop_b",
+                       "file":  "fxhero_yogi_full_aura_loop_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_full_aura_start_a",
+                       "label":  "yogi_full_aura_start_a",
+                       "file":  "fxhero_yogi_full_aura_start_a_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_full_aura_start_b",
+                       "label":  "yogi_full_aura_start_b",
+                       "file":  "fxhero_yogi_full_aura_start_b_strip.png",
+                       "frames":  2,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_gain_a",
+                       "label":  "yogi_gain_a",
+                       "file":  "fxhero_yogi_gain_a_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "yogi_gain_b",
+                       "label":  "yogi_gain_b",
+                       "file":  "fxhero_yogi_gain_b_strip.png",
+                       "frames":  3,
+                       "fps":  12,
+                       "cellW":  256,
+                       "cellH":  768,
+                       "pivotPx":  [
+                                       128,
+                                       384
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   }
+               ]
+}

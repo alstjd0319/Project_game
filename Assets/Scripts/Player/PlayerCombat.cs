@@ -62,6 +62,14 @@ namespace ParryRL
         [SerializeField] private float attackSkillCooldown = 0.35f;
         [SerializeField, Tooltip("기본 일반공격 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐")] private int attackSkillDamage = 15;
         [SerializeField] private Vector2 meleeSkillBox = new(2.4f, 1.6f);
+        [Header("봉 일반공격 단계 (A를 이어 누르면 1 → 2 → 3단)")]
+        [SerializeField, Tooltip("2단 / 3단 데미지 (1단은 위 일반공격 데미지)")] private int comboDamage2 = 18;
+        [SerializeField] private int comboDamage3 = 28;
+        [SerializeField, Tooltip("2단 베기 박스 (앞쪽, 위로 올려 벰)")] private Vector2 comboBox2 = new(2.6f, 1.9f);
+        [SerializeField, Tooltip("3단 마무리 박스 — 플레이어를 가운데로 양옆을 모두 휩쓴다")] private Vector2 comboBox3 = new(3.4f, 2.2f);
+        [SerializeField, Tooltip("3단 마무리에 맞은 적의 기절 시간")] private float comboStun3 = 0.35f;
+        [SerializeField, Tooltip("마무리(3단) 뒤 다음 공격까지 쿨타임 — 1·2단보다 길게 두어 박자를 만든다")] private float comboFinisherCooldown = 0.6f;
+        [SerializeField, Tooltip("한 단을 치고 쿨타임이 끝난 뒤에도 이 시간 안에 다음 A를 누르면 다음 단으로 이어진다")] private float comboWindow = 0.6f;
 
         [Header("원거리 무기 (Q로 전환) — 일반공격과 반격이 화살로 바뀐다")]
         [SerializeField, Tooltip("원거리 일반공격 기본 데미지 (근접 15보다 낮게 — 대신 멀리서 안전하게)")] private int arrowDamage = 12;
@@ -124,6 +132,8 @@ namespace ParryRL
         /// <summary>지금 무기의 일반공격 쿨타임 / 기본 데미지.</summary>
         public float AttackSkillCooldown => IsRanged ? arrowCooldown : attackSkillCooldown;
         public float AttackSkillCooldownLeft => _attackCd;
+        /// <summary>봉 일반공격: 다음에 나갈 단 (1~3). 원거리 무기엔 단계가 없다.</summary>
+        public int NextComboStage => Mathf.Clamp(_comboDone + 1, 1, 3);
         public float MoveSkillCooldown => moveSkillCooldown;
         public int Skill1Cost => skill1Cost;
         public int Skill2Cost => skill2Cost;
@@ -154,6 +164,8 @@ namespace ParryRL
         private PlayerDefense _defense;
         private SuccessEffects _effects;
         private float _attackCd;
+        private int _comboDone;        // 이어서 친 단 수 (0 = 처음부터, 다음은 +1단)
+        private float _comboExpire;    // 이 시각이 지나면 다시 1단부터
         private float _moveCd;        // 다음 충전까지 남은 시간 (충전이 가득이면 0)
         private int _moveCharges = -1; // -1 = 아직 초기화 안 됨 (Awake에서 최대치로)
         private float _weaponCd;
@@ -173,6 +185,7 @@ namespace ParryRL
         private void Update()
         {
             _attackCd = Mathf.Max(0f, _attackCd - Time.deltaTime);
+            if (_comboDone > 0 && Time.time > _comboExpire) _comboDone = 0; // 이어치기 시간이 끝나면 1단부터
             if (_moveCharges < 0 || _moveCharges > MoveSkillMaxCharges) _moveCharges = MoveSkillMaxCharges; // 최대 횟수를 바꾸면 맞춘다
             if (_moveCharges < MoveSkillMaxCharges)
             {
@@ -234,9 +247,10 @@ namespace ParryRL
             if (HitFeel.Instance != null) HitFeel.Instance.ParrySuccess(heavy);
             Fx.Sparks(hitPoint, heavy ? new Color(1f, 0.85f, 0.3f) : Color.white, heavy ? 22 : 12, heavy ? 12f : 8f);
             var art = GameAssets.AttackFx;
-            if (art != null) FxClip.PlayAt(IsRanged ? art.parryRanged : art.parryMelee, hitPoint, heavy ? 1.5f : 1.05f, false, 46); // 둥근 섬광·고리 대신 패링 그림이 성공 이펙트
+            if (art != null) if (IsRanged) FxClip.PlayAt(art.parryRanged, hitPoint, heavy ? 1.5f : 1.05f, false, 46); // 둥근 섬광·고리 대신 패링 그림이 성공 이펙트
+                else FxClip.PlayFit(art.parryMelee, hitPoint, heavy ? new Vector2(4.4f, 1.9f) : new Vector2(3.2f, 1.35f), false, 46); // 봉: 패링 충격파
             // 성공 연출: 플레이어 몸 주변에 요기 흡수 (플레이어 뒤쪽 레이어)
-            if (art != null) FxClip.PlayAt(art.yogiAbsorb, transform.position + Vector3.up * 0.7f, heavy ? 0.9f : 0.7f, false, 8);
+            if (art != null) FxClip.PlayFit(art.yogiAbsorb, transform.position + Vector3.up * 0.55f, heavy ? new Vector2(1.7f, 3.2f) : new Vector2(1.4f, 2.7f), false, 8);
             if (heavy) Hud.ScreenFlash(new Color(1f, 1f, 1f, 0.35f));
         }
 
@@ -285,7 +299,14 @@ namespace ParryRL
                 return false;
             }
 
-            _attackCd = AttackSkillCooldown;
+            int stage = IsRanged ? 1 : NextComboStage;
+            _attackCd = !IsRanged && stage == 3 ? comboFinisherCooldown : AttackSkillCooldown;
+            if (!IsRanged)
+            {
+                // 1·2단을 치면 다음 단으로, 3단(마무리)을 치면 처음으로. 쿨타임 + 이어치기 시간 안에 못 누르면 1단부터
+                _comboDone = stage >= 3 ? 0 : stage;
+                _comboExpire = Time.time + _attackCd + comboWindow;
+            }
             ActionUsed?.Invoke(PlayerAction.Attack);
             Sfx.Play(SfxId.Skill);
             int dir = _motor.Facing;
@@ -302,10 +323,19 @@ namespace ParryRL
             }
             else
             {
-                var center = new Vector2(pos.x + dir * meleeSkillBox.x * 0.5f, pos.y);
-                int hits = MeleeStrike.Spawn(center, meleeSkillBox, new Color(color.r, color.g, color.b, 0.45f), attackSkillDamage, hit,
-                    art: GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeAttack : null, facing: dir);
-                if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
+                var fx = GameAssets.AttackFx;
+                Vector2 box = stage == 1 ? meleeSkillBox : stage == 2 ? comboBox2 : comboBox3;
+                int damage = stage == 1 ? attackSkillDamage : stage == 2 ? comboDamage2 : comboDamage3;
+                var art = fx == null ? null : stage == 1 ? fx.meleeAttack : stage == 2 ? fx.meleeAttack2 : fx.meleeAttack3;
+                // 1·2단은 앞쪽 박스, 3단 마무리는 플레이어를 가운데로 양옆을 휩쓴다 (그림도 몸을 감싸는 회오리)
+                var center = stage == 3 ? new Vector2(pos.x, pos.y) : new Vector2(pos.x + dir * box.x * 0.5f, pos.y);
+                System.Action<EnemyController> onHit = stage == 3 ? e => e.Stun(comboStun3) : null;
+                int hits = MeleeStrike.Spawn(center, box, new Color(color.r, color.g, color.b, 0.45f), damage, hit, onHit, art, dir);
+                if (hits > 0 && HitFeel.Instance != null)
+                {
+                    if (stage == 3) HitFeel.Instance.Play(new HitFeelProfile { hitStop = 0.05f, slowMotion = 0f, slowScale = 1f, shake = 0.2f, shakeDuration = 0.15f });
+                    else HitFeel.Instance.SkillHit();
+                }
                 _motor.Lunge(dir);
             }
             return true;
@@ -371,9 +401,10 @@ namespace ParryRL
             var art = GameAssets.AttackFx != null ? GameAssets.AttackFx.staffSlam : null;
             if (art != null && !art.IsEmpty)
             {
-                const float scale = 1.8f;
-                var at = new Vector2(center.x, GroundY + 0.8f * scale);
-                FxClip.PlayAt(art, at, scale, dir < 0, 11);
+                // 땅 충격파: 판정 박스 폭에 맞춰 바닥에 붙여 재생 (그림 아래 끝 = 바닥)
+                float scale = FxClip.FitScale(art, new Vector2(slamBox.x * 1.15f, 2.4f));
+                float hgt = art.frames[0].bounds.size.y * scale;
+                FxClip.PlayAt(art, new Vector2(center.x, GroundY + hgt * 0.5f - 0.05f), scale, dir < 0, 11);
             }
             Fx.Sparks(new Vector2(center.x, GroundY + 0.1f), new Color(0.6f, 1f, 0.95f), 14, 8f);
             if (HitFeel.Instance != null)
@@ -399,8 +430,9 @@ namespace ParryRL
         {
             var hit = NewHit(DamageSource.AttackSkill, false);
             var ground = new Vector2(pos.x + dir * sealDistance, GroundY);
-            var art = GameAssets.AttackFx != null ? GameAssets.AttackFx.talismanSeal : null;
-            SealZone.Spawn(ground, sealBox, sealDuration, sealTickInterval, sealTickDamage, hit, art, 2f);
+            var fx = GameAssets.AttackFx;
+            SealZone.Spawn(ground, sealBox, sealDuration, sealTickInterval, sealTickDamage, hit,
+                fx != null ? fx.sealStart : null, fx != null ? fx.sealLoop : null, fx != null ? fx.sealEnd : null);
         }
 
         /// <summary>씬을 넘어 이어받은 무기를 조용히 맞춘다 (전환 쿨타임·교체 모션·효과 없음).</summary>
@@ -409,6 +441,7 @@ namespace ParryRL
         /// <summary>Q: 근접 ↔ 원거리. 방어 활성 중이거나 쿨타임이면 안 된다. 도력은 쓰지 않는다.</summary>
         public bool TrySwitchWeapon()
         {
+            _comboDone = 0; // 무기를 바꾸면 단계는 처음부터
             if (_party.IsDead) return false;
             if (_weaponCd > 0f || _defense.State == DefenseState.Active)
             {

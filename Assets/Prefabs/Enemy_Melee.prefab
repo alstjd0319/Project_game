@@ -191,6 +191,7 @@ MonoBehaviour:
   recoverTime: 0.35
   normalDamage: 10
   heavyDamage: 20
+  pressCueFraction: 0.8
   normalWindupScale: 1.06
   heavyWindupScale: 1.25
   normalAttackColor: {r: 1, g: 0.7, b: 0.45, a: 0.55}

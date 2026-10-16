@@ -629,6 +629,12 @@ namespace ParryRL.EditorTools
         {
             if (!AssetDatabase.IsValidFolder(FxDir)) return;
             ImportFrames(FxDir, _ => CenterPivot);
+            // 봉인진 그림은 런타임에 빛기둥 층의 아래를 흐리게 만들려고 읽기 가능으로 임포트한다 (SealZone.MakePillars)
+            foreach (string guid in AssetDatabase.FindAssets("fxhero_seal_ t:Texture2D", new[] { FxDir }))
+            {
+                var imp = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid));
+                if (imp != null && !imp.isReadable) { imp.isReadable = true; imp.SaveAndReimport(); }
+            }
 
             var fx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
             if (fx == null)
@@ -638,21 +644,26 @@ namespace ParryRL.EditorTools
             }
             fx.enemySlash = new SpriteClip();       // 창귀 베기는 몸 그림이 맡는다 (판정 박스만 표시)
             fx.enemyHeavySlash = new SpriteClip();
-            fx.meleeCounter = LoadClip(FxDir, "fx", "staff_thrust", 20f);
-            fx.meleeAttack = LoadClip(FxDir, "fx", "staff_slash", 20f);
-            fx.parryMelee = LoadClip(FxDir, "fx", "parry_staff", 20f);
+            fx.meleeCounter = LoadClip(FxDir, "fxhero", "counter_big", 12f);   // 1016 퇴마사 이펙트(Tools/gwimun_sprites/cut_fxhero.py)
+            fx.meleeAttack = LoadClip(FxDir, "fxhero", "combo1", 12f);
+            fx.meleeAttack2 = LoadClip(FxDir, "fxhero", "combo2", 12f);
+            fx.meleeAttack3 = LoadClip(FxDir, "fxhero", "combo3", 12f);
+            fx.parryMelee = LoadClip(FxDir, "fxhero", "parry_shockwave", 12f);
             fx.parryRanged = LoadClip(FxDir, "fx", "parry_talisman", 16f);
             fx.talismanProjectile = LoadClip(FxDir, "fx", "talisman_projectile", 16f);
-            fx.talismanBurst = LoadClip(FxDir, "fx", "talisman_burst", 16f);
+            fx.talismanBurst = LoadClip(FxDir, "fxhero", "talisman_hit", 12f);
             fx.hitSpark = LoadClip(FxDir, "fx", "hit_spark", 20f);
             fx.yokaiDissolve = LoadClip(FxDir, "fx", "yokai_dissolve", 12f);
             fx.heavyWarning = LoadClip(FxDir, "fx", "heavy_warning", 12f);
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
-            fx.yogiAbsorb = LoadClip(FxDir, "fx", "yogi_absorb", 14f);
+            fx.yogiAbsorb = LoadClip(FxDir, "fxhero", "yogi_gain", 12f);
             fx.gatePortal = LoadClip(FxDir, "fx", "gate_portal", 10f);
             fx.portalSwirl = LoadClip(FxDir, "fx", "portal_swirl", 14f); // 16장 (Tools/gwimun_sprites/make_portal_swirl.py), 한 바퀴 약 1.1초
-            fx.staffSlam = LoadClip(FxDir, "fx", "staff_slam", 16f);
-            fx.talismanSeal = LoadClip(FxDir, "fx", "talisman_seal", 12f);
+            fx.staffSlam = LoadClip(FxDir, "fxhero", "quake_wave", 12f);
+            fx.sealStart = LoadClip(FxDir, "fxhero", "seal_start", 12f);
+            fx.sealLoop = LoadClip(FxDir, "fxhero", "seal_loop", 12f);
+            fx.sealEnd = LoadClip(FxDir, "fxhero", "seal_end", 12f);
+            fx.perfectParry = LoadClip(FxDir, "fxhero", "perfect_parry", 12f);
             fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);
             EditorUtility.SetDirty(fx);
         }

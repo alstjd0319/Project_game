@@ -40,6 +40,8 @@ namespace ParryRL
             float k = parryIntensity;
 
             Hud.WorldText(transform.position + Vector3.up * 2.4f, parryText, color, 1.5f);
+            var art = GameAssets.AttackFx;
+            if (art != null) FxClip.PlayFit(art.perfectParry, hitPoint, new Vector2(2.8f, 3.2f), false, 47); // 퍼펙트 패링 그림
             Hud.ScreenFlash(new Color(color.r, color.g, color.b, Mathf.Min(0.6f, 0.35f * k)));
             SpeedLines(hitPoint, color);
 

@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1079394532
+--- !u!1 &355180142
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,10 +127,60 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1079394536}
-  - component: {fileID: 1079394535}
-  - component: {fileID: 1079394534}
-  - component: {fileID: 1079394533}
+  - component: {fileID: 355180144}
+  - component: {fileID: 355180143}
+  m_Layer: 0
+  m_Name: Background
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &355180143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355180142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32a1b899be31f4bfb98cd32ec6aae5dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ParryRL::ParryRL.ParallaxBackground
+  sets:
+  - {fileID: 11400000, guid: bef0f00dddd894dc2a064709b37dae02, type: 2}
+  - {fileID: 11400000, guid: 5fcf4009a827a42f39eeadfd1d71265b, type: 2}
+  - {fileID: 11400000, guid: 814a467634d3d49d588a0a23e60cd2ae, type: 2}
+  - {fileID: 11400000, guid: 1bc06eba784ed48629e4c9e9922628f5, type: 2}
+  forcedZone: 0
+--- !u!4 &355180144
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355180142}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &400473196
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 400473200}
+  - component: {fileID: 400473199}
+  - component: {fileID: 400473198}
+  - component: {fileID: 400473197}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -138,34 +188,34 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1079394533
+--- !u!114 &400473197
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1079394532}
+  m_GameObject: {fileID: 400473196}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bfa85100245d44be48498e67c1071bbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ParryRL::ParryRL.MenuCameraPan
   speed: 0.8
---- !u!81 &1079394534
+--- !u!81 &400473198
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1079394532}
+  m_GameObject: {fileID: 400473196}
   m_Enabled: 1
---- !u!20 &1079394535
+--- !u!20 &400473199
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1079394532}
+  m_GameObject: {fileID: 400473196}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -210,13 +260,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &1079394536
+--- !u!4 &400473200
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1079394532}
+  m_GameObject: {fileID: 400473196}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 3.5, z: -10}
@@ -225,7 +275,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1375092946
+--- !u!1 &511763130
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -233,59 +283,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1375092948}
-  - component: {fileID: 1375092947}
-  m_Layer: 0
-  m_Name: Background
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1375092947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1375092946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32a1b899be31f4bfb98cd32ec6aae5dd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ParryRL::ParryRL.ParallaxBackground
-  sets:
-  - {fileID: 11400000, guid: bef0f00dddd894dc2a064709b37dae02, type: 2}
-  - {fileID: 11400000, guid: 5fcf4009a827a42f39eeadfd1d71265b, type: 2}
-  - {fileID: 11400000, guid: 814a467634d3d49d588a0a23e60cd2ae, type: 2}
-  - {fileID: 11400000, guid: 1bc06eba784ed48629e4c9e9922628f5, type: 2}
-  forcedZone: 0
---- !u!4 &1375092948
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1375092946}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1389820492
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1389820495}
-  - component: {fileID: 1389820494}
-  - component: {fileID: 1389820493}
+  - component: {fileID: 511763133}
+  - component: {fileID: 511763132}
+  - component: {fileID: 511763131}
   m_Layer: 0
   m_Name: Systems
   m_TagString: Untagged
@@ -293,13 +293,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1389820493
+--- !u!114 &511763131
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1389820492}
+  m_GameObject: {fileID: 511763130}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52cdf63708d8189459d9206a0ea28cfb, type: 3}
@@ -308,13 +308,13 @@ MonoBehaviour:
   masterVolume: 0.7
   parryClip: {fileID: 0}
   perfectParryClip: {fileID: 0}
---- !u!82 &1389820494
+--- !u!82 &511763132
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1389820492}
+  m_GameObject: {fileID: 511763130}
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
@@ -405,13 +405,13 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!4 &1389820495
+--- !u!4 &511763133
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1389820492}
+  m_GameObject: {fileID: 511763130}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -420,7 +420,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1992077548
+--- !u!1 &1227428117
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -428,8 +428,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1992077550}
-  - component: {fileID: 1992077549}
+  - component: {fileID: 1227428119}
+  - component: {fileID: 1227428118}
   m_Layer: 0
   m_Name: StartMenu
   m_TagString: Untagged
@@ -437,26 +437,26 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1992077549
+--- !u!114 &1227428118
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1992077548}
+  m_GameObject: {fileID: 1227428117}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a74eb38cd9e1e4961986e7912766bceb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ParryRL::ParryRL.StartMenu
   heroArt: {fileID: 0}
---- !u!4 &1992077550
+--- !u!4 &1227428119
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1992077548}
+  m_GameObject: {fileID: 1227428117}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -469,7 +469,7 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1079394536}
-  - {fileID: 1389820495}
-  - {fileID: 1375092948}
-  - {fileID: 1992077550}
+  - {fileID: 400473200}
+  - {fileID: 511763133}
+  - {fileID: 355180144}
+  - {fileID: 1227428119}

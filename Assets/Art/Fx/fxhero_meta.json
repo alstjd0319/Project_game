@@ -1,0 +1,98 @@
+{
+ "combo1": {
+  "frames": 4,
+  "fps": 12,
+  "size": [
+   282,
+   198
+  ]
+ },
+ "combo2": {
+  "frames": 4,
+  "fps": 12,
+  "size": [
+   325,
+   266
+  ]
+ },
+ "combo3": {
+  "frames": 5,
+  "fps": 12,
+  "size": [
+   273,
+   210
+  ]
+ },
+ "counter_big": {
+  "frames": 5,
+  "fps": 12,
+  "size": [
+   301,
+   139
+  ]
+ },
+ "parry_shockwave": {
+  "frames": 5,
+  "fps": 12,
+  "size": [
+   289,
+   116
+  ]
+ },
+ "perfect_parry": {
+  "frames": 6,
+  "fps": 12,
+  "size": [
+   176,
+   208
+  ]
+ },
+ "yogi_gain": {
+  "frames": 6,
+  "fps": 12,
+  "size": [
+   165,
+   321
+  ]
+ },
+ "talisman_hit": {
+  "frames": 5,
+  "fps": 12,
+  "size": [
+   187,
+   187
+  ]
+ },
+ "quake_wave": {
+  "frames": 6,
+  "fps": 12,
+  "size": [
+   439,
+   191
+  ]
+ },
+ "seal_start": {
+  "frames": 5,
+  "fps": 12,
+  "size": [
+   358,
+   326
+  ]
+ },
+ "seal_loop": {
+  "frames": 6,
+  "fps": 12,
+  "size": [
+   358,
+   326
+  ]
+ },
+ "seal_end": {
+  "frames": 5,
+  "fps": 12,
+  "size": [
+   358,
+   326
+  ]
+ }
+}

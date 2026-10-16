@@ -137,7 +137,7 @@ namespace ParryRL
         {
             color = _combat.WeaponColor,
             icon = Skill(_combat.IsRanged ? 4 : 1),
-            name = _combat.IsRanged ? "일반공격 · 화살" : "일반공격 · 베기",
+            name = _combat.IsRanged ? "일반공격 · 화살" : $"베기 {_combat.NextComboStage}단",
             cost = _combat.AttackSkillGaugeCost,
             affordable = _gauge.CanSpend(_combat.AttackSkillGaugeCost),
             blocked = _defense.State == DefenseState.Active,
