@@ -41,11 +41,10 @@ namespace ParryRL.EditorTools
             if (!File.Exists(PrototypeSceneBuilder.StartScenePath) || !File.Exists(PrototypeSceneBuilder.HubScenePath) || !File.Exists(PrototypeSceneBuilder.ScenePath))
                 PrototypeSceneBuilder.Build();
 
+            // 제품명만 맞춘다. 해상도·전체화면 모드·창 크기 조절은 건드리지 않는다 —
+            // 에디터의 Project Settings → Player(Build Profiles → Player Settings)에서 고른 값이 그대로 빌드에 쓰이게 하려는 것이다.
+            // (예전엔 여기서 1600×900 창 모드로 덮어써서, 에디터에서 바꾼 설정이 런처 빌드에는 반영되지 않았다.)
             PlayerSettings.productName = GameName;
-            PlayerSettings.defaultScreenWidth = 1600;
-            PlayerSettings.defaultScreenHeight = 900;
-            PlayerSettings.fullScreenMode = FullScreenMode.Windowed; // 창 모드로 시작 (Alt+Enter 등 OS 기능으로 전체화면 가능)
-            PlayerSettings.resizableWindow = true;
 
             string fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", relativePath));
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));

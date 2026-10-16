@@ -51,7 +51,7 @@
 
 ## 런처 · 빌드 (2026-10-14)
 
-- `Editor/GameBuilder.cs`: 독립 실행형 빌드. 메뉴 Tools → ParryRL → 게임 빌드 (macOS / Windows), 배치는 `-executeMethod ParryRL.EditorTools.GameBuilder.BuildMac|BuildWindows`. 씬이 없으면 `PrototypeSceneBuilder.Build`로 먼저 만들고, 씬은 Start(0) → Prototype(1). 빌드 때 PlayerSettings를 맞춘다: 제품명 "귀문", 창 모드 1600×900(크기 조절 가능). 결과는 `Builds/`(gitignore).
+- `Editor/GameBuilder.cs`: 독립 실행형 빌드. 메뉴 Tools → ParryRL → 게임 빌드 (macOS / Windows), 배치는 `-executeMethod ParryRL.EditorTools.GameBuilder.BuildMac|BuildWindows`. 씬이 없으면 `PrototypeSceneBuilder.Build`로 먼저 만들고, 씬은 Start(0) → Prototype(1). 빌드 때 PlayerSettings를 맞춘다: 제품명만 "귀문"으로 맞춘다 — **해상도·전체화면 모드·창 크기 조절은 코드가 덮어쓰지 않고 에디터의 Project Settings → Player 값(`ProjectSettings.asset`)을 그대로 쓴다** (2026-10-16 이전엔 1600×900 창 모드로 덮어써서 에디터에서 바꾼 설정이 런처 빌드에 안 먹었다). 지금 값은 `fullscreenMode: 2`(Maximized Window). 결과는 `Builds/`(gitignore).
 - `Tools/launcher/귀문_실행.command`(macOS) · `귀문_실행.bat` → `귀문_실행.ps1`(Windows, **UTF-8 BOM 필수**): 빌드가 없으면 Unity 배치로 빌드한 뒤 실행. Unity가 프로젝트를 열고 있으면 배치 빌드가 막히니 사본에서 빌드하거나 에디터 메뉴를 쓴다. `바탕화면에_설치.command`(macOS)는 빌드를 `~/Desktop/귀문.app`으로 복사하고, `바탕화면에_설치.bat`(Windows)는 `귀문.lnk` 바로가기를 만든다. Mac 빌드·바탕화면 설치는 이 PC에서 확인됨(14초, 177MB, 앱이 뜨고 예외 없음), **Windows 빌드는 이 PC에 모듈이 없어 확인 못 했다.**
 - 빌드에서 튜닝 파일은 `Tuning/tuning.json`이 아니라 `persistentDataPath`(제품명 폴더)의 `tuning.json`을 쓴다 (`GameTuning.FilePath`).
 
