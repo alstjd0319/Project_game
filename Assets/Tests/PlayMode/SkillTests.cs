@@ -99,6 +99,22 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 봉_베기_이펙트는_이동하며_공격해도_플레이어를_따라가_뒤로_밀리지_않는다()
+        {
+            TestScene.SetAttackSkillFree(true);
+            Assert.IsTrue(_combat.TryAttackSkill());
+            var clip = Object.FindAnyObjectByType<FxClip>();
+            Assert.IsNotNull(clip, "베기 이펙트");
+            float offset = clip.transform.position.x - _combat.transform.position.x;
+            // 공격 직후 플레이어가 앞으로 크게 이동 (돌진·달리기 대신 위치를 직접 옮김)
+            var rb = _combat.GetComponent<Rigidbody2D>();
+            rb.position += new Vector2(1.2f, 0f);
+            _combat.transform.position += new Vector3(1.2f, 0f, 0f);
+            yield return null;
+            Assert.AreEqual(offset, clip.transform.position.x - _combat.transform.position.x, 0.01f, "이펙트는 플레이어와의 거리를 유지하며 따라간다");
+        }
+
+        [UnityTest]
         public IEnumerator D스킬은_도력_3을_쓰고_부족하면_안_나간다()
         {
             Assert.IsFalse(_combat.TrySkill(1), "도력 0 — 발동 불가");

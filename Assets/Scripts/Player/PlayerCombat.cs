@@ -276,7 +276,7 @@ namespace ParryRL
                 var center = new Vector2(pos.x + dir * meleeCounterRange * 0.5f, pos.y);
                 var boxColor = new Color(color.r, color.g, color.b, 0.6f);
                 MeleeStrike.Spawn(center, new Vector2(meleeCounterRange, meleeCounterHeight), boxColor, counterDamage, hit,
-                    art: GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeCounter : null, facing: dir);
+                    art: GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeCounter : null, facing: dir, follow: transform);
                 _motor.Lunge(dir);
             }
             CounterFired?.Invoke(new CounterShot(hit, pos, target, dir));
@@ -330,7 +330,7 @@ namespace ParryRL
                 // 1·2단은 앞쪽 박스, 3단 마무리는 플레이어를 가운데로 양옆을 휩쓴다 (그림도 몸을 감싸는 회오리)
                 var center = stage == 3 ? new Vector2(pos.x, pos.y) : new Vector2(pos.x + dir * box.x * 0.5f, pos.y);
                 System.Action<EnemyController> onHit = stage == 3 ? e => e.Stun(comboStun3) : null;
-                int hits = MeleeStrike.Spawn(center, box, new Color(color.r, color.g, color.b, 0.45f), damage, hit, onHit, art, dir);
+                int hits = MeleeStrike.Spawn(center, box, new Color(color.r, color.g, color.b, 0.45f), damage, hit, onHit, art, dir, follow: transform);
                 if (hits > 0 && HitFeel.Instance != null)
                 {
                     if (stage == 3) HitFeel.Instance.Play(new HitFeelProfile { hitStop = 0.05f, slowMotion = 0f, slowScale = 1f, shake = 0.2f, shakeDuration = 0.15f });
@@ -384,7 +384,7 @@ namespace ParryRL
             var center = new Vector2(pos.x + dir * sweepBox.x * 0.5f, pos.y);
             var hit = NewHit(DamageSource.AttackSkill, false);
             int hits = MeleeStrike.Spawn(center, sweepBox, new Color(WeaponColor.r, WeaponColor.g, WeaponColor.b, 0.45f), sweepDamage, hit,
-                e => e.Stun(sweepStun), GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeAttack : null, dir, stretchArt: true);
+                e => e.Stun(sweepStun), GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeAttack : null, dir, stretchArt: true, follow: transform);
             if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
             _motor.Lunge(dir);
         }

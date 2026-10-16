@@ -82,6 +82,28 @@ namespace ParryRL
             return Mathf.Min(maxSize.x / s.x, maxSize.y / s.y);
         }
 
+        private Transform _follow;
+        private Vector3 _followOffset;
+
+        /// <summary>
+        /// 재생하는 동안 target(플레이어)을 따라 움직이게 한다. 지금 위치와 target의 차이(오프셋)를 유지한다.
+        /// 판정은 공격이 나간 순간 한 번뿐이지만, 그 뒤 플레이어가 이동·돌진해도 그림이 뒤에 처지지 않게 하려는 것이다.
+        /// </summary>
+        public FxClip Follow(Transform target)
+        {
+            if (target == null) return this;
+            _follow = target;
+            _followOffset = transform.position - target.position;
+            return this;
+        }
+
+        // 플레이어 이동(물리·보간)이 끝난 뒤에 위치를 맞춘다
+        private void LateUpdate()
+        {
+            if (_follow == null) return;
+            transform.position = _follow.position + _followOffset;
+        }
+
         private void Update()
         {
             _t += Time.unscaledDeltaTime;

@@ -228,6 +228,25 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 봉_베기_이동하며_공격해도_이펙트가_따라간다()
+        {
+            TestScene.SetAttackSkillFree(true);
+            foreach (var e in Object.FindObjectsByType<EnemyController>()) e.gameObject.SetActive(false);
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            var combat = defense.GetComponent<PlayerCombat>();
+            var body = defense.GetComponent<Rigidbody2D>();
+            yield return new WaitForSeconds(0.3f);
+            combat.TryAttackSkill();
+            // 오른쪽으로 달리며 베기 (달리는 중에 공격)
+            for (float t = 0f; t < 0.17f; t += Time.deltaTime)
+            {
+                body.linearVelocity = new Vector2(9f, body.linearVelocity.y);
+                yield return null;
+            }
+            yield return Capture("combo_while_running");
+        }
+
+        [UnityTest]
         public IEnumerator Hud_전투중()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();
