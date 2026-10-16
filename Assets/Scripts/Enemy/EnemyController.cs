@@ -45,8 +45,8 @@ namespace ParryRL
         [SerializeField] private float meleeHeavySlashHeight = 1.4f;
 
         [Header("원거리")]
-        [SerializeField] private float fireRange = 11f;
-        [SerializeField] private float rangedMaxTravel = 16f;
+        [SerializeField, Tooltip("원거리 몬스터 사정거리(유닛). 화면 반폭이 약 10.7이라 11이면 화면 끝에서도 쐈다 → 7로 줄임")] private float fireRange = 7f;
+        [SerializeField, Tooltip("불덩이가 날아가는 최대 거리 (사정거리보다 조금 길게)")] private float rangedMaxTravel = 10f;
 
         public EnemyKind Kind => kind;
         public bool IsDead => _state == State.Dead;

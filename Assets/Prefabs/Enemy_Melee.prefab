@@ -205,8 +205,8 @@ MonoBehaviour:
   meleeAttackHeight: 0.7
   meleeNormalSlashHeight: 1
   meleeHeavySlashHeight: 1.4
-  fireRange: 11
-  rangedMaxTravel: 16
+  fireRange: 7
+  rangedMaxTravel: 10
 --- !u!114 &7774267862081931807
 MonoBehaviour:
   m_ObjectHideFlags: 0
