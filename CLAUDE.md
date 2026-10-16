@@ -215,3 +215,10 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 증상: 바탕화면 `귀문.app`/런처로 실행하면 게임이 바로 죽음 (Player.log: `level0 is corrupted! … Position out of bounds`). 원인: `MenuCameraPan`이 `StartMenu.cs` 안에 같이 있어서, 시작 씬(level0)에 스크립트가 GUID가 아닌 임시 번호(`m_Script: {fileID: 1363278542}`)로 저장됨 → 에디터에서는 멀쩡(테스트 통과)하지만 **빌드된 게임은 그 씬을 못 읽는다** (그래서 "게임 시작이 안 넘어감"도 같은 뿌리였을 수 있다). 같은 실수를 `PlayerPersistence`에서도 한 번 했다.
 - 규칙: **씬에 올라가는 MonoBehaviour는 반드시 클래스 이름과 같은 파일에 둔다** (런타임에 `AddComponent`만 하는 클래스는 상관없지만 습관적으로 분리). `MenuCameraPan`·`MenuHero`를 별도 파일로 분리했고, `SceneIntegrityTests`가 씬 파일에 GUID 없는 스크립트 참조·Missing 스크립트가 있으면 실패한다.
 - 빌드 확인법: 빌드를 실행한 뒤 `~/Library/Logs/DefaultCompany/귀문/Player.log`에 `corrupted`·`Exception`이 없는지 본다.
+
+## 귀문 UI 그림 적용 — 체력 틀·도력 구슬·스킬 아이콘 (2026-10-16)
+- 원본 `ArtSource/gwimun/ui/hud.png`·`icons.png`(에셋 폴더 `원본/ui/`의 사본, 마젠타 배경 1536×1024)를 **직접** 오린다: 미리보기 폴더의 `bg/ui/*` 조각은 대충 잘려 있어(안내.md 5절) 안 쓴다. `Tools/gwimun_sprites/cut_ui.py`(+`ui_cutter.py`: 마젠타 제거·덩어리 찾기)가 `Assets/Art/Ui/ui_*.png` 33장을 만든다 (HUD 조각 15장은 상자 좌표를 스크립트에 적어 둠 — 용 장식 틀·부적 메달처럼 붙은 조각은 자동 구분이 안 돼서; 아이콘 18장은 자동). 다시 오리려면 `python3 -I Tools/gwimun_sprites/cut_ui.py` 후 씬 재생성.
+- `UiArt`(UI/UiArt.cs, ScriptableObject) → 빌더 `CreateUiArt`가 만들어 `GameAssets.uiArt`에 연결, 코드는 `GameAssets.Ui`로 읽는다(없으면 UI는 예전 네모·글자 모양 — `Hud.BuildStatusPlain`).
+- **체력**: 하트 아이콘 + 옥 장식 틀(`hp_frame`) 안쪽 홈 위에 초록 바(`hp_fill`, `Image.Type.Filled`)가 차오른다. 빨강은 적 공격 경고 전용이라 체력도 초록. **도력**: 빈 구슬(`orb_empty`)을 20개 깔고 그 위에 찬 구슬(`orb_full`)을 겹치며 가장 최근에 찬 구슬은 반짝이는 큰 구슬(`orb_spark`). **경험치**: 구리 빈 바 + 보라 채움. 도력 줄 옆엔 등불 아이콘.
+- **스킬 아이콘**(`icons.png`의 틀 포함 12종, `UiArt.skillIcons[0..11]`): 대시=3(회오리 봉) · 패링=7(결계 부적) · 일반공격 봉/부적=1(찌르기)/4(부적 바람) · D 봉/부적=0(휩쓸기 초승달)/5(부적 세 장) · F 봉/부적=2(내려찍기)/6(봉인진) · Q 무기=`weaponStaff/weaponTalisman` 메달. 안 쓴 것: 7 결계(패링으로 씀) 외 8 분신 · 9 사슬 여우 · 10 도력 상승 · 11 잎 부적 — 앞으로 생길 스킬용. 못 쓸 땐 아이콘을 어둡게, 아이콘 뒤는 어두운 중립색(메달이 무기 색으로 비치지 않게).
+- 아직 안 쓴 조각: `dragon_frame`(큰 바용 — 보스 체력 후보), `purple_fill`은 경험치에 사용 중, `orb_string`·`slot_*`·`cooldown_disc`(아이콘이 틀을 포함해 불필요), 스킬 트리·대화창 시트(`skilltree.png`·`dialog_menu.png`)는 스킬 트리 구현 때.

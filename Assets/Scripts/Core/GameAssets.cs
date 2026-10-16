@@ -7,10 +7,28 @@ namespace ParryRL
     {
         [SerializeField] private Sprite square;
         [SerializeField, Tooltip("공격 이펙트 그림 (없으면 네모로 표시)")] private AttackFxArt attackFx;
+        [SerializeField, Tooltip("UI 그림 (체력 틀·도력 구슬·스킬 아이콘; 없으면 네모·글자)")] private UiArt uiArt;
 
         private static Sprite _square;
         private static AttackFxArt _attackFx;
         private static bool _attackFxLooked;
+        private static UiArt _uiArt;
+        private static bool _uiArtLooked;
+
+        /// <summary>UI 그림 묶음. 씬에 없으면 null → UI는 예전 모양으로 그려진다.</summary>
+        public static UiArt Ui
+        {
+            get
+            {
+                if (_uiArt == null && !_uiArtLooked)
+                {
+                    _uiArtLooked = true;
+                    var assets = FindAnyObjectByType<GameAssets>();
+                    if (assets != null) _uiArt = assets.uiArt;
+                }
+                return _uiArt;
+            }
+        }
 
         /// <summary>공격 이펙트 그림. 씬에 없으면 null → 공격은 네모로 보인다.</summary>
         public static AttackFxArt AttackFx
@@ -45,6 +63,8 @@ namespace ParryRL
             if (square != null) _square = square;
             _attackFx = attackFx;
             _attackFxLooked = true;
+            _uiArt = uiArt;
+            _uiArtLooked = true;
         }
 
         private static Sprite CreateRuntimeSquare()

@@ -50,6 +50,8 @@ namespace ParryRL.EditorTools
         private static readonly string[] BgZones = { "shrine", "zone1", "zone2", "zone3" }; // 사당 · 1구간 · 2구간 황천길 · 3구간 저승 문턱 (보스방은 보류)
         private static readonly string[] BgZoneLabels = { "사당", "1구간", "2구간 황천길", "3구간 저승 문턱" };
         private static readonly bool[] BgNearInFront = { false, false, true, true }; // 안내.md: 사당·1구간은 near를 뒤에, 2·3구간은 앞에
+        private const string UiDir = "Assets/Art/Ui";                 // Tools/gwimun_sprites/cut_ui.py가 오린 UI 조각
+        private const string UiArtPath = UiDir + "/UiArt.asset";
         private const string FxDir = "Assets/Art/Fx";
         private const string FxArtPath = FxDir + "/AttackFx.asset";
 
@@ -75,6 +77,7 @@ namespace ParryRL.EditorTools
             CreateHeroArt(WeaponMode.Ranged, TalismanArtPath, "talisman");
             CreateAttackFxArt();
             CreateMentorArt();
+            CreateUiArt();
             if (AssetDatabase.IsValidFolder(PropsDir)) ImportFrames(PropsDir, _ => BottomPivot);
             var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
@@ -89,6 +92,7 @@ namespace ParryRL.EditorTools
             var staffArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(StaffArtPath);
             var talismanArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(TalismanArtPath);
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
+            var uiArt = AssetDatabase.LoadAssetAtPath<UiArt>(UiArtPath);
             var meleePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MeleePrefabPath).GetComponent<EnemyController>();
             var rangedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RangedPrefabPath).GetComponent<EnemyController>();
 
@@ -98,6 +102,7 @@ namespace ParryRL.EditorTools
             var gameAssets = systems.AddComponent<GameAssets>();
             Set(gameAssets, "square", _square);
             if (attackFx != null) Set(gameAssets, "attackFx", attackFx);
+            if (uiArt != null) Set(gameAssets, "uiArt", uiArt);
             systems.AddComponent<HitFeel>();
             systems.AddComponent<AudioSource>();
             var sfx = systems.AddComponent<Sfx>();
@@ -273,12 +278,14 @@ namespace ParryRL.EditorTools
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
             var mentorArt = AssetDatabase.LoadAssetAtPath<NpcArt>(MentorArtPath);
             var gateSprite = AssetDatabase.LoadAssetAtPath<Sprite>(GateSpritePath);
+            var uiArt = AssetDatabase.LoadAssetAtPath<UiArt>(UiArtPath);
 
             var systems = new GameObject("Systems");
             systems.AddComponent<GameManager>();
             var gameAssets = systems.AddComponent<GameAssets>();
             Set(gameAssets, "square", _square);
             if (attackFx != null) Set(gameAssets, "attackFx", attackFx);
+            if (uiArt != null) Set(gameAssets, "uiArt", uiArt);
             systems.AddComponent<HitFeel>();
             systems.AddComponent<AudioSource>();
             var sfx = systems.AddComponent<Sfx>();
@@ -499,6 +506,29 @@ namespace ParryRL.EditorTools
             art.idle = LoadClip(MentorArtDir, "mentor", "idle", 5f);
             art.talk = LoadClip(MentorArtDir, "mentor", "talk", 6f);
             art.bless = LoadClip(MentorArtDir, "mentor", "bless", 8f);
+            EditorUtility.SetDirty(art);
+        }
+
+        /// <summary>UI 조각(ui_*.png)을 도트 설정으로 임포트하고 UiArt로 묶는다. 피벗은 가운데.</summary>
+        private static void CreateUiArt()
+        {
+            if (!AssetDatabase.IsValidFolder(UiDir)) return;
+            ImportFrames(UiDir, _ => CenterPivot);
+            var art = AssetDatabase.LoadAssetAtPath<UiArt>(UiArtPath);
+            if (art == null)
+            {
+                art = ScriptableObject.CreateInstance<UiArt>();
+                AssetDatabase.CreateAsset(art, UiArtPath);
+            }
+            Sprite S(string name) => AssetDatabase.LoadAssetAtPath<Sprite>($"{UiDir}/ui_{name}.png");
+            art.hpFrame = S("hp_frame"); art.hpFill = S("hp_fill"); art.barEmpty = S("bar_empty");
+            art.purpleFill = S("purple_fill"); art.dragonFrame = S("dragon_frame");
+            art.orbEmpty = S("orb_empty"); art.orbFull = S("orb_full"); art.orbSpark = S("orb_spark"); art.orbString = S("orb_string");
+            art.slotParchment = S("slot_parchment"); art.slotActive = S("slot_active"); art.slotLocked = S("slot_locked");
+            art.cooldownDisc = S("cooldown_disc"); art.weaponStaff = S("weapon_staff"); art.weaponTalisman = S("weapon_talisman");
+            art.iconHeart = S("icon_heart"); art.iconLantern = S("icon_lantern");
+            art.skillIcons = new Sprite[12];
+            for (int i = 0; i < 12; i++) art.skillIcons[i] = S($"skill_{i:00}");
             EditorUtility.SetDirty(art);
         }
 

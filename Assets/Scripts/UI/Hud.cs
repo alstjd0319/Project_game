@@ -149,7 +149,7 @@ namespace ParryRL
         {
             if (_party != null)
             {
-                _hpFill.rectTransform.anchorMax = new Vector2((float)_party.Hp / _party.MaxHp, 1f);
+                SetBarFill(_hpFill, (float)_party.Hp / _party.MaxHp);
                 _hpText.text = $"HP {_party.Hp} / {_party.MaxHp}";
                 var cur = _party.Current;
                 _combat ??= FindAnyObjectByType<PlayerCombat>();
@@ -166,7 +166,19 @@ namespace ParryRL
                 {
                     bool filled = i < _gauge.Value;
                     var core = _gaugeCells[i];
-                    if (filled)
+                    if (_orbSprites)
+                    {
+                        // 귀문 UI 구슬: 빈 구슬 위에 찬 구슬을 겹친다. 가장 최근에 찬 구슬은 반짝이는 큰 구슬
+                        var art = GameAssets.Ui;
+                        bool isNewest = filled && i == _gauge.Value - 1;
+                        float pulse = 0.88f + 0.12f * Mathf.Sin(t * 3f + i * 0.5f);
+                        core.sprite = isNewest ? art.orbSpark : art.orbFull;
+                        core.color = filled ? new Color(1f, 1f, 1f, isNewest ? 1f : pulse) : Color.clear;
+                        float k = isNewest ? 1.9f + 0.12f * Mathf.Sin(t * 5f) : 1f;
+                        core.rectTransform.localScale = Vector3.one * k;
+                        if (isNewest) core.transform.SetAsLastSibling();
+                    }
+                    else if (filled)
                     {
                         Color c = i < 10 ? new Color(0.55f, 0.95f, 0.88f) : new Color(0.78f, 0.55f, 1f);
                         float pulse = 0.85f + 0.15f * Mathf.Sin(t * 3f + i * 0.5f);
@@ -191,14 +203,25 @@ namespace ParryRL
             if (_level != null)
             {
                 _levelText.text = $"Lv.{_level.Level}";
-                _xpFill.rectTransform.anchorMax = new Vector2((float)_level.Xp / _level.XpToNext, 1f);
+                SetBarFill(_xpFill, (float)_level.Xp / _level.XpToNext);
                 _xpText.text = $"EXP {_level.Xp} / {_level.XpToNext}";
                 _xpFlash = Mathf.Max(0f, _xpFlash - Time.unscaledDeltaTime * 4f);
-                _xpFill.color = Color.Lerp(new Color(0.45f, 0.9f, 1f), Color.white, _xpFlash);
+                // 그림 바는 밝히기만 할 수 있어 평소를 살짝 어둡게 두고 경험치를 얻으면 원래 밝기로
+                var xpBase = _orbSprites ? new Color(0.78f, 0.76f, 0.9f) : new Color(0.45f, 0.9f, 1f);
+                _xpFill.color = Color.Lerp(xpBase, Color.white, _xpFlash);
             }
         }
 
         private PlayerCombat _combat;
+        private bool _orbSprites;
+
+        /// <summary>바 채움: 그림 바는 fillAmount로, 네모 바는 오른쪽 끝(anchorMax)으로 줄인다.</summary>
+        private static void SetBarFill(Image fill, float ratio)
+        {
+            ratio = Mathf.Clamp01(ratio);
+            if (fill.type == Image.Type.Filled) fill.fillAmount = ratio;
+            else fill.rectTransform.anchorMax = new Vector2(ratio, 1f);
+        }
 
         /// <summary>기본값(배율 1, 감소 0)이 아닌 패시브만 표시. 예: "  공격 ×1.5 · 받는 피해 -30%" / "  이속 +30%"</summary>
         private static string PassiveLabel(CharacterKind kind, bool ranged)
@@ -286,43 +309,11 @@ namespace ParryRL
             _characterText = UiKit.Text("Character", panel, 36, TextAnchor.UpperLeft);
             UiKit.Place(_characterText.rectTransform, new Vector2(0, 1), new Vector2(16, -10), new Vector2(590, 48));
 
-            var hpBg = UiKit.Image("HpBg", panel, new Color(1f, 1f, 1f, 0.12f)).rectTransform;
-            UiKit.Place(hpBg, new Vector2(0, 1), new Vector2(16, -64), new Vector2(588, 30));
-            _hpFill = UiKit.Image("HpFill", hpBg, new Color(0.9f, 0.25f, 0.3f));
-            UiKit.Stretch(_hpFill.rectTransform);
-            _hpText = UiKit.Text("HpText", hpBg, 22, TextAnchor.MiddleCenter);
-            UiKit.Stretch(_hpText.rectTransform);
-
-            // 도력 구슬 20개 (염주처럼 한 줄에 꿰어 있다, 10개째 뒤에 매듭 간격)
-            const float cell = 24f, gap = 4f, midGap = 12f;
-            var thread = UiKit.Image("GaugeThread", panel, new Color(0.7f, 0.6f, 0.95f, 0.35f)).rectTransform;
-            UiKit.Place(thread, new Vector2(0, 1), new Vector2(10, -104 - cell * 0.5f + 1f), new Vector2(600, 2));
-            for (int i = 0; i < 20; i++)
-            {
-                float x = 16 + i * (cell + gap) + (i >= 10 ? midGap : 0f);
-                var ring = UiKit.Image($"GaugeRing{i}", panel, Color.white);
-                ring.sprite = FxSprites.Ring;
-                UiKit.Place(ring.rectTransform, new Vector2(0, 1), new Vector2(x, -104), new Vector2(cell, cell));
-                _gaugeRings.Add(ring);
-                var core = UiKit.Image($"Gauge{i}", panel, Color.clear);
-                core.sprite = FxSprites.Glow;
-                UiKit.Place(core.rectTransform, new Vector2(0, 1), new Vector2(x + 3f, -107), new Vector2(cell - 6f, cell - 6f));
-                _gaugeCells.Add(core);
-            }
-            _gaugeText = UiKit.Text("GaugeText", panel, 22, TextAnchor.UpperLeft);
-            UiKit.Place(_gaugeText.rectTransform, new Vector2(0, 1), new Vector2(16, -134), new Vector2(590, 30));
-
-            // 레벨 + 경험치 바
-            _levelText = UiKit.Text("Level", panel, 26, TextAnchor.MiddleLeft);
-            _levelText.fontStyle = FontStyle.Bold;
-            _levelText.color = new Color(0.45f, 0.9f, 1f);
-            UiKit.Place(_levelText.rectTransform, new Vector2(0, 1), new Vector2(16, -166), new Vector2(80, 26));
-            var xpBg = UiKit.Image("XpBg", panel, new Color(1f, 1f, 1f, 0.12f)).rectTransform;
-            UiKit.Place(xpBg, new Vector2(0, 1), new Vector2(96, -170), new Vector2(508, 18));
-            _xpFill = UiKit.Image("XpFill", xpBg, new Color(0.45f, 0.9f, 1f));
-            UiKit.Stretch(_xpFill.rectTransform);
-            _xpText = UiKit.Text("XpText", xpBg, 16, TextAnchor.MiddleCenter);
-            UiKit.Stretch(_xpText.rectTransform);
+            var ui = GameAssets.Ui;
+            if (ui != null && ui.hpFrame != null && ui.hpFill != null && ui.orbEmpty != null && ui.orbFull != null)
+                BuildStatusWithArt(panel, ui);
+            else
+                BuildStatusPlain(panel);
 
             // 하단 스킬바 (Shift / A / S / D)
             _skillBar = new SkillBar(_root);
@@ -373,6 +364,124 @@ namespace ParryRL
             _pausePanel = CreateOverlay("PausePanel", $"일시 정지\n<size=28>ESC 계속   R 다시 시작{hubHint}   M 시작 화면</size>", pauseButtons.ToArray());
             _gameOverPanel = CreateOverlay("GameOverPanel", $"쓰러졌다\n<size=28>R 다시 시작{hubHint}   M 시작 화면</size>", overButtons.ToArray());
         }
+
+        /// <summary>그림이 없을 때의 예전 모양 (네모 바·글자 도력).</summary>
+        private void BuildStatusPlain(RectTransform panel)
+        {
+            var hpBg = UiKit.Image("HpBg", panel, new Color(1f, 1f, 1f, 0.12f)).rectTransform;
+            UiKit.Place(hpBg, new Vector2(0, 1), new Vector2(16, -64), new Vector2(588, 30));
+            _hpFill = UiKit.Image("HpFill", hpBg, new Color(0.9f, 0.25f, 0.3f));
+            UiKit.Stretch(_hpFill.rectTransform);
+            _hpText = UiKit.Text("HpText", hpBg, 22, TextAnchor.MiddleCenter);
+            UiKit.Stretch(_hpText.rectTransform);
+
+            // 도력 구슬 20개 (염주처럼 한 줄에 꿰어 있다, 10개째 뒤에 매듭 간격)
+            const float cell = 24f, gap = 4f, midGap = 12f;
+            var thread = UiKit.Image("GaugeThread", panel, new Color(0.7f, 0.6f, 0.95f, 0.35f)).rectTransform;
+            UiKit.Place(thread, new Vector2(0, 1), new Vector2(10, -104 - cell * 0.5f + 1f), new Vector2(600, 2));
+            for (int i = 0; i < 20; i++)
+            {
+                float x = 16 + i * (cell + gap) + (i >= 10 ? midGap : 0f);
+                var ring = UiKit.Image($"GaugeRing{i}", panel, Color.white);
+                ring.sprite = FxSprites.Ring;
+                UiKit.Place(ring.rectTransform, new Vector2(0, 1), new Vector2(x, -104), new Vector2(cell, cell));
+                _gaugeRings.Add(ring);
+                var core = UiKit.Image($"Gauge{i}", panel, Color.clear);
+                core.sprite = FxSprites.Glow;
+                UiKit.Place(core.rectTransform, new Vector2(0, 1), new Vector2(x + 3f, -107), new Vector2(cell - 6f, cell - 6f));
+                _gaugeCells.Add(core);
+            }
+            _gaugeText = UiKit.Text("GaugeText", panel, 22, TextAnchor.UpperLeft);
+            UiKit.Place(_gaugeText.rectTransform, new Vector2(0, 1), new Vector2(16, -134), new Vector2(590, 30));
+
+            // 레벨 + 경험치 바
+            _levelText = UiKit.Text("Level", panel, 26, TextAnchor.MiddleLeft);
+            _levelText.fontStyle = FontStyle.Bold;
+            _levelText.color = new Color(0.45f, 0.9f, 1f);
+            UiKit.Place(_levelText.rectTransform, new Vector2(0, 1), new Vector2(16, -166), new Vector2(80, 26));
+            var xpBg = UiKit.Image("XpBg", panel, new Color(1f, 1f, 1f, 0.12f)).rectTransform;
+            UiKit.Place(xpBg, new Vector2(0, 1), new Vector2(96, -170), new Vector2(508, 18));
+            _xpFill = UiKit.Image("XpFill", xpBg, new Color(0.45f, 0.9f, 1f));
+            UiKit.Stretch(_xpFill.rectTransform);
+            _xpText = UiKit.Text("XpText", xpBg, 16, TextAnchor.MiddleCenter);
+            UiKit.Stretch(_xpText.rectTransform);
+        }
+
+        /// <summary>귀문 UI 그림: 옥 장식 체력 틀 + 초록 채움, 구슬 도력, 구리 바 + 보라 채움 경험치.</summary>
+        private void BuildStatusWithArt(RectTransform panel, UiArt ui)
+        {
+            _orbSprites = true;
+            UiKit.Place(panel, new Vector2(0, 1), new Vector2(24, -24), new Vector2(620, 252));
+
+            // 체력: 하트 + 틀 (틀의 어두운 홈 위에 초록 바가 차오른다)
+            var heart = UiKit.Image("HeartIcon", panel, Color.white);
+            heart.sprite = ui.iconHeart;
+            heart.preserveAspect = true;
+            UiKit.Place(heart.rectTransform, new Vector2(0, 1), new Vector2(12, -56), new Vector2(40, 64));
+            var frame = UiKit.Image("HpFrame", panel, Color.white);
+            frame.sprite = ui.hpFrame;
+            UiKit.Place(frame.rectTransform, new Vector2(0, 1), new Vector2(62, -62), new Vector2(544, 63));
+            _hpFill = UiKit.Image("HpFill", frame.rectTransform, Color.white);
+            _hpFill.sprite = ui.hpFill;
+            _hpFill.type = Image.Type.Filled;
+            _hpFill.fillMethod = Image.FillMethod.Horizontal;
+            _hpFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            // 틀 그림(924×107) 안쪽 홈: 가로 9.9%~90%, 세로 28%~78.5%
+            _hpFill.rectTransform.anchorMin = new Vector2(0.099f, 0.215f);
+            _hpFill.rectTransform.anchorMax = new Vector2(0.9f, 0.72f);
+            _hpFill.rectTransform.offsetMin = _hpFill.rectTransform.offsetMax = Vector2.zero;
+            _hpText = UiKit.Text("HpText", frame.rectTransform, 22, TextAnchor.MiddleCenter);
+            _hpText.rectTransform.anchorMin = _hpFill.rectTransform.anchorMin;
+            _hpText.rectTransform.anchorMax = _hpFill.rectTransform.anchorMax;
+            _hpText.rectTransform.offsetMin = _hpText.rectTransform.offsetMax = Vector2.zero;
+
+            // 도력 구슬 20개 (빈 구슬을 먼저 모두 깔고, 그 위에 찬 구슬을 얹는다)
+            const float cell = 26f, gap = 3f, midGap = 10f, rowY = -132f;
+            var thread = UiKit.Image("GaugeThread", panel, new Color(0.55f, 0.36f, 0.22f, 0.9f)).rectTransform;
+            UiKit.Place(thread, new Vector2(0, 1), new Vector2(10, rowY - cell * 0.5f + 1f), new Vector2(604, 3));
+            for (int i = 0; i < 20; i++)
+            {
+                float x = 16 + i * (cell + gap) + (i >= 10 ? midGap : 0f);
+                var empty = UiKit.Image($"GaugeRing{i}", panel, Color.white);
+                empty.sprite = ui.orbEmpty;
+                UiKit.Place(empty.rectTransform, new Vector2(0, 1), new Vector2(x, rowY), new Vector2(cell, cell));
+                _gaugeRings.Add(empty);
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                float x = 16 + i * (cell + gap) + (i >= 10 ? midGap : 0f);
+                var full = UiKit.Image($"Gauge{i}", panel, Color.clear);
+                full.sprite = ui.orbFull;
+                UiKit.Place(full.rectTransform, new Vector2(0, 1), new Vector2(x, rowY), new Vector2(cell, cell));
+                _gaugeCells.Add(full);
+            }
+            var lantern = UiKit.Image("LanternIcon", panel, Color.white);
+            lantern.sprite = ui.iconLantern;
+            lantern.preserveAspect = true;
+            UiKit.Place(lantern.rectTransform, new Vector2(0, 1), new Vector2(14, -160), new Vector2(22, 44));
+            _gaugeText = UiKit.Text("GaugeText", panel, 22, TextAnchor.MiddleLeft);
+            UiKit.Place(_gaugeText.rectTransform, new Vector2(0, 1), new Vector2(42, -166), new Vector2(560, 32));
+
+            // 레벨 + 경험치: 구리 바 위에 보라 채움
+            _levelText = UiKit.Text("Level", panel, 26, TextAnchor.MiddleLeft);
+            _levelText.fontStyle = FontStyle.Bold;
+            _levelText.color = new Color(0.8f, 0.7f, 1f);
+            UiKit.Place(_levelText.rectTransform, new Vector2(0, 1), new Vector2(16, -208), new Vector2(80, 28));
+            var xpBg = UiKit.Image("XpBg", panel, Color.white);
+            xpBg.sprite = ui.barEmpty != null ? ui.barEmpty : null;
+            UiKit.Place(xpBg.rectTransform, new Vector2(0, 1), new Vector2(96, -210), new Vector2(508, 24));
+            _xpFill = UiKit.Image("XpFill", xpBg.rectTransform, Color.white);
+            _xpFill.sprite = ui.purpleFill;
+            _xpFill.type = Image.Type.Filled;
+            _xpFill.fillMethod = Image.FillMethod.Horizontal;
+            _xpFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            _xpFill.rectTransform.anchorMin = new Vector2(0.006f, 0.12f);
+            _xpFill.rectTransform.anchorMax = new Vector2(0.994f, 0.88f);
+            _xpFill.rectTransform.offsetMin = _xpFill.rectTransform.offsetMax = Vector2.zero;
+            _xpText = UiKit.Text("XpText", xpBg.rectTransform, 16, TextAnchor.MiddleCenter);
+            UiKit.Stretch(_xpText.rectTransform);
+        }
+
 
         /// <summary>화면 전체를 덮는 안내 + 아래 버튼들 (키로도 되고 마우스로도 된다). 버튼은 가운데 줄로 늘어선다.</summary>
         private GameObject CreateOverlay(string name, string message, params (string label, Action action)[] buttons)

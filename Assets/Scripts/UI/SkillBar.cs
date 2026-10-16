@@ -23,6 +23,7 @@ namespace ParryRL
         private struct SlotState
         {
             public Color color;
+            public Sprite icon;       // 귀문 UI 아이콘 (없으면 글자 아이콘)
             public string name;
             public int cost;          // 0이면 코스트 배지 숨김
             public bool affordable;
@@ -40,6 +41,7 @@ namespace ParryRL
             public Image frame;
             public Image bg;
             public Text icon;
+            public Image iconImage;
             public Image activeFill;
             public Image cooldownFill;
             public Image dim;
@@ -117,9 +119,13 @@ namespace ParryRL
 
         // ───────────── 슬롯별 상태 ─────────────
 
+        private static UiArt Art => GameAssets.Ui;
+        private static Sprite Skill(int i) => Art != null ? Art.Skill(i) : null;
+
         private SlotState MoveState() => new()
         {
             color = _party.Current.color,
+            icon = Skill(3),
             name = _combat.MoveSkillMaxCharges > 1 ? $"돌진 {_combat.MoveSkillCharges}/{_combat.MoveSkillMaxCharges}" : "이동 · 돌진",
             cost = _combat.MoveSkillGaugeCost,
             affordable = _gauge.CanSpend(_combat.MoveSkillGaugeCost),
@@ -130,6 +136,7 @@ namespace ParryRL
         private SlotState AttackState() => new()
         {
             color = _combat.WeaponColor,
+            icon = Skill(_combat.IsRanged ? 4 : 1),
             name = _combat.IsRanged ? "일반공격 · 화살" : "일반공격 · 베기",
             cost = _combat.AttackSkillGaugeCost,
             affordable = _gauge.CanSpend(_combat.AttackSkillGaugeCost),
@@ -145,6 +152,7 @@ namespace ParryRL
             return new SlotState
             {
                 color = _combat.WeaponColor,
+                icon = Skill(slot == 1 ? (_combat.IsRanged ? 5 : 0) : (_combat.IsRanged ? 6 : 2)),
                 name = slot == 1 ? _combat.Skill1Name : _combat.Skill2Name,
                 cost = cost,
                 affordable = _gauge.CanSpend(cost),
@@ -158,6 +166,7 @@ namespace ParryRL
         private SlotState WeaponState() => new()
         {
             color = _combat.WeaponColor,
+            icon = Art != null ? (_combat.IsRanged ? Art.weaponTalisman : Art.weaponStaff) : null,
             name = _combat.IsRanged ? "무기 · 원거리" : "무기 · 근접",
             blocked = _defense.State == DefenseState.Active,
             cooldownLeft = _combat.WeaponCooldownLeft,
@@ -169,6 +178,7 @@ namespace ParryRL
             var s = new SlotState
             {
                 color = _party.Current.color,
+                icon = Skill(7),
                 name = _party.Current.defenseName,
                 affordable = true,
             };
@@ -214,6 +224,16 @@ namespace ParryRL
             // 배경: 캐릭터 색을 어둡게
             slot.bg.color = Color.Lerp(s.color, Color.black, 0.55f);
             slot.icon.color = usable || active ? Color.white : new Color(1f, 1f, 1f, 0.45f);
+            bool hasIcon = s.icon != null;
+            slot.iconImage.enabled = hasIcon;
+            slot.icon.enabled = !hasIcon;
+            if (hasIcon)
+            {
+                slot.bg.color = new Color(0.07f, 0.08f, 0.1f, 1f); // 메달처럼 네모가 아닌 아이콘 뒤가 무기 색으로 비치지 않게
+                slot.iconImage.sprite = s.icon;
+                // 못 쓸 때는 그림을 어둡게 (아이콘 자체가 틀을 포함한다)
+                slot.iconImage.color = usable || active ? Color.white : new Color(0.55f, 0.55f, 0.6f, 1f);
+            }
 
             // 방어 활성: 남은 활성 시간을 밝은 원형으로
             slot.activeFill.fillAmount = active && s.activeTotal > 0f ? s.activeLeft / s.activeTotal : 0f;
@@ -270,6 +290,11 @@ namespace ParryRL
 
             slot.icon = UiKit.Text("Icon", slot.bg.rectTransform, 58, TextAnchor.MiddleCenter, outline: false);
             UiKit.Stretch(slot.icon.rectTransform);
+            // 귀문 UI 아이콘 (그림 자체가 금빛 틀을 포함한다. 가로세로 비율을 지킨다)
+            slot.iconImage = UiKit.Image("IconImage", slot.bg.rectTransform, Color.white);
+            slot.iconImage.preserveAspect = true;
+            UiKit.Stretch(slot.iconImage.rectTransform);
+            slot.iconImage.enabled = false;
 
             slot.activeFill = UiKit.RadialImage("ActiveFill", slot.bg.rectTransform, new Color(1f, 1f, 1f, 0.45f));
             UiKit.Stretch(slot.activeFill.rectTransform);

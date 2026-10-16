@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e7fb3760ce8a4d3bad7dc1d3132e7a0, type: 3}
+  m_Name: UiArt
+  m_EditorClassIdentifier: ParryRL::ParryRL.UiArt
+  hpFrame: {fileID: 21300000, guid: 62103692d8cfd4f6bbb7ed0e3bc77fdd, type: 3}
+  hpFill: {fileID: 21300000, guid: b0128d6ac5aed474aa2ad46fb30c0bda, type: 3}
+  barEmpty: {fileID: 21300000, guid: 076df06e7ed344fa8be926ae64ab7518, type: 3}
+  purpleFill: {fileID: 21300000, guid: 25efacb6ebfcb43ea82dec2e38b97a69, type: 3}
+  dragonFrame: {fileID: 21300000, guid: cb339752ce6f7410f8cc52f1ff08e102, type: 3}
+  orbEmpty: {fileID: 21300000, guid: 29ec09de0af3940bb8e6a6baa26322c1, type: 3}
+  orbFull: {fileID: 21300000, guid: 1f991b62d06814a8b9482980bd8db75d, type: 3}
+  orbSpark: {fileID: 21300000, guid: e912f955e32384c3fa2488631693c421, type: 3}
+  orbString: {fileID: 21300000, guid: 4909afffb335f476b83a019ae57a3f31, type: 3}
+  slotParchment: {fileID: 21300000, guid: 3b8902502ed6e4045969794dfce8ed5f, type: 3}
+  slotActive: {fileID: 21300000, guid: a1d17329c34054e76aadaaf32fd21e25, type: 3}
+  slotLocked: {fileID: 21300000, guid: 07ce1d50c6dd446eaba2f30bf97a85d3, type: 3}
+  cooldownDisc: {fileID: 21300000, guid: 0ad7dc8f53837418b9670010e6164a42, type: 3}
+  weaponStaff: {fileID: 21300000, guid: cf66a8132cf3b41dfbcbcd9a3471e08f, type: 3}
+  weaponTalisman: {fileID: 21300000, guid: d410bd1dfce5e4aaeb96a72ba8cd7654, type: 3}
+  iconHeart: {fileID: 21300000, guid: 07f88407055ac44b29fbeb621c068783, type: 3}
+  iconLantern: {fileID: 21300000, guid: 4afbfb80c80c9447ca702f4fc272c48b, type: 3}
+  skillIcons:
+  - {fileID: 21300000, guid: 423b0faf556da4010a28b10c9c1c29db, type: 3}
+  - {fileID: 21300000, guid: 4501354ed866b42a4b121acded86fdec, type: 3}
+  - {fileID: 21300000, guid: 5592719084077469aba5ef5087d1009a, type: 3}
+  - {fileID: 21300000, guid: 4d97f0379fff34bd89dc2d882f7d1a6d, type: 3}
+  - {fileID: 21300000, guid: 3d345d926447d4667aa227e4e068bc74, type: 3}
+  - {fileID: 21300000, guid: d042c974a43d042a8a7213ca794bef3d, type: 3}
+  - {fileID: 21300000, guid: 800f4472e3222485897e018050708fbc, type: 3}
+  - {fileID: 21300000, guid: 82df6c25d4a0b4226999a5c3354c22f8, type: 3}
+  - {fileID: 21300000, guid: c2f0ca3d8964f4e2d9916704f788b0a7, type: 3}
+  - {fileID: 21300000, guid: a1d8f916cf237443a8539f76b58b01bd, type: 3}
+  - {fileID: 21300000, guid: 1dcab8993b5744111ad0f7694ce2fc45, type: 3}
+  - {fileID: 21300000, guid: 888e5fa76f4244e85afdb847d9c53a9e, type: 3}
