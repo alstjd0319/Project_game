@@ -1,0 +1,248 @@
+{
+ "zones": [
+  {
+   "zone": "zone1",
+   "bodyPx": 81,
+   "files": [
+    {
+     "name": "zone1_top_0.png",
+     "height": 102,
+     "surface": 19
+    },
+    {
+     "name": "zone1_top_1.png",
+     "height": 115,
+     "surface": 35
+    },
+    {
+     "name": "zone1_topL_0.png",
+     "height": 136,
+     "surface": 49
+    },
+    {
+     "name": "zone1_topR_0.png",
+     "height": 145,
+     "surface": 61
+    },
+    {
+     "name": "zone1_fill_0.png",
+     "height": 154,
+     "surface": 0
+    },
+    {
+     "name": "zone1_fill_1.png",
+     "height": 154,
+     "surface": 0
+    },
+    {
+     "name": "zone1_fillL_0.png",
+     "height": 156,
+     "surface": 0
+    },
+    {
+     "name": "zone1_fillR_0.png",
+     "height": 155,
+     "surface": 0
+    },
+    {
+     "name": "zone1_platL_0.png",
+     "height": 147,
+     "surface": 30
+    },
+    {
+     "name": "zone1_platM_0.png",
+     "height": 148,
+     "surface": 31
+    },
+    {
+     "name": "zone1_platM_1.png",
+     "height": 148,
+     "surface": 30
+    },
+    {
+     "name": "zone1_platR_0.png",
+     "height": 152,
+     "surface": 35
+    }
+   ]
+  },
+  {
+   "zone": "zone2",
+   "bodyPx": 100,
+   "files": [
+    {
+     "name": "zone2_top_0.png",
+     "height": 111,
+     "surface": 11
+    },
+    {
+     "name": "zone2_top_1.png",
+     "height": 132,
+     "surface": 32
+    },
+    {
+     "name": "zone2_top_2.png",
+     "height": 118,
+     "surface": 17
+    },
+    {
+     "name": "zone2_top_3.png",
+     "height": 133,
+     "surface": 33
+    },
+    {
+     "name": "zone2_top_4.png",
+     "height": 117,
+     "surface": 17
+    },
+    {
+     "name": "zone2_top_5.png",
+     "height": 116,
+     "surface": 16
+    },
+    {
+     "name": "zone2_top_6.png",
+     "height": 135,
+     "surface": 35
+    },
+    {
+     "name": "zone2_top_7.png",
+     "height": 134,
+     "surface": 34
+    },
+    {
+     "name": "zone2_fill_0.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_fill_1.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_fill_2.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_fill_3.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_fill_4.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_fill_5.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_fill_6.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_fill_7.png",
+     "height": 142,
+     "surface": 0
+    },
+    {
+     "name": "zone2_platL_0.png",
+     "height": 111,
+     "surface": 1
+    },
+    {
+     "name": "zone2_platM_0.png",
+     "height": 111,
+     "surface": 1
+    },
+    {
+     "name": "zone2_platM_1.png",
+     "height": 111,
+     "surface": 1
+    },
+    {
+     "name": "zone2_platR_0.png",
+     "height": 111,
+     "surface": 1
+    }
+   ]
+  },
+  {
+   "zone": "zone3",
+   "bodyPx": 135,
+   "files": [
+    {
+     "name": "zone3_top_0.png",
+     "height": 140,
+     "surface": 5
+    },
+    {
+     "name": "zone3_top_1.png",
+     "height": 139,
+     "surface": 4
+    },
+    {
+     "name": "zone3_topL_0.png",
+     "height": 137,
+     "surface": 2
+    },
+    {
+     "name": "zone3_topR_0.png",
+     "height": 139,
+     "surface": 5
+    },
+    {
+     "name": "zone3_fill_0.png",
+     "height": 144,
+     "surface": 0
+    },
+    {
+     "name": "zone3_fill_1.png",
+     "height": 144,
+     "surface": 0
+    },
+    {
+     "name": "zone3_fill_2.png",
+     "height": 144,
+     "surface": 0
+    },
+    {
+     "name": "zone3_fill_3.png",
+     "height": 144,
+     "surface": 0
+    },
+    {
+     "name": "zone3_platL_0.png",
+     "height": 116,
+     "surface": 27
+    },
+    {
+     "name": "zone3_platM_0.png",
+     "height": 119,
+     "surface": 25
+    },
+    {
+     "name": "zone3_platR_0.png",
+     "height": 119,
+     "surface": 25
+    }
+   ]
+  },
+  {
+   "zone": "shrine",
+   "bodyPx": 70,
+   "files": [
+    {
+     "name": "shrine_top_0.png",
+     "height": 88,
+     "surface": 18
+    }
+   ]
+  }
+ ]
+}

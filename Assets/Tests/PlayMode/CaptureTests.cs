@@ -111,6 +111,36 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 바닥_구간별_타일()
+        {
+            string[] names = { "shrine", "zone1", "zone2", "zone3" };
+            for (int z = 0; z < names.Length; z++)
+            {
+                GameTuning.Current.backgroundZone = z;
+                yield return new WaitForSeconds(0.5f);
+                yield return Capture("floor_" + names[z]);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator 화면_끝에서_벽_없이_막힌다()
+        {
+            foreach (var e in Object.FindObjectsByType<EnemyController>()) e.gameObject.SetActive(false);
+            Camera.main.aspect = 16f / 9f; // 배치모드의 작은 창 비율이 아니라 실제 1920×1080 화면 기준으로 카메라가 멈추게
+            var player = Object.FindAnyObjectByType<PlayerMotor>();
+            var body = player.GetComponent<Rigidbody2D>();
+            // 오른쪽 벽에 몸이 닿는 자리(벽 안쪽 면 23 − 몸 반폭 0.4)에 세워 화면 끝에서 막히는 모습을 본다
+            var pos = new Vector3(22.55f, 0.7f, 0f);
+            body.position = pos;
+            player.transform.position = pos;
+            body.linearVelocity = Vector2.zero;
+            yield return new WaitForSeconds(1.2f);
+            Debug.Log("[edge] player x=" + player.transform.position.x + " camera x=" + Camera.main.transform.position.x);
+            Assert.AreEqual(22.55f, player.transform.position.x, 0.1f, "벽 안쪽 면에 닿아 더 가지 못한다");
+            yield return Capture("floor_wall_edge_right");
+        }
+
+        [UnityTest]
         public IEnumerator Hud_전투중()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

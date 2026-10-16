@@ -30,6 +30,8 @@ namespace ParryRL.EditorTools
         private const string AudioDir = "Assets/Audio/ParryPrototype/";
 
         private const float ArenaHalfWidth = 22f;
+        // 옆 벽: 카메라가 멈추는 끝(반폭 + 1)에 벽 안쪽 면이 딱 닿게 둬서, 벽이 화면 밖에 있고 플레이어는 화면 끝에서 막힌다
+        private const float WallInset = 1f;
 
         // 도트 그림 규격 (귀문 에셋 묶음 안내.md): 화면 1920×1080을 배율 1로, 화면 높이 12유닛 → 1유닛 = 90px.
         // 칸 안의 기준점(피벗)은 시트 manifest 값. 땅 캐릭터는 발끝(0.5, 0.0714), 도깨비불은 몸 중심(0.5, 0.3304).
@@ -52,6 +54,9 @@ namespace ParryRL.EditorTools
         private static readonly bool[] BgNearInFront = { false, false, true, true }; // 안내.md: 사당·1구간은 near를 뒤에, 2·3구간은 앞에
         private const string UiDir = "Assets/Art/Ui";                 // Tools/gwimun_sprites/cut_ui.py가 오린 UI 조각
         private const string UiArtPath = UiDir + "/UiArt.asset";
+        // 바닥 타일: Tools/gwimun_sprites/cut_floor.py가 오린 조각(floor_meta.json 포함). 구간 순서는 배경과 같다 (사당·1·2·3구간)
+        private const string FloorDir = "Assets/Art/Floor";
+        private static readonly string[] FloorZones = { "shrine", "zone1", "zone2", "zone3" };
         private const string FxDir = "Assets/Art/Fx";
         private const string FxArtPath = FxDir + "/AttackFx.asset";
 
@@ -78,6 +83,7 @@ namespace ParryRL.EditorTools
             CreateAttackFxArt();
             CreateMentorArt();
             CreateUiArt();
+            CreateFloorSets();
             if (AssetDatabase.IsValidFolder(PropsDir)) ImportFrames(PropsDir, _ => BottomPivot);
             var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
@@ -89,6 +95,7 @@ namespace ParryRL.EditorTools
             var noFriction = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(NoFrictionPath);
             // 배경 묶음도 NewScene 뒤에 다시 로드한다 (안 그러면 씬에 null이 들어간다)
             bgSets = LoadBackgroundSets();
+            var floorSets = LoadFloorSets();
             var staffArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(StaffArtPath);
             var talismanArt = AssetDatabase.LoadAssetAtPath<CharacterArt>(TalismanArtPath);
             var attackFx = AssetDatabase.LoadAssetAtPath<AttackFxArt>(FxArtPath);
@@ -112,12 +119,15 @@ namespace ParryRL.EditorTools
 
             // ── 레벨 ──
             var level = new GameObject("Level").transform;
-            CreateSolid("Ground", new Vector2(0f, -0.5f), new Vector2(ArenaHalfWidth * 2f + 2f, 1f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
-            CreateSolid("Wall_L", new Vector2(-ArenaHalfWidth - 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
-            CreateSolid("Wall_R", new Vector2(ArenaHalfWidth + 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
-            CreateOneWay("Platform_L", new Vector2(-7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
-            CreateOneWay("Platform_R", new Vector2(7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
-            CreateOneWay("Platform_Top", new Vector2(0f, 4.4f), new Vector2(3f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
+            var ground = CreateSolid("Ground", new Vector2(0f, -0.5f), new Vector2((ArenaHalfWidth + WallInset + 2f) * 2f, 1f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
+            var wallL = CreateSolid("Wall_L", new Vector2(-(ArenaHalfWidth + WallInset) - 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
+            var wallR = CreateSolid("Wall_R", new Vector2(ArenaHalfWidth + WallInset + 0.5f, 5f), new Vector2(1f, 12f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
+            var platL = CreateOneWay("Platform_L", new Vector2(-7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
+            var platR = CreateOneWay("Platform_R", new Vector2(7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
+            var platTop = CreateOneWay("Platform_Top", new Vector2(0f, 4.4f), new Vector2(3f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
+            // 바닥 그림: 판정 네모 위에 구간 타일을 깐다 (구간은 F1 연습 탭의 배경 구간과 함께 바뀐다)
+            AddFloorDecorator(level, floorSets, -1, (ground, FloorDecorator.Kind.Ground), (wallL, FloorDecorator.Kind.Wall), (wallR, FloorDecorator.Kind.Wall),
+                (platL, FloorDecorator.Kind.Platform), (platR, FloorDecorator.Kind.Platform), (platTop, FloorDecorator.Kind.Platform));
 
             // 배경 (판정 없음): 먼·중간·가까운 3겹 시차 스크롤. 구간은 F1 연습 탭에서 바꾼다.
             var background = new GameObject("Background").AddComponent<ParallaxBackground>();
@@ -295,9 +305,11 @@ namespace ParryRL.EditorTools
 
             var level = new GameObject("Level").transform;
             var solid = new Color(0.3f, 0.32f, 0.38f, 0.55f);
-            CreateSolid("Ground", new Vector2(0f, -0.5f), new Vector2(HubHalfWidth * 2f + 2f, 1f), solid, level);
-            CreateSolid("Wall_L", new Vector2(-HubHalfWidth - 0.5f, 5f), new Vector2(1f, 12f), solid, level);
-            CreateSolid("Wall_R", new Vector2(HubHalfWidth + 0.5f, 5f), new Vector2(1f, 12f), solid, level);
+            var hubGround = CreateSolid("Ground", new Vector2(0f, -0.5f), new Vector2((HubHalfWidth + WallInset + 2f) * 2f, 1f), solid, level);
+            var hubWallL = CreateSolid("Wall_L", new Vector2(-(HubHalfWidth + WallInset) - 0.5f, 5f), new Vector2(1f, 12f), solid, level);
+            var hubWallR = CreateSolid("Wall_R", new Vector2(HubHalfWidth + WallInset + 0.5f, 5f), new Vector2(1f, 12f), solid, level);
+            // 사당 바닥은 흙바닥 타일 (구간 0 고정)
+            AddFloorDecorator(level, LoadFloorSets(), 0, (hubGround, FloorDecorator.Kind.Ground), (hubWallL, FloorDecorator.Kind.Wall), (hubWallR, FloorDecorator.Kind.Wall));
 
             // 사당 배경 고정
             var background = new GameObject("Background").AddComponent<ParallaxBackground>();
@@ -509,6 +521,86 @@ namespace ParryRL.EditorTools
             EditorUtility.SetDirty(art);
         }
 
+        [System.Serializable]
+        private class FloorMetaFile { public string name; public int height; public int surface; }
+        [System.Serializable]
+        private class FloorMetaZone { public string zone; public FloorMetaFile[] files; public int bodyPx; }
+        [System.Serializable]
+        private class FloorMeta { public FloorMetaZone[] zones; }
+
+        /// <summary>바닥 타일 조각(floor_meta.json)을 임포트하고 구간별 FloorSet으로 묶는다. 윗면·발판은 표면 줄, 속 채움은 위 가운데가 피벗.</summary>
+        private static void CreateFloorSets()
+        {
+            if (!AssetDatabase.IsValidFolder(FloorDir) || !File.Exists($"{FloorDir}/floor_meta.json")) return;
+            var parsed = JsonUtility.FromJson<FloorMeta>(File.ReadAllText($"{FloorDir}/floor_meta.json"));
+            var meta = new System.Collections.Generic.Dictionary<string, FloorMetaZone>();
+            foreach (var z in parsed.zones) meta[z.zone] = z;
+            var pivots = new System.Collections.Generic.Dictionary<string, Vector2>();
+            foreach (var z in meta)
+                foreach (var f in z.Value.files)
+                    pivots[f.name] = f.name.Contains("_fill_") ? new Vector2(0.5f, 1f)
+                        : new Vector2(0.5f, 1f - (float)f.surface / Mathf.Max(1, f.height));
+            ImportFrames(FloorDir, file => pivots.TryGetValue(file, out var p) ? p : CenterPivot);
+
+            foreach (string zone in FloorZones)
+            {
+                if (!meta.TryGetValue(zone, out var zm)) continue;
+                string path = $"{FloorDir}/{zone}FloorSet.asset";
+                var set = AssetDatabase.LoadAssetAtPath<FloorSet>(path);
+                if (set == null)
+                {
+                    set = ScriptableObject.CreateInstance<FloorSet>();
+                    AssetDatabase.CreateAsset(set, path);
+                }
+                Sprite[] Role(string role)
+                {
+                    var list = new System.Collections.Generic.List<Sprite>();
+                    for (int i = 0; ; i++)
+                    {
+                        var sp = AssetDatabase.LoadAssetAtPath<Sprite>($"{FloorDir}/{zone}_{role}_{i}.png");
+                        if (sp == null) break;
+                        list.Add(sp);
+                    }
+                    return list.ToArray();
+                }
+                set.zoneName = zone;
+                set.top = Role("top"); set.fill = Role("fill");
+                set.platL = Role("platL"); set.platM = Role("platM"); set.platR = Role("platR");
+                set.unitScale = PixelsPerUnit / Mathf.Max(1, zm.bodyPx); // 윗면 타일의 몸통 높이 = 판정 두께 1유닛
+                EditorUtility.SetDirty(set);
+            }
+        }
+
+        private static FloorSet[] LoadFloorSets()
+        {
+            var list = new System.Collections.Generic.List<FloorSet>();
+            foreach (string zone in FloorZones)
+            {
+                var set = AssetDatabase.LoadAssetAtPath<FloorSet>($"{FloorDir}/{zone}FloorSet.asset");
+                list.Add(set); // 없으면 null — FloorDecorator가 예전 네모로 둔다
+            }
+            return list.ToArray();
+        }
+
+        private static void AddFloorDecorator(Transform level, FloorSet[] floorSets, int forcedZone, params (Transform solid, FloorDecorator.Kind kind)[] segments)
+        {
+            var deco = level.gameObject.AddComponent<FloorDecorator>();
+            var so = new SerializedObject(deco);
+            var setsProp = so.FindProperty("sets");
+            setsProp.arraySize = floorSets.Length;
+            for (int i = 0; i < floorSets.Length; i++) setsProp.GetArrayElementAtIndex(i).objectReferenceValue = floorSets[i];
+            var segProp = so.FindProperty("segments");
+            segProp.arraySize = segments.Length;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var e = segProp.GetArrayElementAtIndex(i);
+                e.FindPropertyRelative("solid").objectReferenceValue = segments[i].solid;
+                e.FindPropertyRelative("kind").enumValueIndex = (int)segments[i].kind;
+            }
+            so.FindProperty("forcedZone").intValue = forcedZone;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         /// <summary>UI 조각(ui_*.png)을 도트 설정으로 임포트하고 UiArt로 묶는다. 피벗은 가운데.</summary>
         private static void CreateUiArt()
         {
@@ -704,14 +796,15 @@ namespace ParryRL.EditorTools
         }
 
         /// <summary>충돌 지형. 콜라이더 size는 기본값(1,1) 그대로 → 보이는 네모 = 충돌 범위.</summary>
-        private static void CreateSolid(string name, Vector2 pos, Vector2 size, Color color, Transform parent)
+        private static Transform CreateSolid(string name, Vector2 pos, Vector2 size, Color color, Transform parent)
         {
             var go = CreateVisual(name, pos, size, color, 0, parent);
             go.AddComponent<BoxCollider2D>();
+            return go.transform;
         }
 
         /// <summary>아래에서 통과해 올라가고 위에서만 밟히는 얇은 발판 (↓ + 점프로 내려감). 콜라이더 size는 기본값 유지.</summary>
-        private static void CreateOneWay(string name, Vector2 pos, Vector2 size, Color color, Transform parent)
+        private static Transform CreateOneWay(string name, Vector2 pos, Vector2 size, Color color, Transform parent)
         {
             var go = CreateVisual(name, pos, size, color, 0, parent);
             var col = go.AddComponent<BoxCollider2D>();
@@ -721,6 +814,7 @@ namespace ParryRL.EditorTools
             effector.useSideFriction = false;
             effector.useSideBounce = false;
             effector.surfaceArc = 160f;
+            return go.transform;
         }
 
         private static T LoadAsset<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>(path);

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca21b0786583f434dbbd8e8d009a94dc, type: 3}
+  m_Name: zone1FloorSet
+  m_EditorClassIdentifier: ParryRL::ParryRL.FloorSet
+  zoneName: zone1
+  top:
+  - {fileID: 21300000, guid: b1e7d095817734b029e37e27a9becb8d, type: 3}
+  - {fileID: 21300000, guid: 6b0cd497bb54b4ffe9b2e71b81177f88, type: 3}
+  fill:
+  - {fileID: 21300000, guid: 8b8eacbe44b514fbdbe754f7a11b2630, type: 3}
+  - {fileID: 21300000, guid: 901e7f7cb06694538b9e6aa158356576, type: 3}
+  platL:
+  - {fileID: 21300000, guid: 3caa266418ec54de885816bae0b3fd0c, type: 3}
+  platM:
+  - {fileID: 21300000, guid: 7a29dc7b3621b41108cca782e869c6a8, type: 3}
+  - {fileID: 21300000, guid: a5b70e6169e354d079ef66c04e56bebd, type: 3}
+  platR:
+  - {fileID: 21300000, guid: 0e8f43a4cbbc24d3e875fd477b1e26ec, type: 3}
+  unitScale: 1.1111112

@@ -222,3 +222,15 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - **체력**: 하트 아이콘 + 옥 장식 틀(`hp_frame`) 안쪽 홈 위에 초록 바(`hp_fill`, `Image.Type.Filled`)가 차오른다. 빨강은 적 공격 경고 전용이라 체력도 초록. **도력**: 빈 구슬(`orb_empty`)을 20개 깔고 그 위에 찬 구슬(`orb_full`)을 겹치며 가장 최근에 찬 구슬은 반짝이는 큰 구슬(`orb_spark`). **경험치**: 구리 빈 바 + 보라 채움. 도력 줄 옆엔 등불 아이콘.
 - **스킬 아이콘**(`icons.png`의 틀 포함 12종, `UiArt.skillIcons[0..11]`): 대시=3(회오리 봉) · 패링=7(결계 부적) · 일반공격 봉/부적=1(찌르기)/4(부적 바람) · D 봉/부적=0(휩쓸기 초승달)/5(부적 세 장) · F 봉/부적=2(내려찍기)/6(봉인진) · Q 무기=`weaponStaff/weaponTalisman` 메달. 안 쓴 것: 7 결계(패링으로 씀) 외 8 분신 · 9 사슬 여우 · 10 도력 상승 · 11 잎 부적 — 앞으로 생길 스킬용. 못 쓸 땐 아이콘을 어둡게, 아이콘 뒤는 어두운 중립색(메달이 무기 색으로 비치지 않게).
 - 아직 안 쓴 조각: `dragon_frame`(큰 바용 — 보스 체력 후보), `purple_fill`은 경험치에 사용 중, `orb_string`·`slot_*`·`cooldown_disc`(아이콘이 틀을 포함해 불필요), 스킬 트리·대화창 시트(`skilltree.png`·`dialog_menu.png`)는 스킬 트리 구현 때.
+
+## 커밋할 때 스크린샷 기록 (2026-10-16, 사용자 요청)
+- **화면이 바뀌는 변경(UI·연출·씬·이펙트 등)을 커밋·푸시할 때는 스크린샷 기록도 같은 커밋에 넣는다.** 순서: `CaptureTests`로 최신 캡처(`Captures/`) 확인(새 장면이면 `CaptureTests`에 추가) → 바뀐 장면을 `docs/screenshots/`에 JPG(1280×720)로 저장(전/후가 의미 있으면 "전"은 이전 커밋의 캡처 파일에서 꺼낸다) → `docs/변경기록_스크린샷.md`에 날짜·커밋·전→후 섹션 추가 → 코드와 함께 커밋·푸시. 로직·문서만 바뀌면 스크린샷 없이 글로만 적거나 생략한다. 노션은 정리를 요청받을 때만 갱신한다.
+- 보류 중인 과제: 바닥·벽·발판이 반투명 네모(임시) — 에셋 타일(`shrine/props_06` 땅 한 줄, `zone*/tiles_*`)로 그리는 방안(A)을 제안했고 사용자가 "일단 보류".
+
+## 바닥·벽·발판 타일 그림 (2026-10-16)
+- 새 시트: `귀문_에셋_공유_1013/원본/bg/<zone1|zone2|zone3|boss>/floor_tiles_clean.png`(1254×1254, 투명, 8×8칸 ≈156.75px)·`floor_tiles_atlas.png`·`원본/bg/floor_tiles_preview.jpg`(원래 위치 `~/Documents/Codex/2026-10-16/new-chat/outputs/`). 안내.md 4절에 설명 추가, 프로젝트 사본은 `ArtSource/gwimun/floor/`. 칸 경계에 보라 선이 있어 **칸 내용 상자를 2px 안쪽으로** 자른다.
+- `Tools/gwimun_sprites/cut_floor.py`: 구간별 `SPECS`(역할 → 칸 좌표)대로 `Assets/Art/Floor/<구간>_<역할>_<번호>.png`(top 윗면 · fill 속 채움 · platL/M/R 발판 · zone1/zone3은 topL/R·fillL/R 모서리도 오리지만 아직 안 씀) + `floor_meta.json`(파일별 표면 줄·높이, 구간별 `bodyPx` = 윗면 몸통 높이)을 만든다. 사당은 `shrine_props.png`의 땅 한 줄 조각(`shrine_top_0`). 보스 시트는 아직 안 씀.
+- `FloorSet`(Core/, 구간별 ScriptableObject) → 빌더 `CreateFloorSets`(피벗: 윗면·발판 = 표면 줄 가운데, 속 채움 = 위 가운데; `unitScale = 90 ÷ bodyPx`) → **`FloorDecorator`**(World/, `Level` 오브젝트에 붙음): 판정 네모(Ground·Wall·Platform) 위에 타일을 자식으로 깐다. 윗면은 표면을 판정 윗면에 맞춰 번갈아 이어 붙이고, 속 채움은 표면 −0.9부터 3.5유닛 아래까지, 벽은 안쪽 면에서 바깥으로 속 채움을 쌓고, 발판은 L + M×n + R을 판정 폭에 맞춰(가로세로 같은 배율). 구간은 배경과 같은 규칙(`forcedZone`, 아니면 `GameTuning.backgroundZone`)이고 바뀌면 다시 깐다. 그림이 깔린 판정 네모는 숨기고 "판정 상자 보기"일 때만 알파 0.35로 보인다(그림이 없는 건 예전 네모 그대로 — 사당 구간의 발판).
+- 판정은 그대로(콜라이더 크기·위치 무변경) — 보이는 땅 윗면 = 판정 윗면. 테스트: `FloorTests`, 캡처 `바닥_구간별_타일`(`Captures/floor_*.png`).
+- 사당 구간(구간 0)은 발판 그림이 없어 `FloorDecorator`가 발판 오브젝트를 **끈다**(판정 포함; 다른 구간으로 바꾸면 다시 켠다). 사당 바닥은 에셋의 "땅 한 줄" 조각(사용자가 보낸 흙바닥 타일 `shrine_dirt_*`은 써 보고 원래대로 되돌렸다 — 파일은 `ArtSource/gwimun/floor/`에 보관).
+- **옆 벽 위치**: 벽 안쪽 면 = 카메라가 멈추는 끝(`arenaMin/Max` = 반폭 ± 1) — `PrototypeSceneBuilder.WallInset`(1)로 벽을 바깥으로 옮기고 바닥을 그만큼 늘렸다. 벽은 화면 밖이라 안 보이고 플레이어는 화면 끝에서 막힌다. `FloorTests`가 벽 안쪽 면이 카메라 끝과 맞는지 확인한다(캡처 테스트는 배치모드 창 비율이 달라 `Camera.main.aspect`를 16:9로 고정해 찍는다).
