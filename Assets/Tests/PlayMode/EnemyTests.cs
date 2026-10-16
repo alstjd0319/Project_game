@@ -97,6 +97,96 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 근접_일반공격도_느낌표가_뜨고_느낌표를_보고_바로_누르면_막힌다()
+        {
+            GameTuning.Current.heavyChance = 0f; // 일반 공격만
+            _melee.enabled = true;
+            Place(_melee, 1.6f);
+            yield return WaitForWindup();
+            float windupStart = Time.time;
+            Assert.AreEqual(0, _melee.PressCueCount, "예비 모션 시작 직후에는 아직 빨갛게 안 바뀐다");
+            var icon = Object.FindAnyObjectByType<PressCueIcon>();
+            Assert.IsNotNull(icon, "예비 모션이 시작되면 노란 느낌표가 먼저 뜬다");
+            Assert.IsFalse(icon.IsRed);
+
+            // 느낌표가 뜰 때까지 기다린 뒤 그 즉시 패링을 누른다 ("빨간 느낌표가 보이면 누르면 된다")
+            float t = 0f;
+            while (_melee.PressCueCount == 0 && t < 3f) { t += Time.deltaTime; yield return null; }
+            Assert.AreEqual(1, _melee.PressCueCount, "일반 공격에도 느낌표");
+            Assert.IsTrue(icon.IsRed, "같은 느낌표가 빨갛게 바뀐다");
+            float waited = Time.time - windupStart;
+            Assert.Greater(waited, GameTuning.Current.meleeNormalReaction - GameTuning.Current.defenseActiveTime, "베기 직전에 뜬다");
+            Assert.Less(waited, GameTuning.Current.meleeNormalReaction, "베기 전에 뜬다");
+
+            Assert.IsTrue(_defense.TryActivate());
+            yield return new WaitForSeconds(0.6f);
+            Assert.AreEqual(100, _party.Hp, "느낌표를 보고 바로 눌렀으니 막혀서 피해가 없다");
+        }
+
+        [UnityTest]
+        public IEnumerator 근접_강공격도_노란_느낌표로_시작해_베기_직전에_빨갛게_바뀐다_하나만()
+        {
+            GameTuning.Current.heavyOnly = true;
+            _melee.enabled = true;
+            Place(_melee, 1.6f);
+            yield return WaitForWindup();
+            yield return new WaitForSeconds(0.1f);
+            var icon = Object.FindAnyObjectByType<PressCueIcon>();
+            Assert.IsNotNull(icon, "노란 느낌표로 시작");
+            Assert.IsFalse(icon.IsRed);
+            Assert.AreEqual(1, Object.FindObjectsByType<PressCueIcon>().Length, "느낌표는 하나뿐");
+            float t = 0f;
+            while (_melee.PressCueCount == 0 && t < 3f) { t += Time.deltaTime; yield return null; }
+            yield return new WaitForSeconds(0.12f);
+            Assert.IsTrue(icon.IsRed, "베기 직전에 빨갛게");
+            Assert.AreEqual(1, Object.FindObjectsByType<PressCueIcon>().Length, "여전히 하나");
+            // 베기가 나가고 나면 느낌표는 사라진다
+            yield return new WaitForSeconds(0.8f);
+            Assert.AreEqual(0, Object.FindObjectsByType<PressCueIcon>().Length, "베기 뒤에는 사라진다");
+        }
+
+        [UnityTest]
+        public IEnumerator 근접_공격_도중_플레이어가_반대편으로_가도_따라_돌거나_움직이지_않고_그자리에서_벤다()
+        {
+            GameTuning.Current.heavyChance = 0f;
+            _melee.enabled = true;
+            Place(_melee, 1.6f); // 플레이어가 왼쪽, 몬스터는 오른쪽
+            yield return WaitForWindup();
+            float xAtStart = _melee.transform.position.x;
+            float dirAtStart = _melee.Facing;
+            Assert.Less(dirAtStart, 0f, "플레이어(왼쪽)를 향해 시작");
+
+            // 예비 모션 도중 플레이어가 몬스터 반대편(오른쪽 뒤)으로 가 버린다
+            MovePlayerTo(xAtStart + 3f);
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(xAtStart, _melee.transform.position.x, 1e-3f, "공격 도중 몬스터는 따라 움직이지 않는다");
+            Assert.AreEqual(dirAtStart, _melee.Facing, "공격 도중 방향이 바뀌지 않는다");
+
+            EnemyAttack slash = null;
+            yield return WaitForAttack(a => slash = a);
+            Assert.IsTrue(slash.IsSlash);
+            float frontEdge = xAtStart - _melee.HalfWidth;
+            Assert.AreEqual(frontEdge, slash.SlashAnchor.x, 1e-3f, "처음 향한 쪽(왼쪽) 앞면에서 벤다 — 플레이어를 따라 오른쪽으로 돌지 않는다");
+            Assert.AreEqual(dirAtStart, _melee.Facing);
+        }
+
+        [UnityTest]
+        public IEnumerator 근접_베기는_대시로_피해도_끊기지_않고_끝까지_뻗는다_맞지는_않는다()
+        {
+            // 대시 중(무적)인 플레이어 앞에 베기를 낸다
+            var motor = _defense.GetComponent<PlayerMotor>();
+            motor.Dash(-1);
+            Vector2 anchor = new(PlayerPos.x + 1.2f, PlayerPos.y);
+            var slash = EnemyAttack.SpawnSlash(_melee, AttackType.Normal, anchor, -1f, 1.2f, 45f, 2.9f - _melee.HalfWidth, Color.red, 10);
+            yield return new WaitForSeconds(0.15f);
+            Assert.IsTrue(slash != null, "대시로 지나가도 베기는 사라지지 않는다");
+            Assert.AreEqual(100, _party.Hp, "무적 대시 중이라 맞지는 않는다");
+            Assert.AreEqual(2.9f - _melee.HalfWidth, slash.transform.localScale.x, 0.05f, "끝까지 다 뻗는다 (회색으로 흐려지며 멈추지 않는다)");
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(slash == null, "다 뻗은 뒤 평소처럼 사라진다");
+        }
+
+        [UnityTest]
         public IEnumerator 근접베기_반응시간은_예비모션_길이()
         {
             _melee.enabled = true;

@@ -266,6 +266,12 @@ namespace ParryRL
                     break;
 
                 case AttackResolution.PassThrough:
+                    // 근접 베기는 대시로 피해도 끊기지 않는다: 판정만 꺼지고(플레이어를 다시 맞히지 않음) 끝까지 뻗는 모습은 그대로 보여준다
+                    if (_slash)
+                    {
+                        _slashSpent = true;
+                        break;
+                    }
                     // 판정-시각 일치 원칙: 판정이 꺼졌으니 "살아 있는 공격"처럼 보이면 안 된다
                     // → 회색·반투명으로 바꾸고 빠르게 사라지게 해서 위협이 아님을 분명히 한다.
                     _ghost = true;

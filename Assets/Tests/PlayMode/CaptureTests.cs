@@ -141,6 +141,63 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 도력_구슬_중간_상태()
+        {
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            defense.GetComponent<SkillGauge>().Add(8);
+            defense.GetComponent<PlayerParty>().TakeDamage(110); // 체력도 일부 닳은 상태
+            yield return new WaitForSecondsRealtime(0.15f);
+            yield return Capture("hud_dorok_gained");   // 막 얻은 순간: 새로 찬 구슬만 반짝인다
+            yield return new WaitForSecondsRealtime(1.0f);
+            yield return Capture("hud_dorok_partial");  // 시간이 지나면 갖고 있는 구슬은 모두 같은 모양
+        }
+
+        [UnityTest]
+        public IEnumerator 근접_일반공격_느낌표()
+        {
+            GameTuning.Current.heavyChance = 0f; // 일반 공격만
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            EnemyController melee = null;
+            foreach (var e in Object.FindObjectsByType<EnemyController>())
+            {
+                if (e.Kind == EnemyKind.Melee) { melee = e; e.enabled = true; } else e.gameObject.SetActive(false); // SetUp이 적 AI를 꺼 두므로 근접만 켠다
+            }
+            var pos = new Vector3(defense.transform.position.x + 2.2f, melee.transform.localScale.y * 0.5f, 0f);
+            melee.transform.position = pos;
+            melee.GetComponent<Rigidbody2D>().position = pos;
+            // 예비 모션이 시작되면 노란 느낌표 → 베기 직전 빨간 느낌표
+            float t = 0f;
+            while (Object.FindAnyObjectByType<PressCueIcon>() == null && t < 3f) { t += Time.deltaTime; yield return null; }
+            yield return new WaitForSecondsRealtime(0.25f);
+            yield return Capture("melee_cue_yellow");
+            t = 0f;
+            while (melee.PressCueCount == 0 && t < 3f) { t += Time.deltaTime; yield return null; }
+            yield return new WaitForSecondsRealtime(0.1f);
+            yield return Capture("melee_press_cue");
+        }
+
+        [UnityTest]
+        public IEnumerator 근접_베기_대시로_피해도_끊기지_않는다()
+        {
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            var motor = defense.GetComponent<PlayerMotor>();
+            EnemyController melee = null;
+            foreach (var e in Object.FindObjectsByType<EnemyController>())
+            {
+                if (e.Kind == EnemyKind.Melee) melee = e; else e.gameObject.SetActive(false);
+            }
+            var pos = new Vector3(defense.transform.position.x + 2.0f, melee.transform.localScale.y * 0.5f, 0f);
+            melee.transform.position = pos;
+            melee.GetComponent<Rigidbody2D>().position = pos;
+            melee.enabled = false;
+            yield return new WaitForSeconds(0.3f);
+            motor.Dash(-1);   // 베기 순간 뒤로 대시 (무적)
+            var slash = EnemyAttack.SpawnSlash(melee, AttackType.Normal, new Vector2(melee.transform.position.x - melee.HalfWidth, defense.transform.position.y), -1f, 1.2f, 45f, 2.6f, Color.red, 10);
+            yield return new WaitForSecondsRealtime(0.07f);
+            yield return Capture("melee_slash_through_dash");
+        }
+
+        [UnityTest]
         public IEnumerator Hud_전투중()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

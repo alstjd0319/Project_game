@@ -234,3 +234,16 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 판정은 그대로(콜라이더 크기·위치 무변경) — 보이는 땅 윗면 = 판정 윗면. 테스트: `FloorTests`, 캡처 `바닥_구간별_타일`(`Captures/floor_*.png`).
 - 사당 구간(구간 0)은 발판 그림이 없어 `FloorDecorator`가 발판 오브젝트를 **끈다**(판정 포함; 다른 구간으로 바꾸면 다시 켠다). 사당 바닥은 에셋의 "땅 한 줄" 조각(사용자가 보낸 흙바닥 타일 `shrine_dirt_*`은 써 보고 원래대로 되돌렸다 — 파일은 `ArtSource/gwimun/floor/`에 보관).
 - **옆 벽 위치**: 벽 안쪽 면 = 카메라가 멈추는 끝(`arenaMin/Max` = 반폭 ± 1) — `PrototypeSceneBuilder.WallInset`(1)로 벽을 바깥으로 옮기고 바닥을 그만큼 늘렸다. 벽은 화면 밖이라 안 보이고 플레이어는 화면 끝에서 막힌다. `FloorTests`가 벽 안쪽 면이 카메라 끝과 맞는지 확인한다(캡처 테스트는 배치모드 창 비율이 달라 `Camera.main.aspect`를 16:9로 고정해 찍는다).
+- (수정, 2026-10-16) 도력 구슬: 방금 찬 구슬(`orbSpark`)이 커질 때 오른쪽으로 밀리던 문제 — `Hud.BuildStatusWithArt`의 찬 구슬 이미지 기준점이 `UiKit.Place` 기본(왼쪽 위)이라 확대가 모서리 기준이었다 → 기준점을 가운데로 바꾸고 확대 1.9→1.5배. **`UiKit.Place`는 기준점을 앵커와 같게 잡으니, 크기를 키울 UI 요소는 `Place` 뒤에 `pivot`을 (0.5, 0.5)로 바꾸고 위치를 가운데 기준으로 줄 것.**
+- (수정) 도력 구슬 반짝임은 **막 얻은 구슬만 0.6초** (`Hud._orbSparkUntil`): 도력이 늘 때 새로 찬 인덱스에만 시각을 기록해 `orbSpark` + 확대(1.5→1배)를 보여 주고, 평소엔 갖고 있는 구슬이 모두 같은 `orbFull`이다 — 가장 최근 구슬이 계속 달라 보이면 몇 개인지 헷갈린다는 사용자 지적.
+
+## 근접 몬스터 "지금 눌러" 느낌표 — 노랑 → 빨강 (2026-10-16)
+- 창귀(근접)는 일반·강공격 모두 **느낌표 하나**(`Combat/PressCueIcon`, 코드로 그린 둥근 느낌표 + 테두리 + 빛무리, 판정 없음)로 타이밍을 알려 준다: 예비 모션이 시작되면 `PressCueIcon.Spawn` → **노란색**으로 톡 튀어나와 둥실거린다 → 베기 직전(`defenseActiveTime × pressCueFraction(0.8)`초 전, `EnemyController.ShowPressCue`)에 **빨갛게**(`TurnRed`, `IsRed`) 바뀌며 한 번 커졌다 가라앉고 뒤에서 에셋 `heavyWarning` 불꽃이 퍼진다(`PressCueCount` +1) → 빨간 느낌표가 보이자마자 패링(S)을 누르면 판정 창이 베기 순간을 덮는다. 몬스터가 예비 모션을 끝내거나(`!IsWindingUp`) 끊기면 서서히 사라진다. 빨강은 적 공격 경고 전용 색이라는 규칙과 맞다.
+- 옛 방식(에셋 번개 느낌표를 베기 직전에 한 번 재생, 강공격은 시작에도)은 폐기. 원거리(도깨비불) 강공격의 시작 경고(`heavyWarning` 그림)는 그대로.
+- 테스트(`EnemyTests`): 일반·강공격 모두 노랑으로 시작 → 같은 아이콘이 빨갛게 → 즉시 패링하면 피해 0 → 베기 뒤 사라짐(하나뿐). 캡처 `근접_일반공격_느낌표`(`melee_cue_yellow.png`, `melee_press_cue.png`; SetUp이 적 AI를 꺼 두므로 근접만 `enabled = true`).
+- (조정, 2026-10-16) 창귀 일반 공격 예비 모션(반응시간) 0.65 → **1.0초**(`GameTuning.meleeNormalReaction`, F1 몬스터 탭 슬라이더로도 조절). 강공격 1.2초는 그대로라 둘의 차이는 길이보다 몸이 붉게 크게 부푸는 정도·강공격 연출로 구분된다. 노란 느낌표는 예비 모션 시작에, 빨갛게 바뀌는 시점은 베기 0.24초 전 그대로.
+
+## 창귀 공격 고정·대시 통과 (2026-10-16)
+- **방향 고정**: `EnemyController.AttackRoutine` 시작에서 `_attackDir`(플레이어 쪽)을 정해 `Facing`에 넣고, `Update`의 `Facing` 갱신은 `State.Idle`일 때만 한다(예비 모션·회복 중엔 안 돎). `Launch`의 근접 베기는 `DxToPlayer`를 다시 읽지 않고 `_attackDir`로 낸다. 몬스터는 예비 모션 중 원래 안 움직이므로(`Move`는 Idle만) 공격 도중 위치·방향이 모두 고정 → 플레이어가 옆으로 지나가면 헛스윙.
+- **대시 통과**: `EnemyAttack.Resolve(PassThrough)`에서 베기(`_slash`)는 회색 ghost로 만들지 않고 `_slashSpent`(판정만 끄고 끝까지 뻗는 모습 유지)로 처리한다. 투사체(도깨비불)는 예전 ghost 그대로. `PlayerDefense.ReceiveAttack`의 무적(`IsDashInvulnerable`) 통과 경로가 이걸 부른다.
+- 테스트: `EnemyTests` — 공격 도중 반대편으로 가도 따라 돌지 않음 / 대시 중 베기가 끊기지 않고 끝까지(수정 전엔 실패). 캡처 `근접_베기_대시로_피해도_끊기지_않는다`.

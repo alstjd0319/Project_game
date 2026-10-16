@@ -162,21 +162,24 @@ namespace ParryRL
             {
                 // 도력 구슬(염주): 찬 구슬은 은은하게 숨 쉬듯 빛나고, 가장 최근에 찬 구슬이 가장 밝다. 앞 10개는 옥빛, 뒤 10개는 귀문의 보라빛
                 float t = Time.unscaledTime;
+                // 도력이 늘었으면 새로 얻은 구슬만 잠깐 반짝이게 표시해 둔다
+                for (int i = _lastGaugeValue; i < _gauge.Value && i < _orbSparkUntil.Length; i++) _orbSparkUntil[i] = t + OrbSparkTime;
+                _lastGaugeValue = _gauge.Value;
                 for (int i = 0; i < _gaugeCells.Count; i++)
                 {
                     bool filled = i < _gauge.Value;
                     var core = _gaugeCells[i];
                     if (_orbSprites)
                     {
-                        // 귀문 UI 구슬: 빈 구슬 위에 찬 구슬을 겹친다. 가장 최근에 찬 구슬은 반짝이는 큰 구슬
+                        // 귀문 UI 구슬: 빈 구슬 위에 찬 구슬을 겹친다.
+                        // 갖고 있는 구슬은 전부 똑같은 모양(개수가 한눈에 보이게) — 반짝임은 막 얻은 순간 0.6초만 나온다
                         var art = GameAssets.Ui;
-                        bool isNewest = filled && i == _gauge.Value - 1;
-                        float pulse = 0.88f + 0.12f * Mathf.Sin(t * 3f + i * 0.5f);
-                        core.sprite = isNewest ? art.orbSpark : art.orbFull;
-                        core.color = filled ? new Color(1f, 1f, 1f, isNewest ? 1f : pulse) : Color.clear;
-                        float k = isNewest ? 1.9f + 0.12f * Mathf.Sin(t * 5f) : 1f;
+                        bool sparking = filled && t < _orbSparkUntil[i];
+                        core.sprite = sparking ? art.orbSpark : art.orbFull;
+                        core.color = filled ? Color.white : Color.clear;
+                        float k = sparking ? 1.5f - 0.5f * Mathf.Clamp01(1f - (_orbSparkUntil[i] - t) / OrbSparkTime) : 1f; // 커졌다가 제 크기로
                         core.rectTransform.localScale = Vector3.one * k;
-                        if (isNewest) core.transform.SetAsLastSibling();
+                        if (sparking) core.transform.SetAsLastSibling();
                     }
                     else if (filled)
                     {
@@ -214,6 +217,9 @@ namespace ParryRL
 
         private PlayerCombat _combat;
         private bool _orbSprites;
+        private const float OrbSparkTime = 0.6f;
+        private readonly float[] _orbSparkUntil = new float[20];
+        private int _lastGaugeValue;
 
         /// <summary>바 채움: 그림 바는 fillAmount로, 네모 바는 오른쪽 끝(anchorMax)으로 줄인다.</summary>
         private static void SetBarFill(Image fill, float ratio)
@@ -452,7 +458,9 @@ namespace ParryRL
                 float x = 16 + i * (cell + gap) + (i >= 10 ? midGap : 0f);
                 var full = UiKit.Image($"Gauge{i}", panel, Color.clear);
                 full.sprite = ui.orbFull;
-                UiKit.Place(full.rectTransform, new Vector2(0, 1), new Vector2(x, rowY), new Vector2(cell, cell));
+                // 기준점을 구슬 가운데로 둔다 — 반짝이는 구슬이 커질 때 왼쪽 위 모서리가 아니라 제자리에서 커지게
+                UiKit.Place(full.rectTransform, new Vector2(0, 1), new Vector2(x + cell * 0.5f, rowY - cell * 0.5f), new Vector2(cell, cell));
+                full.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 _gaugeCells.Add(full);
             }
             var lantern = UiKit.Image("LanternIcon", panel, Color.white);

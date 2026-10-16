@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -27,6 +27,7 @@ namespace ParryRL
         [SerializeField] private int heavyDamage = 20;
 
         [Header("예비 모션 (텔레그래프 전)")]
+        [SerializeField, Tooltip("근접 공격의 \"지금 눌러\" 느낌표가 뜨는 시점: 베기 직전 패링 판정 창(defenseActiveTime)의 이 비율만큼 앞")] private float pressCueFraction = 0.8f;
         [SerializeField] private float normalWindupScale = 1.06f;
         [SerializeField] private float heavyWindupScale = 1.25f;
         [SerializeField] private Color normalAttackColor = new(1f, 0.7f, 0.45f, 0.55f);
@@ -131,7 +132,8 @@ namespace ParryRL
             ArtTint = IsStunned ? Color.Lerp(Color.white, StunColor, 0.65f) : _artTint;
 
             IsMoving = false;
-            if (_player != null && (_state == State.Idle || _state == State.Windup) && Mathf.Abs(DxToPlayer) > 0.05f)
+            // 공격을 시작하면(예비 모션·회복) 방향을 잠근다 — 플레이어가 옆으로 지나가도 그 방향 그 자리에서 휘두른다
+            if (_player != null && _state == State.Idle && Mathf.Abs(DxToPlayer) > 0.05f)
                 Facing = Mathf.Sign(DxToPlayer);
 
             if (_state != State.Idle || IsStunned || _player == null || GameManager.InputBlocked) return;
@@ -140,6 +142,8 @@ namespace ParryRL
             _cooldown -= Time.deltaTime;
             if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive) StartCoroutine(AttackRoutine());
         }
+
+        private float _attackDir = -1f; // 지금 공격의 방향 (시작할 때 고정)
 
         private float DxToPlayer => _player.position.x - transform.position.x;
 
@@ -182,6 +186,9 @@ namespace ParryRL
         private IEnumerator AttackRoutine()
         {
             _state = State.Windup;
+            // 공격 방향은 시작하는 순간 정해 둔다: 이후 플레이어가 이동·대시로 반대편에 가도 따라 돌지 않고 그 자리에서 그대로 벤다
+            _attackDir = Mathf.Abs(DxToPlayer) > 0.05f ? Mathf.Sign(DxToPlayer) : (Facing != 0f ? Facing : -1f);
+            Facing = _attackDir;
             float heavyChance = T.heavyOnly ? 1f : T.heavyChance;
             var type = UnityEngine.Random.value < heavyChance ? AttackType.Heavy : AttackType.Normal;
             bool heavy = type == AttackType.Heavy;
@@ -196,18 +203,29 @@ namespace ParryRL
             WindupProgress = 0f;
 
             Sfx.Play(heavy ? SfxId.HeavyCue : SfxId.NormalCue);
-            if (heavy)
+            // 예비 모션 시작 때의 경고는 원거리 강공격에만 있다. 근접(창귀)은 일반·강공격 모두 베기 직전의 "지금 눌러" 느낌표 하나뿐.
+            if (heavy && kind == EnemyKind.Ranged)
             {
-                // 강공격 경고: 붉은 느낌표 그림 (빨강은 적 공격 경고 전용). 그림이 없으면 글자.
                 var warn = GameAssets.AttackFx != null ? GameAssets.AttackFx.heavyWarning : null;
                 Vector2 above = transform.position + Vector3.up * (_baseScale.y * 0.5f + 0.7f);
                 if (FxClip.PlayAt(warn, above, 0.55f) == null)
                     Hud.WorldText(transform.position + Vector3.up * (_baseScale.y * 0.5f + 0.6f), "!!", heavyAttackColor, 1.3f);
             }
 
+            // 근접은 일반·강공격 모두 느낌표 하나로 타이밍을 알려 준다: 예비 모션이 시작되면 노란 느낌표(공격이 온다)가 뜨고,
+            // 베기가 나가기 직전 패링 판정 창(defenseActiveTime)이 베기 순간을 덮을 만큼의 시점(창의 80%)에 빨갛게 바뀐다
+            // → 빨간 느낌표가 보이자마자 패링(S)을 누르면 맞는다.
+            bool cueShown = false;
+            PressCueIcon cueIcon = kind == EnemyKind.Melee ? PressCueIcon.Spawn(this) : null;
+            float cueAt = windup - T.defenseActiveTime * pressCueFraction;
             // 예비 모션: 색이 공격색으로 차오르고, 몸이 커진다 (발밑 고정). 콜라이더도 같은 트랜스폼이라 함께 커짐.
             for (float t = 0f; t < windup; t += Time.deltaTime)
             {
+                if (kind == EnemyKind.Melee && !cueShown && t >= cueAt)
+                {
+                    cueShown = true;
+                    ShowPressCue(cueIcon);
+                }
                 float k = t / windup;
                 float s = Mathf.Lerp(1f, pulse, Mathf.Sin(k * Mathf.PI * 0.5f));
                 SetScaleFeetAnchored(new Vector3(_baseScale.x * s, _baseScale.y * s, 1f));
@@ -226,6 +244,21 @@ namespace ParryRL
             _state = State.Idle;
             _cooldown = RollInterval();
         }
+
+        /// <summary>"지금 패링을 눌러": 노란 느낌표가 빨갛게 바뀐다 (빨강은 적 공격 경고 전용).</summary>
+        private void ShowPressCue(PressCueIcon icon)
+        {
+            Sfx.Play(SfxId.HeavyCue, 0.7f);
+            PressCueCount++;
+            if (icon != null) icon.TurnRed(); // 노랑 → 빨강 + 한 번 커졌다 가라앉는다
+            // 빨갛게 바뀌는 순간 뒤에서 붉은 불꽃이 확 퍼진다 (에셋의 경고 이펙트)
+            var warn = GameAssets.AttackFx != null ? GameAssets.AttackFx.heavyWarning : null;
+            Vector2 at = transform.position + Vector3.up * (_baseScale.y * 0.5f + 1.35f);
+            FxClip.PlayAt(warn, at, 0.45f, false, 48, new Color(1f, 1f, 1f, 0.8f));
+        }
+
+        /// <summary>느낌표를 띄운 횟수 (테스트용).</summary>
+        public int PressCueCount { get; private set; }
 
         private static GameTuning T => GameTuning.Current;
 
@@ -246,7 +279,7 @@ namespace ParryRL
             {
                 // 베기: 몸 앞면에서 한 번에 "삭" 뻗는다 (플레이어 공격 스킬처럼). 반응시간은 앞의 예비 모션이 맡는다.
                 // 순간이동 대신 아주 빠르게 뻗게 해서, 뻗는 경로 위의 플레이어를 물리 판정이 놓치지 않게 한다.
-                float dir = Mathf.Sign(DxToPlayer);
+                float dir = _attackDir; // 시작할 때 정한 방향 (플레이어 위치를 다시 보지 않는다)
                 Facing = dir;
                 var anchor = new Vector2(transform.position.x + dir * HalfWidth, _feetY + meleeAttackHeight);
                 EnemyAttack.SpawnSlash(this, type, anchor, dir, heavy ? meleeHeavySlashHeight : meleeNormalSlashHeight,
