@@ -101,6 +101,19 @@ namespace ParryRL.Tests
             yield return Capture("hub_skilltree_panel");
             SkillTreePanel.Close();
 
+            // 레벨 6(포인트 5)로 몇 칸 익힌 모습
+            Object.FindAnyObjectByType<PlayerLevel>().Restore(6, 0);
+            SkillTreeState.TryBuy(SkillTreeState.IndexOf(SkillBranch.Health, 0), 6);
+            SkillTreeState.TryBuy(SkillTreeState.IndexOf(SkillBranch.Health, 0), 6);
+            SkillTreeState.TryBuy(SkillTreeState.IndexOf(SkillBranch.MeleeAttack, 0), 6);
+            SkillTreeState.TryBuy(SkillTreeState.IndexOf(SkillBranch.Resource, 0), 6);
+            interactor.TryInteract();
+            yield return new WaitForSecondsRealtime(0.3f);
+            yield return Capture("hub_skilltree_learned");
+            SkillTreePanel.Close();
+            SkillTreeState.Reset();
+            Object.FindAnyObjectByType<PlayerLevel>().Restore(1, 0);
+
             MoveTo(portal.transform.position.x - 7f);   // 멀리서 본 문 (은은하게)
             yield return new WaitForSeconds(1.5f);
             yield return Capture("hub_portal_far");

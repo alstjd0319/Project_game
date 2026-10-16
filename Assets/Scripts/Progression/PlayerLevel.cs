@@ -26,8 +26,9 @@ namespace ParryRL
         private void OnEnemyDied(EnemyController enemy)
         {
             if (enemy.XpReward <= 0) return;
-            Hud.WorldText(enemy.transform.position + Vector3.up * 1.4f, $"+{enemy.XpReward} EXP", new Color(0.45f, 0.9f, 1f), 1.1f);
-            AddXp(enemy.XpReward);
+            int reward = Mathf.Max(1, Mathf.RoundToInt(enemy.XpReward * SkillTreeState.XpMultiplier));
+            Hud.WorldText(enemy.transform.position + Vector3.up * 1.4f, $"+{reward} EXP", new Color(0.45f, 0.9f, 1f), 1.1f);
+            AddXp(reward);
         }
 
         /// <summary>씬을 넘어 이어받은 레벨·경험치를 되돌린다 (알림·이벤트 없음).</summary>

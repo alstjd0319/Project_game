@@ -98,6 +98,8 @@ namespace ParryRL
         [NonSerialized] public bool hideRanged;
         /// <summary>도트 그림 위에 판정 네모를 반투명하게 겹쳐 본다 (그림과 판정이 맞는지 확인용).</summary>
         [NonSerialized] public bool showHitboxes;
+        /// <summary>스킬 포인트 제한 없이 노드를 찍는다 (테스트용 — 레벨과 상관없음).</summary>
+        [NonSerialized] public bool infiniteSkillPoints;
 
         public float InputBufferOrZero => inputBufferEnabled ? inputBuffer : 0f;
 
@@ -159,6 +161,7 @@ namespace ParryRL
                 _current.enemyInvincible = practice.enemyInvincible;
                 _current.heavyOnly = practice.heavyOnly;
                 _current.enemyPassive = practice.enemyPassive;
+                _current.infiniteSkillPoints = practice.infiniteSkillPoints;
             }
             Save();
             NotifyChanged();

@@ -27,6 +27,15 @@ MonoBehaviour:
   cooldownDisc: {fileID: 21300000, guid: 0ad7dc8f53837418b9670010e6164a42, type: 3}
   weaponStaff: {fileID: 21300000, guid: cf66a8132cf3b41dfbcbcd9a3471e08f, type: 3}
   weaponTalisman: {fileID: 21300000, guid: d410bd1dfce5e4aaeb96a72ba8cd7654, type: 3}
+  skillScroll: {fileID: 21300000, guid: 0d7dbd6c1eca041d8bfe9440dbd5d313, type: 3}
+  nodeLocked: {fileID: 21300000, guid: c1d5f9b6f13e74948b90836cf1b52564, type: 3}
+  nodeOpen: {fileID: 21300000, guid: 68e6e9f2e6ef840c9aaf7d7ffb455849, type: 3}
+  nodeOwned: {fileID: 21300000, guid: d7f57b610af234dfba3ab4120bd2db3c, type: 3}
+  nodeSelected: {fileID: 21300000, guid: 098e0442bf0cd4b2092c7dacefbafcfa, type: 3}
+  lineDim: {fileID: 21300000, guid: 224e0d438f65847898ae59c4e0d07182, type: 3}
+  lineGlow: {fileID: 21300000, guid: c66975245afbd4aac91a64afee92ca17, type: 3}
+  iconStaff: {fileID: 21300000, guid: d7b3867e5f50a43adb27c49ff2d78f25, type: 3}
+  iconTalisman: {fileID: 21300000, guid: 92269e5328a4346c3945ed8fe609bf16, type: 3}
   iconHeart: {fileID: 21300000, guid: 07f88407055ac44b29fbeb621c068783, type: 3}
   iconLantern: {fileID: 21300000, guid: 4afbfb80c80c9447ca702f4fc272c48b, type: 3}
   skillIcons:

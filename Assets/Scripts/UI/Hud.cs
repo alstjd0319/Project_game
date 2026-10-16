@@ -86,6 +86,21 @@ namespace ParryRL
             }
         }
 
+        /// <summary>설정 창을 연다 (게임은 멈추고 일시정지 메뉴는 숨겨, 창만 따로 보인다).</summary>
+        public void OpenSettings()
+        {
+            if (GameManager.Instance != null && !GameManager.Instance.IsPaused) GameManager.Instance.SetPaused(true);
+            _pausePanel.SetActive(false);
+            _tuningPanel.SetVisible(true);
+        }
+
+        /// <summary>설정 창을 닫고 일시정지 메뉴로 돌아간다 (ESC로 한 번 더 누르면 계속).</summary>
+        public void CloseSettings()
+        {
+            _tuningPanel.SetVisible(false);
+            _pausePanel.SetActive(GameManager.Instance != null && GameManager.Instance.IsPaused);
+        }
+
         // ───────────── 정적 API ─────────────
 
         /// <summary>화면 상단 중앙의 판정 문구 (패링!/강공격 패링! 등).</summary>
@@ -136,6 +151,11 @@ namespace ParryRL
             UpdateStatus();
             _skillBar.Tick(dt);
             _tuningPanel.Tick();
+            if (GameManager.Instance != null && !GameManager.Instance.IsGameOver && !GameManager.Instance.IsMenuOpen)
+            {
+                if (Input.GetKeyDown(Controls.TuningPanel)) { if (_tuningPanel.IsVisible) CloseSettings(); else OpenSettings(); }
+                else if (Input.GetKeyDown(Controls.Pause) && _tuningPanel.IsVisible) CloseSettings(); // 설정창에서 ESC = 일시정지 메뉴로
+            }
             UpdatePopup(dt);
             UpdateFloating(dt);
 
@@ -344,11 +364,12 @@ namespace ParryRL
             // 우상단 조작 안내 (스킬 키는 하단 스킬바에 표시되므로 이동·점프·일시정지만)
             var help = UiKit.Text("Help", _root, 22, TextAnchor.UpperRight);
             help.color = new Color(1f, 1f, 1f, 0.55f);
-            help.text = "←/→ 이동   Space 점프 (2단)   ↓+Space 발판 내려가기   Q 무기 전환   ESC 일시정지   F1 튜닝";
+            help.text = "←/→ 이동   Space 점프 (2단)   ↓+Space 발판 내려가기   Q 무기 전환   ESC 일시정지 · 설정";
             UiKit.Place(help.rectTransform, new Vector2(1f, 1f), new Vector2(-28f, -28f), new Vector2(900f, 32f));
 
-            // F1 튜닝 패널
+            // 설정 창 (ESC 일시정지 메뉴의 "설정" 버튼 / F1) — 따로 뜨는 창
             _tuningPanel = new TuningPanel(_root);
+            _tuningPanel.CloseRequested += CloseSettings;
 
             // 플레이 씬에서만 "사당으로" 버튼이 있다 (사당에서는 이미 사당)
             bool hubButton = !GameManager.InHub;
@@ -358,16 +379,18 @@ namespace ParryRL
                 ("계속  (ESC)", () => GameManager.Instance?.SetPaused(false)),
                 ("다시 시작  (R)", () => GameManager.Instance?.Restart()),
             };
+            var settings = ("설정  (F1)", (Action)OpenSettings);
             var overButtons = new List<(string, Action)> { ("다시 시작  (R)", () => GameManager.Instance?.Restart()) };
             if (hubButton)
             {
                 pauseButtons.Add(toHub);
                 overButtons.Add(toHub);
             }
+            pauseButtons.Add(settings);
             pauseButtons.Add(("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
             overButtons.Add(("시작 화면  (M)", () => GameManager.Instance?.GoToStartMenu()));
             string hubHint = hubButton ? "   H 사당" : "";
-            _pausePanel = CreateOverlay("PausePanel", $"일시 정지\n<size=28>ESC 계속   R 다시 시작{hubHint}   M 시작 화면</size>", pauseButtons.ToArray());
+            _pausePanel = CreateOverlay("PausePanel", $"일시 정지\n<size=28>ESC 계속   F1 설정   R 다시 시작{hubHint}   M 시작 화면</size>", pauseButtons.ToArray());
             _gameOverPanel = CreateOverlay("GameOverPanel", $"쓰러졌다\n<size=28>R 다시 시작{hubHint}   M 시작 화면</size>", overButtons.ToArray());
         }
 
@@ -500,7 +523,7 @@ namespace ParryRL
             UiKit.Stretch(text.rectTransform);
             text.text = message;
 
-            const float width = 340f, height = 70f, gap = 24f;
+            const float width = 310f, height = 70f, gap = 20f;
             for (int i = 0; i < buttons.Length; i++)
             {
                 var (label, action) = buttons[i];

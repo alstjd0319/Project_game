@@ -48,3 +48,14 @@ names = ['icon_heart', 'icon_lantern', 'icon_staff', 'icon_talisman', 'icon_coin
 for name, box in zip(names, boxes):
     icons.crop(box).save(f'{OUT}/ui_{name}.png')
 print('오린 조각:', len(HUD) + len(names))
+
+# ── 스킬 트리 시트(skilltree.png): 덩어리를 위→아래, 왼→오른쪽 순서로 11조각 ──
+st = remove_magenta(Image.open(os.path.join(SRC, 'skilltree.png')))
+tb = components(st, grow=6)
+tb.sort(key=lambda b: ((b[1] + b[3]) // 2 // 170, b[0]))
+assert len(tb) == 11, f'스킬 트리 조각 {len(tb)}개 (11개여야 한다)'
+tnames = ['node_locked', 'node_open', 'node_owned', 'node_selected', 'line_dim', 'line_dim_l', 'line_glow', 'line_glow_l',
+          'medal_staff', 'medal_talisman', 'skilltree_scroll']
+for name, box in zip(tnames, tb):
+    st.crop(box).save(f'{OUT}/ui_{name}.png')
+print('스킬 트리 조각:', len(tnames))

@@ -50,7 +50,7 @@ namespace ParryRL
             var t = GameTuning.Current;
             Notes.Clear();
 
-            float passive = hit.Ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(hit.Kind);
+            float passive = (hit.Ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(hit.Kind)) * SkillTreeState.AttackMultiplier(hit.Ranged);
 
             note = Notes.Count > 0 ? string.Join(" · ", Notes) : null;
             return Mathf.Max(1, Mathf.RoundToInt(baseDamage * passive));

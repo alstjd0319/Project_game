@@ -27,7 +27,9 @@ namespace ParryRL
 
         public CharacterProfile Current { get; private set; }
         public int Hp { get; private set; }
-        public int MaxHp => maxHp;
+        public int MaxHp => maxHp + BonusMaxHp;
+        /// <summary>스킬 트리로 올린 최대 체력 (<see cref="SkillTreeState"/>).</summary>
+        public int BonusMaxHp { get; private set; }
         public bool IsDead => Hp <= 0;
 
         public event Action<int> Damaged;
@@ -78,17 +80,25 @@ namespace ParryRL
         public int Heal(int amount)
         {
             if (IsDead || amount <= 0) return 0;
-            int healed = Mathf.Min(amount, maxHp - Hp);
+            int healed = Mathf.Min(amount, MaxHp - Hp);
             Hp += healed;
             if (healed > 0) Hud.WorldText(transform.position + Vector3.up * 1.3f, $"+{healed}", new Color(0.45f, 1f, 0.55f), 0.95f);
             return healed;
         }
 
         /// <summary>연습용 (튜닝 패널).</summary>
-        public void RestoreFullHp() => Hp = maxHp;
+        public void RestoreFullHp() => Hp = MaxHp;
 
         /// <summary>씬을 넘어 이어받은 체력을 되돌린다 (연출 없음). 1~최대 체력으로 맞춘다.</summary>
-        public void SetHp(int hp) => Hp = Mathf.Clamp(hp, 1, maxHp);
+        public void SetHp(int hp) => Hp = Mathf.Clamp(hp, 1, MaxHp);
+
+        /// <summary>스킬 트리 보너스를 반영한다. heal이면 늘어난 만큼 지금 체력도 올린다 (사당에서 찍을 때).</summary>
+        public void SetMaxHpBonus(int bonus, bool heal)
+        {
+            int delta = bonus - BonusMaxHp;
+            BonusMaxHp = bonus;
+            Hp = Mathf.Clamp(heal && delta > 0 ? Hp + delta : Hp, 1, MaxHp);
+        }
 
         /// <summary>도트 애니메이션(PlayerSprite)에 곱할 색 (흰색 = 원본). 피격·쿨타임 표시는 네모와 같다.</summary>
         public Color ArtTint { get; private set; } = Color.white;

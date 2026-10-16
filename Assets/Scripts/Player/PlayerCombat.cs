@@ -221,7 +221,7 @@ namespace ParryRL
 
             // 공격해 온 쪽을 먼저 바라본다 — 반격 방향 기준
             _motor.FaceTowards(attackerX);
-            _gauge.Add(heavy ? heavySuccessGain : normalSuccessGain);
+            _gauge.Add((heavy ? heavySuccessGain : normalSuccessGain) + SkillTreeState.GaugeGainBonus);
             DefenseSucceeded?.Invoke(new DefenseSuccess(_party.Current.kind, heavy, attack, perfect));
 
             // 타격감: 강공격은 한 층 더 크게.

@@ -29,6 +29,17 @@ namespace ParryRL
         [Tooltip("무기 전환 칸에 보이는 메달 (봉 / 부적)")] public Sprite weaponStaff;
         public Sprite weaponTalisman;
 
+        [Header("스킬 트리 창")]
+        [Tooltip("두루마리 창")] public Sprite skillScroll;
+        [Tooltip("노드 틀: 잠김 · 익힐 수 있음 · 다 익힘 · 선택 표시")] public Sprite nodeLocked;
+        public Sprite nodeOpen;
+        public Sprite nodeOwned;
+        public Sprite nodeSelected;
+        [Tooltip("노드 사이 이음 줄 (점선 / 빛나는 줄)")] public Sprite lineDim;
+        public Sprite lineGlow;
+        public Sprite iconStaff;
+        public Sprite iconTalisman;
+
         [Header("아이콘")]
         public Sprite iconHeart;
         public Sprite iconLantern;

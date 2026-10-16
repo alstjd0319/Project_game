@@ -265,3 +265,15 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 
 ## 사당 바닥 채움 (2026-10-16)
 - 사당 바닥은 에셋 지형 타일 세트(`ArtSource/gwimun/floor/shrine_tiles/`, 원본 `1016/미리보기/tiles/shrine/`)를 쓴다: `cut_floor.py`가 윗면 `ground_14` → `shrine_top_0`, 속 `ground_15`+변형 4장 → `shrine_fill_0~4`로 불투명 영역만 잘라 만든다(약 90px = 1유닛, `fillDarken` 0). 사당엔 발판이 없다. 옛 "땅 한 줄" 방식은 폐기.
+
+## 스킬 트리: 스탯 올리기 (2026-10-17)
+- `SkillTreeState`(Progression/, static): 노드 표 `Nodes`(체력 3 · 공격력 3 · 자원 3 = 3줄×3칸, 줄 안에서 앞 노드 1랭크 이상 익혀야 열림, 노드당 `MaxRank`·`PerRank`·`Cost`) + 익힌 랭크. **포인트 = 레벨 − 1 − 쓴 포인트**(따로 저장 안 함, 임시 규칙 — 재화(영혼석 등)가 정해지면 `TotalPoints`/`Available`만 바꾼다). `PlayerSession.Reset`이 같이 비운다(새 게임·다시 시작·시작 화면).
+- 효과는 읽는 쪽이 적용: `PlayerParty.MaxHp = maxHp + BonusMaxHp`(`SetMaxHpBonus`, 사당에서 찍으면 늘어난 만큼 체력도 참 / `PlayerPersistence.Start`가 씬 시작 때 보너스를 먼저 적용) · `DamageCalc.Compute`(× `AttackMultiplier`) · `PlayerLevel.OnEnemyDied`(경험치 × `XpMultiplier`) · `PlayerCombat` 패링 성공 도력(+ `GaugeGainBonus`) · `PlayerPersistence`(플레이 씬 시작 도력 `StartGauge`). 최대 도력(20 구슬)은 HUD 구슬 수가 고정이라 올리지 않는다.
+- `SkillTreePanel`: 에셋 `skilltree.png`(`cut_ui.py`가 `ui_skilltree_scroll`·`ui_node_*`·`ui_line_*` 등 11조각으로 오림, `UiArt`에 연결) 두루마리 안에 세 줄 노드 + 선택 노드 설명 + 익히기/닫기. 두루마리 네 귀퉁이 장식이 글을 가려서 글자·버튼은 장식 밖(x 215~930)에 둔다. 테스트 `SkillTreeTests`, 캡처 `hub_skilltree_panel`·`hub_skilltree_learned`.
+
+## 설정 창 (2026-10-17) — F1 패널 → 따로 뜨는 창
+- `TuningPanel`은 이제 화면 가운데에 따로 뜨는 **설정 창**(폭 680, 뒤는 α0.3 어둡게 + 창 α0.97). 여는 길: ESC 일시정지 메뉴의 "설정 (F1)" 버튼 또는 F1 → `Hud.OpenSettings`(게임 멈춤 + 일시정지 메뉴 숨김), 닫기: 닫기 버튼 · ESC · F1 → `Hud.CloseSettings`(일시정지 메뉴로 복귀). `GameManager`는 설정 창이 열려 있거나 `TuningPanel.ClosedFrame == Time.frameCount`이면 ESC로 일시정지를 토글하지 않는다. 예전 "게임을 멈추지 않고 옆에서 실시간 튜닝"은 없어졌다.
+- 일시정지 버튼은 계속 · 다시 시작 · (사당으로) · 설정 · 시작 화면 (사당에서는 4개, 플레이 씬 5개).
+- 연습 탭 테스트 항목: `GameTuning.infiniteSkillPoints`(스킬 포인트 무제한, 저장 안 됨 — `SkillTreeState.Available`이 99) · "스킬 트리 초기화" · "레벨 초기화". 테스트: `PauseMenuTests`.
+
+- (2026-10-17) 스킬 트리 줄이 **체력 · 근접 · 원거리 · 자원** 4개로 바뀌었다(공격력 줄을 `MeleeAttack`/`RangedAttack`으로 분리: `SkillStat.MeleeAttackPercent/RangedAttackPercent`, `SkillTreeState.AttackMultiplier(ranged)`를 `DamageCalc`가 `hit.Ranged`로 고름). 줄을 늘릴 땐 `SkillBranch`·`BranchNames`·`SkillTreePanel.Rows`와 줄 아이콘만 맞추면 된다.

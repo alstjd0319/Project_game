@@ -14,11 +14,11 @@ namespace ParryRL
     {
         public static TuningPanel Instance { get; private set; }
 
-        private const float Width = 560f;
+        private const float Width = 680f;
         private const float RowHeight = 44f;
         private const float SaveDelay = 0.4f;
 
-        private static readonly Color PanelColor = new(0.06f, 0.07f, 0.1f, 0.88f);
+        private static readonly Color PanelColor = new(0.06f, 0.07f, 0.1f, 0.97f);
         private static readonly Color TabOff = new(0.2f, 0.22f, 0.28f);
         private static readonly Color TabOn = new(0.95f, 0.75f, 0.25f);
         private static readonly Color Accent = new(0.45f, 0.9f, 1f);
@@ -89,7 +89,7 @@ namespace ParryRL
         /// 내용 영역 최대 높이 — 넘치면 휠 스크롤. 패널 아래끝이 바닥에 선 적의 머리 위(1080p 기준 약 710px)에서 멈추는 값.
         /// 튜닝하는 동안 판정 대상(적·공격)이 패널에 가리면 튜닝 자체가 의미 없어지므로.
         /// </summary>
-        private const float MaxContentHeight = 420f;
+        private const float MaxContentHeight = 470f;
         private PlayerDefense _defense;
         private PlayerParty _party;
         private SkillGauge _gauge;
@@ -109,21 +109,35 @@ namespace ParryRL
 
         public bool IsVisible => _root.activeSelf;
 
+        /// <summary>테스트용: 창 안의 컴포넌트를 모두 찾는다.</summary>
+        public T[] GetComponentsForTest<T>() where T : Component => _root.GetComponentsInChildren<T>(true);
+
+        /// <summary>창을 닫아 달라는 요청 (닫기 버튼) — Hud가 받아 일시정지 메뉴로 돌아간다.</summary>
+        public event Action CloseRequested;
+
+        /// <summary>창이 마지막으로 닫힌 프레임 (같은 프레임의 ESC가 일시정지를 풀지 않도록 GameManager가 본다).</summary>
+        public static int ClosedFrame { get; private set; } = -1;
+
         public TuningPanel(RectTransform canvasRoot)
         {
             Instance = this;
             EnsureEventSystem();
 
-            var bg = UiKit.Image("TuningPanel", canvasRoot, PanelColor);
-            bg.raycastTarget = true; // 패널 위 클릭이 뒤로 새지 않게
-            _root = bg.gameObject;
+            // 설정은 따로 뜨는 창이다 (일시정지 메뉴와 겹치지 않는다): 살짝 어두운 배경 위 가운데에 창
+            var dim = UiKit.Image("SettingsWindow", canvasRoot, new Color(0f, 0f, 0f, 0.3f));
+            dim.raycastTarget = true; // 창 밖 클릭이 뒤로 새지 않게
+            UiKit.Stretch(dim.rectTransform);
+            _root = dim.gameObject;
+            var bg = UiKit.Image("TuningPanel", dim.rectTransform, PanelColor);
+            bg.raycastTarget = true;
             var root = bg.rectTransform;
-            UiKit.Place(root, new Vector2(1f, 1f), new Vector2(-24f, -72f), new Vector2(Width, 700f));
+            UiKit.Place(root, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(Width, 700f));
+            root.pivot = new Vector2(0.5f, 0.5f);
 
             var title = UiKit.Text("Title", root, 30, TextAnchor.MiddleLeft);
             title.fontStyle = FontStyle.Bold;
             title.color = Accent;
-            title.text = "튜닝 패널  <size=20><color=#999999>F1로 닫기</color></size>";
+            title.text = "설정  <size=20><color=#999999>ESC · F1로 닫기</color></size>";
             UiKit.Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(20f, -14f), new Vector2(Width - 40f, 40f));
 
             _status = UiKit.Text("Status", root, 17, TextAnchor.MiddleLeft, outline: false);
@@ -175,6 +189,11 @@ namespace ParryRL
             _resetLabel = reset.GetComponentInChildren<Text>();
             reset.onClick.AddListener(OnResetClicked);
 
+            var close = UiKit.Button("Close", root, "닫기", 22, new Color(0.34f, 0.26f, 0.55f));
+            UiKit.Place(close.GetComponent<RectTransform>(), new Vector2(1f, 1f), new Vector2(-20f, -12f), new Vector2(120f, 42f));
+            close.GetComponent<RectTransform>().pivot = new Vector2(1f, 1f);
+            close.onClick.AddListener(() => CloseRequested?.Invoke());
+
             var hint = UiKit.Text("Hint", root, 16, TextAnchor.MiddleRight, outline: false);
             hint.color = new Color(1f, 1f, 1f, 0.4f);
             hint.text = "바꾸는 즉시 적용 · 자동 저장\n연습 스위치는 저장 안 됨";
@@ -195,10 +214,15 @@ namespace ParryRL
             if (_defense != null) _defense.TimingReported += OnTiming;
         }
 
-        public void Dispose() => GameTuning.Changed -= RefreshAll;
+        public void Dispose()
+        {
+            GameTuning.Changed -= RefreshAll;
+            if (Instance == this) Instance = null;
+        }
 
         public void SetVisible(bool visible)
         {
+            if (_root.activeSelf && !visible) ClosedFrame = Time.frameCount;
             _root.SetActive(visible);
             if (visible) RefreshAll();
         }
@@ -236,8 +260,6 @@ namespace ParryRL
         /// <summary>Hud.Update에서 호출 (실시간 dt).</summary>
         public void Tick()
         {
-            if (Input.GetKeyDown(Controls.TuningPanel)) SetVisible(!IsVisible);
-
             // 클릭한 UI가 선택된 채 남으면 Space/Enter가 그 버튼을 다시 누르므로 매번 선택 해제
             var es = EventSystem.current;
             if (es != null && es.currentSelectedGameObject != null && !Input.GetMouseButton(0))
@@ -361,6 +383,7 @@ namespace ParryRL
                 if (v && _gauge != null) _gauge.Add(_gauge.Max); // 켜면 가득 채워서 보이는 것도 맞게
             }, persist: false);
             AddToggle("판정 상자 보기 (그림 위에 겹쳐 표시)", () => T.showHitboxes, v => T.showHitboxes = v, persist: false);
+            AddToggle("스킬 포인트 무제한 (레벨과 상관없이 찍기)", () => T.infiniteSkillPoints, v => T.infiniteSkillPoints = v, persist: false);
             Space(10f);
             Header("바로 실행");
             AddButton("배경 구간 바꾸기 (사당 → 1구간 → 2구간 → 3구간)", () =>
@@ -372,6 +395,17 @@ namespace ParryRL
             });
             AddButton("도력 가득 채우기", () => { if (_gauge != null) _gauge.Add(_gauge.Max); });
             AddButton("체력 회복", () => { if (_party != null) _party.RestoreFullHp(); });
+            AddButton("스킬 트리 초기화 (익힌 노드 전부 되돌리기)", () =>
+            {
+                SkillTreeState.Reset();
+                if (_party != null) _party.SetMaxHpBonus(0, false);
+            });
+            AddButton("레벨 초기화 (Lv.1로 — 스킬 트리도 함께)", () =>
+            {
+                if (_level != null) _level.Restore(1, 0);
+                SkillTreeState.Reset();
+                if (_party != null) _party.SetMaxHpBonus(0, false);
+            });
             AddButton("레벨업 +1", () => { if (_level != null) _level.AddXp(_level.XpToNext - _level.Xp); });
         }
 

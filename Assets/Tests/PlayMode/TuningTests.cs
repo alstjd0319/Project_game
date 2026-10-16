@@ -127,7 +127,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 튜닝패널은_어느_탭이든_높이_상한을_넘지_않는다()
+        public IEnumerator 설정창은_어느_탭이든_화면_높이_안에_들어간다()
         {
             var panel = TuningPanel.Instance;
             panel.SetVisible(true);
@@ -136,7 +136,7 @@ namespace ParryRL.Tests
             {
                 panel.SelectTab(i);
                 yield return null;
-                Assert.LessOrEqual(panel.PanelHeight, 146f + 420f + 76f + 0.5f, $"탭 {i}: 판정 대상(적)을 가리지 않도록 높이 상한");
+                Assert.LessOrEqual(panel.PanelHeight, 146f + 470f + 76f + 0.5f, $"탭 {i}: 따로 뜨는 창이 1080p 화면(위아래 여유 포함) 안에 들어가는 높이 상한");
             }
             panel.SelectTab(1);
             Assert.IsTrue(panel.IsScrollable, "판정 탭은 내용이 길어 스크롤");

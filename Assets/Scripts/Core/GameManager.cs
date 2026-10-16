@@ -39,7 +39,9 @@ namespace ParryRL
 
         private void Update()
         {
-            if (Input.GetKeyDown(Controls.Pause) && !IsGameOver && !IsMenuOpen) SetPaused(!IsPaused);
+            // 설정 창이 열려 있거나 방금 ESC로 닫힌 프레임이면 일시정지는 그대로 둔다 (설정창 → 일시정지 메뉴로만 돌아감)
+            bool settingsBusy = TuningPanel.Instance != null && (TuningPanel.Instance.IsVisible || TuningPanel.ClosedFrame == Time.frameCount);
+            if (Input.GetKeyDown(Controls.Pause) && !IsGameOver && !IsMenuOpen && !settingsBusy) SetPaused(!IsPaused);
             if (Input.GetKeyDown(Controls.Restart) && (IsPaused || IsGameOver)) Restart();
             if (Input.GetKeyDown(Controls.MainMenu) && (IsPaused || IsGameOver)) GoToStartMenu();
             if (Input.GetKeyDown(Controls.Hub) && (IsPaused || IsGameOver) && !InHub) LoadHub();

@@ -10,7 +10,13 @@ namespace ParryRL
         private void Start()
         {
             var party = GetComponent<PlayerParty>();
+            party.SetMaxHpBonus(SkillTreeState.MaxHpBonus, false); // 스킬 트리 보너스를 먼저 — 아래 체력 복원이 늘어난 최대치 안에서 이뤄진다
             PlayerSession.Apply(party);
+            if (!PlayerSession.HasData) party.SetHp(party.MaxHp);
+
+            // 판 시작 도력 (스킬 트리): 플레이 씬에 들어올 때 그만큼은 채워 준다
+            var gauge = GetComponent<SkillGauge>();
+            if (!GameManager.InHub && gauge != null && SkillTreeState.StartGauge > gauge.Value) gauge.SetValue(SkillTreeState.StartGauge);
 
             // 사당(안전지대)에 들어오면 체력이 자동으로 가득 찬다 (도력·레벨·무기는 그대로)
             if (GameManager.InHub && party.Hp < party.MaxHp)

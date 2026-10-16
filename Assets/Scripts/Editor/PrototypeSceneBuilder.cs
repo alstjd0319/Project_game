@@ -619,7 +619,9 @@ namespace ParryRL.EditorTools
             art.orbEmpty = S("orb_empty"); art.orbFull = S("orb_full"); art.orbSpark = S("orb_spark"); art.orbString = S("orb_string");
             art.slotParchment = S("slot_parchment"); art.slotActive = S("slot_active"); art.slotLocked = S("slot_locked");
             art.cooldownDisc = S("cooldown_disc"); art.weaponStaff = S("weapon_staff"); art.weaponTalisman = S("weapon_talisman");
-            art.iconHeart = S("icon_heart"); art.iconLantern = S("icon_lantern");
+            art.iconHeart = S("icon_heart"); art.iconLantern = S("icon_lantern"); art.iconStaff = S("icon_staff"); art.iconTalisman = S("icon_talisman");
+            art.skillScroll = S("skilltree_scroll"); art.nodeLocked = S("node_locked"); art.nodeOpen = S("node_open");
+            art.nodeOwned = S("node_owned"); art.nodeSelected = S("node_selected"); art.lineDim = S("line_dim"); art.lineGlow = S("line_glow");
             art.skillIcons = new Sprite[12];
             for (int i = 0; i < 12; i++) art.skillIcons[i] = S($"skill_{i:00}");
             EditorUtility.SetDirty(art);

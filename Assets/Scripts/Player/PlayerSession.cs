@@ -23,7 +23,11 @@ namespace ParryRL
         public static bool HasData { get; private set; }
         public static Data Current { get; private set; }
 
-        public static void Reset() => HasData = false;
+        public static void Reset()
+        {
+            HasData = false;
+            SkillTreeState.Reset(); // 포인트는 레벨에서 나오므로 익힌 랭크도 같이 비운다
+        }
 
         /// <summary>지금 씬의 플레이어 상태를 담는다. 플레이어가 없는 씬(시작 화면 등)에서는 아무것도 안 한다.</summary>
         public static void Capture()
