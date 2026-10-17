@@ -297,3 +297,6 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - (2026-10-17) **다음 방 문은 둘 다 왼쪽 끝에 나란히**: `RoomController.gateInset`(1.8, 바닥 왼쪽 끝에서 안쪽) + `gateSpacing`(4.2) — 위 "1단계"의 왼쪽 끝·오른쪽 끝 배치는 이 규칙으로 바뀌었다. 발판은 왼쪽 끝이 `RoomLayouts.MaxLeftReach`(14.2) 안쪽이어야 문 글자를 안 가린다(`LayoutTests`).
 - (2026-10-17) **문은 오른쪽 끝에 나란히, 방은 왼쪽 끝에서 시작**: `RoomController.gateInset`(1.8)·`gateSpacing`(4.2)은 이제 *오른쪽* 끝 기준(바깥 문 = `Gates[0]`, 안쪽 = `Gates[1]`)이고, `PlacePlayerAtStart`가 런 방에 들어올 때 플레이어를 `arenaMinX + startInset(2)`에 놓고 `CameraRig.SnapToTarget`으로 카메라도 바로 옮긴다(연습 모드는 그대로). 발판 한계는 `RoomLayouts.MaxGateReach`(14.2, 오른쪽 끝 기준). 앞의 "왼쪽 끝에 나란히" 문장은 이 규칙으로 바뀌었다.
 - **`DoorEffects`**(World/): 문 안쪽 소용돌이(`portalSwirl` 16장) + 빛무리 + 안쪽 빛 + 접근 밝기·상호작용 가능 시 깜빡임을 한 컴포넌트로 뺐다(`Tint`·`SwirlTintAmount`로 색을 섞음). `ShrinePortal`은 `gateArt`가 있으면 이 컴포넌트를 붙이고(`Brightness`·`HasDoorEffects`는 그대로 노출), `RoomGate`는 방 종류 색으로 붙인다. 문이 사라지면 연출도 같이 사라지게 판정 상자의 자식으로 두고 부모의 늘림을 상쇄한다.
+
+## 근접 일반공격 입력 버퍼 (2026-10-17)
+- `PlayerCombat.PressAttack()`(A 키 입력): 쿨타임이 `attackBuffer`(0.22초) 이하로 남았을 때 누르면 `_attackBuffered`로 기억해 뒀다가 `Update`에서 쿨타임이 끝나는 순간 `TryAttackSkill`을 부른다(패링 중·도력 부족이면 거기서 막힘). 쿨타임이 더 남았으면 예전처럼 무시. `Update`의 A 키는 `PressAttack`을 부른다(테스트는 `PressAttack`/`TryAttackSkill`). 무기 전환 시 버퍼를 비운다. 테스트 `SkillTests`.

@@ -37,6 +37,49 @@ namespace ParryRL.Tests
             Physics2D.SyncTransforms();
         }
 
+        [UnityTest]
+        public IEnumerator 쿨타임_막바지에_누른_A는_끝나는_순간_바로_나가고_한참_일찍_누른_A는_무시된다()
+        {
+            GameTuning.Current.infiniteGauge = true; // 테스트 기준은 일반공격이 도력을 쓰는 쪽이라 도력 걱정 없이
+            int used = 0;
+            _combat.ActionUsed += a => { if (a == PlayerAction.Attack) used++; };
+            Assert.IsTrue(_combat.TryAttackSkill());
+            Assert.AreEqual(1, used);
+
+            // 쿨타임이 한참 남았을 때(0.35초 중 막 쳤을 때) 누른 A는 기억하지 않는다
+            _combat.PressAttack();
+            yield return new WaitForSeconds(0.1f);
+            Assert.AreEqual(1, used, "한참 일찍 누른 건 무시");
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual(1, used, "나중에 저절로 나가지 않는다");
+
+            // 쿨타임이 거의 끝날 때(남은 시간 < 버퍼) 누르면 끝나는 순간 나간다
+            _combat.TryAttackSkill();
+            Assert.AreEqual(2, used);
+            yield return new WaitForSeconds(0.25f); // 0.35 중 0.1 남음
+            Assert.Greater(_combat.AttackSkillCooldownLeft, 0f);
+            _combat.PressAttack();
+            Assert.AreEqual(2, used, "아직 쿨타임 중이라 바로는 안 나간다");
+            yield return new WaitForSeconds(0.2f);
+            Assert.AreEqual(3, used, "쿨타임이 끝나자 눌러 둔 공격이 나갔다");
+        }
+
+        [UnityTest]
+        public IEnumerator 연속_입력은_단계가_끊기지_않고_1_2_3단으로_이어진다()
+        {
+            GameTuning.Current.infiniteGauge = true;
+            var stages = new System.Collections.Generic.List<int>();
+            _combat.ActionUsed += a => { if (a == PlayerAction.Attack) stages.Add(_combat.NextComboStage); };
+            // 박자를 정확히 맞추지 않고 0.3초마다 계속 누른다 (쿨타임 0.35초라 매번 막바지에 눌리는 셈)
+            for (int i = 0; i < 6; i++)
+            {
+                _combat.PressAttack();
+                yield return new WaitForSeconds(0.3f);
+            }
+            yield return new WaitForSeconds(0.7f);
+            Assert.GreaterOrEqual(stages.Count, 4, "눌러 둔 입력이 끊기지 않고 이어졌다");
+        }
+
         private IEnumerator ComboHit(float enemyDx, System.Action<int> report)
         {
             // 적을 앞에 세워 두고 A를 한 번 친 뒤 줄어든 체력(= 그 단의 데미지)을 알려 준다

@@ -69,6 +69,7 @@ namespace ParryRL
         [SerializeField, Tooltip("3단 마무리 박스 — 플레이어를 가운데로 양옆을 모두 휩쓴다")] private Vector2 comboBox3 = new(3.4f, 2.2f);
         [SerializeField, Tooltip("3단 마무리에 맞은 적의 기절 시간")] private float comboStun3 = 0.35f;
         [SerializeField, Tooltip("마무리(3단) 뒤 다음 공격까지 쿨타임 — 1·2단보다 길게 두어 박자를 만든다")] private float comboFinisherCooldown = 0.6f;
+        [SerializeField, Tooltip("쿨타임이 끝나기 이 시간 안쪽에 A를 누르면 기억해 뒀다가 쿨타임이 끝나는 순간 바로 나간다 — 연속으로 칠 때 박자를 살짝 놓쳐도 끊기지 않게")] private float attackBuffer = 0.22f;
         [SerializeField, Tooltip("한 단을 치고 쿨타임이 끝난 뒤에도 이 시간 안에 다음 A를 누르면 다음 단으로 이어진다")] private float comboWindow = 0.6f;
 
         [Header("원거리 무기 (Q로 전환) — 일반공격과 반격이 화살로 바뀐다")]
@@ -164,6 +165,7 @@ namespace ParryRL
         private PlayerDefense _defense;
         private SuccessEffects _effects;
         private float _attackCd;
+        private bool _attackBuffered;  // 쿨타임 막바지에 눌러 둔 A (끝나면 자동으로 나간다)
         private int _comboDone;        // 이어서 친 단 수 (0 = 처음부터, 다음은 +1단)
         private float _comboExpire;    // 이 시각이 지나면 다시 1단부터
         private float _moveCd;        // 다음 충전까지 남은 시간 (충전이 가득이면 0)
@@ -185,6 +187,11 @@ namespace ParryRL
         private void Update()
         {
             _attackCd = Mathf.Max(0f, _attackCd - Time.deltaTime);
+            if (_attackBuffered && _attackCd <= 0f)
+            {
+                _attackBuffered = false; // 눌러 둔 공격: 쿨타임이 끝나는 순간 바로 (패링 중이거나 도력이 모자라면 TryAttackSkill이 막는다)
+                if (!GameManager.InputBlocked && !_party.IsDead) TryAttackSkill();
+            }
             if (_comboDone > 0 && Time.time > _comboExpire) _comboDone = 0; // 이어치기 시간이 끝나면 1단부터
             if (_moveCharges < 0 || _moveCharges > MoveSkillMaxCharges) _moveCharges = MoveSkillMaxCharges; // 최대 횟수를 바꾸면 맞춘다
             if (_moveCharges < MoveSkillMaxCharges)
@@ -201,7 +208,7 @@ namespace ParryRL
             _skill2Cd = Mathf.Max(0f, _skill2Cd - Time.deltaTime);
 
             if (GameManager.InputBlocked || _party.IsDead) return;
-            if (Input.GetKeyDown(Controls.AttackSkill)) TryAttackSkill();
+            if (Input.GetKeyDown(Controls.AttackSkill)) PressAttack();
             if (Input.GetKeyDown(Controls.Skill1)) TrySkill(1);
             if (Input.GetKeyDown(Controls.Skill2)) TrySkill(2);
             if (Input.GetKeyDown(Controls.MoveSkill)) TryMoveSkill();
@@ -283,6 +290,18 @@ namespace ParryRL
         }
 
         // ───────────── 스킬 ─────────────
+
+        /// <summary>A 키 입력. 쿨타임이 거의 끝났으면(attackBuffer 안쪽) 기억해 뒀다가 끝나는 순간 나가고, 아직 한참 남았으면 예전처럼 무시한다.</summary>
+        public void PressAttack()
+        {
+            bool parrying = _defense.State == DefenseState.Active && !_defense.SucceededThisActive;
+            if (_attackCd > 0f && _attackCd <= attackBuffer && !parrying)
+            {
+                _attackBuffered = true;
+                return;
+            }
+            TryAttackSkill();
+        }
 
         public bool TryAttackSkill()
         {
@@ -442,6 +461,7 @@ namespace ParryRL
         public bool TrySwitchWeapon()
         {
             _comboDone = 0; // 무기를 바꾸면 단계는 처음부터
+            _attackBuffered = false;
             if (_party.IsDead) return false;
             if (_weaponCd > 0f || _defense.State == DefenseState.Active)
             {
