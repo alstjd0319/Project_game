@@ -60,11 +60,11 @@ namespace ParryRL
         [SerializeField] private int attackSkillCost = 3;
         [SerializeField, Tooltip("켜면 A 공격 스킬이 도력을 쓰지 않는다 (쿨타임만 적용). 효율 계산용 기본 비용은 그대로 둔다")] private bool attackSkillFree = true;
         [SerializeField] private float attackSkillCooldown = 0.35f;
-        [SerializeField, Tooltip("기본 일반공격 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐")] private int attackSkillDamage = 15;
+        [SerializeField, Tooltip("기본 일반공격(봉 1단) 데미지 — 캐릭터 공격력 배율(GameTuning)이 곱해짐. 평타만으로 너무 쉽게 잡혀 15 → 10")] private int attackSkillDamage = 10;
         [SerializeField] private Vector2 meleeSkillBox = new(2.4f, 1.6f);
         [Header("봉 일반공격 단계 (A를 이어 누르면 1 → 2 → 3단)")]
-        [SerializeField, Tooltip("2단 / 3단 데미지 (1단은 위 일반공격 데미지)")] private int comboDamage2 = 18;
-        [SerializeField] private int comboDamage3 = 28;
+        [SerializeField, Tooltip("2단 / 3단 데미지 (1단은 위 일반공격 데미지). 1·2단은 몬스터를 경직시키지 않고 3단만 경직 + 기절")] private int comboDamage2 = 12;
+        [SerializeField] private int comboDamage3 = 20;
         [SerializeField, Tooltip("2단 베기 박스 (앞쪽, 위로 올려 벰)")] private Vector2 comboBox2 = new(2.6f, 1.9f);
         [SerializeField, Tooltip("3단 마무리 박스 — 플레이어를 가운데로 양옆을 모두 휩쓴다")] private Vector2 comboBox3 = new(3.4f, 2.2f);
         [SerializeField, Tooltip("3단 마무리에 맞은 적의 기절 시간")] private float comboStun3 = 0.35f;
@@ -73,8 +73,8 @@ namespace ParryRL
         [SerializeField, Tooltip("한 단을 치고 쿨타임이 끝난 뒤에도 이 시간 안에 다음 A를 누르면 다음 단으로 이어진다")] private float comboWindow = 0.6f;
 
         [Header("원거리 무기 (Q로 전환) — 일반공격과 반격이 화살로 바뀐다")]
-        [SerializeField, Tooltip("원거리 일반공격 기본 데미지 (근접 15보다 낮게 — 대신 멀리서 안전하게)")] private int arrowDamage = 12;
-        [SerializeField] private float arrowCooldown = 0.45f;
+        [SerializeField, Tooltip("원거리 일반공격 기본 데미지 — 경직이 약한 대신 빠르게 연사 (12 → 7)")] private int arrowDamage = 7;
+        [SerializeField, Tooltip("원거리 일반공격 쿨타임 (0.45 → 0.3, 연사 속도를 올림)")] private float arrowCooldown = 0.3f;
         [SerializeField] private float arrowSpeed = 16f;
         [SerializeField] private float arrowRange = 12f;
         [SerializeField, Tooltip("원거리 반격 화살 속도 (일반 / 강공격) — 목표를 따라가는 유도")] private float counterArrowSpeedNormal = 8f;
@@ -332,6 +332,8 @@ namespace ParryRL
             Vector2 pos = transform.position;
             Color color = WeaponColor;
             var hit = NewHit(DamageSource.AttackSkill, false);
+            // 평타는 몬스터 공격을 끊지 않는다(패링이 할 일): 부적 = 살짝 밀림만, 봉 1·2단 = 경직 없음, 봉 3단(마무리)만 경직 + 기절
+            hit.Stagger = IsRanged ? HitStagger.Light : stage == 3 ? HitStagger.Full : HitStagger.None;
 
             if (IsRanged)
             {

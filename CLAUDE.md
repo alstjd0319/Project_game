@@ -308,3 +308,7 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 
 ## 경험치 = 방 클리어 (2026-10-17)
 - 스킬 포인트는 레벨업(레벨 − 1)로 유지. **런 중(`RunState.Active`)엔 `PlayerLevel.OnEnemyDied`가 경험치를 주지 않고**, `RoomController.Clear` → `GrantRoomXp`가 `RoomPlan.XpReward(type, finalRoom)`(일반 20 · 엘리트 35 · 관문 50 · 보상·상점 0, 가안) × `SkillTreeState.XpMultiplier`를 한 번에 준다(`LastRoomXp`). 연습 모드는 예전처럼 몬스터마다. 테스트 `RunTests`.
+
+## 평타 경직 구분·데미지 감소 (2026-10-17)
+- `HitStagger { Full, Light, None }`(Combat/DamageCalc.cs) → `HitInfo.Stagger`(기본 Full) → `DamageCalc.Apply` → `EnemyController.TakeDamage(..., stagger)`: Full = 밀림 + 경직 + 공격 취소(예전 그대로) / Light = `lightKnockbackRatio`(0.3)만큼 밀림, 경직·취소 없음 / None = 피해·번쩍임만. `Staggered` 이벤트(피격 모션)는 Full에서만.
+- `PlayerCombat.TryAttackSkill`: 부적 평타 = Light, 봉 1·2단 = None, 봉 3단 = Full(+기절). 반격·스킬은 Full. 데미지: 봉 10/12/20, 부적 7(쿨 0.3). 평타만으로 몬스터 공격이 끊기면 패링할 이유가 없다는 사용자 피드백. 테스트 `SkillTests`·`CoreLoopTests`.

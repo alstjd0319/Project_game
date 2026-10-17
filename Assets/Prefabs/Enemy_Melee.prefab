@@ -188,6 +188,7 @@ MonoBehaviour:
   staggerTime: 0.15
   knockback: 0.25
   xpReward: 10
+  lightKnockbackRatio: 0.3
   recoverTime: 0.35
   normalDamage: 10
   heavyDamage: 20

@@ -20,6 +20,7 @@ namespace ParryRL
         [SerializeField] private float staggerTime = 0.15f;
         [SerializeField] private float knockback = 0.25f;
         [SerializeField, Tooltip("처치 시 경험치")] private int xpReward = 10;
+        [SerializeField, Tooltip("약한 경직(부적 평타)에 맞았을 때 밀리는 거리 비율 (보통 밀림 대비)")] private float lightKnockbackRatio = 0.3f;
 
         [Header("공격 공통 — 강공격 확률·공격 간격·예비 모션 길이·반응시간·원거리 속도는 GameTuning (F1 패널)")]
         [SerializeField] private float recoverTime = 0.35f;
@@ -328,7 +329,8 @@ namespace ParryRL
         }
 
         /// <param name="note">데미지 숫자 옆에 작게 붙일 설명 (예: "원거리 ×1.4")</param>
-        public void TakeDamage(int damage, float fromDirection, bool heavy, string note = null)
+        /// <param name="stagger">Full = 밀림 + 경직 + 하던 공격 끊김 / Light = 살짝 밀림만 / None = 피해만 (HitStagger)</param>
+        public void TakeDamage(int damage, float fromDirection, bool heavy, string note = null, HitStagger stagger = HitStagger.Full)
         {
             if (IsDead) return;
 
@@ -348,9 +350,18 @@ namespace ParryRL
                 return;
             }
 
+            float half = _baseScale.x * 0.5f;
+            if (stagger == HitStagger.None) return; // 피해·번쩍임만 — 하던 일(이동·예비 모션·공격)은 그대로
+            if (stagger == HitStagger.Light)
+            {
+                // 살짝 밀리기만 하고 경직·공격 취소는 없다
+                float lx = Mathf.Clamp(transform.position.x + fromDirection * knockback * lightKnockbackRatio, _arenaMinX + half, _arenaMaxX - half);
+                SetPosition(new Vector2(lx, transform.position.y));
+                return;
+            }
+
             StopAllCoroutines();
             RestoreBody();
-            float half = _baseScale.x * 0.5f;
             float x = Mathf.Clamp(transform.position.x + fromDirection * knockback, _arenaMinX + half, _arenaMaxX - half);
             SetPosition(new Vector2(x, transform.position.y));
             StartCoroutine(StaggerRoutine());

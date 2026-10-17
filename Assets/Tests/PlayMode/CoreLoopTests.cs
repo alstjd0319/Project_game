@@ -153,7 +153,7 @@ namespace ParryRL.Tests
             _gauge.Add(3);
             Assert.IsTrue(_combat.TryAttackSkill());
             yield return null;
-            Assert.AreEqual(1f - 22f / 100f, _melee.HpRatio, 1e-4f, "일반공격 15 × 1.5 = 22.5 → 22");
+            Assert.AreEqual(1f - 15f / 100f, _melee.HpRatio, 1e-4f, "일반공격(봉 1단) 10 × 1.5 = 15");
         }
         [UnityTest]
         public IEnumerator 이동스킬_쿨타임은_1초()
@@ -345,8 +345,8 @@ namespace ParryRL.Tests
         {
             TestScene.SetAttackSkillFree(true);
             Assert.IsTrue(_combat.TrySwitchWeapon());
-            Assert.AreEqual(12, _combat.AttackSkillBaseDamage, "원거리 일반공격 기본 12");
-            Assert.AreEqual(0.45f, _combat.AttackSkillCooldown, 1e-4f, "원거리 쿨타임 0.45");
+            Assert.AreEqual(7, _combat.AttackSkillBaseDamage, "원거리 일반공격 기본 7 (빠르게 연사)");
+            Assert.AreEqual(0.3f, _combat.AttackSkillCooldown, 1e-4f, "원거리 쿨타임 0.3 (빠르게 연사)");
 
             _melee.transform.position = new Vector3(PlayerPos.x + 5f * _defense.GetComponent<PlayerMotor>().Facing, _melee.transform.position.y, 0f);
             _melee.GetComponent<Rigidbody2D>().position = _melee.transform.position;
@@ -357,7 +357,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(1f, _melee.HpRatio, "근접 박스는 5칸 밖 적에게 닿지 않는다 — 화살은 날아가는 중");
 
             yield return new WaitForSeconds(0.8f);
-            Assert.AreEqual(1f - 12f / 100f, _melee.HpRatio, 1e-4f, "화살 12 × 원거리 배율 1.0 (근접 배율 1.5가 적용되면 18)");
+            Assert.AreEqual(1f - 7f / 100f, _melee.HpRatio, 1e-4f, "화살 7 × 원거리 배율 1.0 (근접 배율 1.5가 적용되면 10)");
         }
 
         [UnityTest]

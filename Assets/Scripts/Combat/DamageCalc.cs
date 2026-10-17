@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace ParryRL
 {
+    /// <summary>
+    /// 맞은 몬스터가 얼마나 움찔하는가. Full = 밀리고 잠깐 경직 + 하던 공격(예비 모션)이 끊긴다 (반격·스킬·봉 3타) /
+    /// Light = 살짝 밀리기만 하고 공격은 끊기지 않는다 (부적 평타) / None = 피해만, 밀리지도 끊기지도 않는다 (봉 1·2타).
+    /// 평타만으로 몬스터 공격을 계속 끊으면 패링할 이유가 없어서 나눴다.
+    /// </summary>
+    public enum HitStagger { Full, Light, None }
+
     /// <summary>플레이어 딜의 출처.</summary>
     public enum DamageSource { Counter, AttackSkill, DashSlash }
 
@@ -25,6 +32,8 @@ namespace ParryRL
         public bool Ranged;
         /// <summary>관통 순번 — 첫 적 0, 두 번째 적 1, …</summary>
         public int PierceIndex;
+        /// <summary>맞은 몬스터의 경직 정도 (기본 Full).</summary>
+        public HitStagger Stagger;
 
         public static HitInfo Create(DamageSource source, CharacterKind kind, Vector2 from, bool heavy = false) => new()
         {
@@ -62,7 +71,7 @@ namespace ParryRL
         public static int Apply(int baseDamage, in HitInfo hit, EnemyController target, float fromDirection)
         {
             int damage = Compute(baseDamage, hit, target, out string note);
-            target.TakeDamage(damage, fromDirection, hit.Heavy, note);
+            target.TakeDamage(damage, fromDirection, hit.Heavy, note, hit.Stagger);
             return damage;
         }
     }

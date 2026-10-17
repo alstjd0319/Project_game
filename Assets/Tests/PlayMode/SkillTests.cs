@@ -91,6 +91,69 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 봉_1_2단은_몬스터를_경직시키지_않고_3단만_경직시킨다()
+        {
+            TestScene.SetAttackSkillFree(true);
+            int staggers = 0;
+            _enemy.Staggered += () => staggers++;
+            float x0;
+
+            Place(_enemy, 1.5f);
+            x0 = _enemy.transform.position.x;
+            Assert.IsTrue(_combat.TryAttackSkill()); // 1단
+            yield return null;
+            Assert.Less(_enemy.HpRatio, 1f, "1단 피해는 들어간다");
+            Assert.AreEqual(0, staggers, "1단: 경직 없음");
+            Assert.AreEqual(x0, _enemy.transform.position.x, 0.01f, "1단: 밀리지 않음");
+            Assert.IsFalse(_enemy.IsStaggered);
+
+            yield return new WaitForSeconds(0.4f);
+            Place(_enemy, 1.5f);
+            Assert.IsTrue(_combat.TryAttackSkill()); // 2단
+            yield return null;
+            Assert.AreEqual(0, staggers, "2단: 경직 없음");
+
+            yield return new WaitForSeconds(0.4f);
+            Place(_enemy, 1.5f);
+            Assert.IsTrue(_combat.TryAttackSkill()); // 3단
+            yield return null;
+            Assert.AreEqual(1, staggers, "3단(마무리): 경직");
+            Assert.IsTrue(_enemy.IsStunned, "3단은 기절도");
+        }
+
+        [UnityTest]
+        public IEnumerator 부적_평타는_살짝_밀기만_하고_경직이_없고_빨리_쏜다()
+        {
+            TestScene.SetAttackSkillFree(true);
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            yield return new WaitForSeconds(0.6f);
+            Assert.LessOrEqual(_combat.AttackSkillCooldown, 0.3f + 0.001f, "원거리 평타 쿨타임 0.3초");
+            int staggers = 0;
+            _enemy.Staggered += () => staggers++;
+            Place(_enemy, 3f);
+            float x0 = _enemy.transform.position.x;
+            float hp0 = _enemy.HpRatio;
+            Assert.IsTrue(_combat.TryAttackSkill());
+            yield return new WaitForSeconds(0.4f);
+            Assert.Less(_enemy.HpRatio, hp0, "맞았다");
+            Assert.AreEqual(0, staggers, "경직 없음");
+            float pushed = _enemy.transform.position.x - x0;
+            Assert.Greater(pushed, 0.01f, "살짝 밀린다");
+            Assert.Less(pushed, 0.2f, "보통 밀림(0.25)보다 작다");
+        }
+
+        [Test]
+        public void 평타_데미지는_줄었다()
+        {
+            int Field(string name) => (int)typeof(PlayerCombat).GetField(name, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .GetValue(new GameObject().AddComponent<PlayerCombat>());
+            // 반격(20)·스킬은 그대로 — 패링으로 얻는 딜이 평타보다 확실히 크게
+            Assert.Less(Field("attackSkillDamage"), 15);
+            Assert.Less(Field("arrowDamage"), 12);
+            Assert.Less(Field("comboDamage3"), Field("counterDamage") + 1);
+        }
+
+        [UnityTest]
         public IEnumerator 봉_일반공격은_이어_누르면_1_2_3단으로_커지고_3단은_양옆을_휩쓸며_기절시킨다()
         {
             GameTuning.Current.enemyInvincible = false;
