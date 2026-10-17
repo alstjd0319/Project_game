@@ -124,6 +124,34 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 런_바닥_구멍과_추락_복귀()
+        {
+            RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
+            yield return TestScene.LoadRun(RoomType.Normal);
+            GameTuning.Current.enemyPassive = true;
+            foreach (var e in Object.FindObjectsByType<EnemyController>()) e.enabled = false;
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            var pit = RoomLayouts.All[RoomLayouts.Zigzag].Pits[0];
+            void Put(float x, float y)
+            {
+                var pos = new Vector3(x, y, 0f);
+                player.transform.position = pos;
+                player.GetComponent<Rigidbody2D>().position = pos;
+                player.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+            }
+            Put(pit.Left - 2.2f, 0.8f);
+            yield return new WaitForSeconds(1.0f);
+            yield return Capture("run_pit");                  // 바닥에 뚫린 구멍 앞
+            Put(pit.X, 0.8f);
+            yield return new WaitForSeconds(0.45f);           // 빠지는 중
+            yield return Capture("run_fall_in");
+            yield return new WaitForSeconds(1.0f);            // 되돌아온 뒤: 추락 피해 · 깜빡이는 무적
+            yield return Capture("run_fall_back");
+            RoomLayouts.ForcedIndex = -1;
+        }
+
+        [UnityTest]
         public IEnumerator 스킬_D_F_연출()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

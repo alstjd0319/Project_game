@@ -24,6 +24,7 @@ namespace ParryRL
 
         [Header("체력")]
         [SerializeField] private int maxHp = 100;
+        [SerializeField, Tooltip("맞은 뒤 잠깐 무적 — 이 시간 동안은 또 맞지 않고(공격은 몸을 통과), 몸이 깜빡인다. 계속 맞는 느낌을 없앤다")] private float hurtInvulnerableTime = 1.0f;
 
         public CharacterProfile Current { get; private set; }
         public int Hp { get; private set; }
@@ -33,6 +34,17 @@ namespace ParryRL
         public bool IsDead => Hp <= 0;
 
         public event Action<int> Damaged;
+
+        private float _invulnerableUntil = float.NegativeInfinity;
+        /// <summary>피격 직후 무적 중인가 (적 공격이 통과한다).</summary>
+        public bool IsHurtInvulnerable => Time.time < _invulnerableUntil;
+        public float HurtInvulnerableTime => hurtInvulnerableTime;
+
+        /// <summary>무적 시간을 준다 (추락 뒤 되돌아왔을 때 등). 이미 더 길게 남았으면 그대로.</summary>
+        public void GrantInvulnerability(float seconds) => _invulnerableUntil = Mathf.Max(_invulnerableUntil, Time.time + seconds);
+
+        /// <summary>무적을 바로 끈다 (테스트용).</summary>
+        public void ClearInvulnerability() => _invulnerableUntil = float.NegativeInfinity;
 
         private SpriteRenderer _sr;
         private PlayerDefense _defense;
@@ -54,15 +66,19 @@ namespace ParryRL
         /// 피격. 플레이어 방어 패시브로 줄인다 (가안 30% 감소, 최소 1).
         /// </summary>
         /// <returns>실제로 받은 데미지</returns>
-        public int TakeDamage(int rawDamage)
+        /// <param name="ignoreInvulnerability">무적 중에도 받는다 (추락 같은 환경 피해)</param>
+        /// <param name="ignoreReduction">받는 피해 감소 패시브를 적용하지 않는다 (환경 피해)</param>
+        public int TakeDamage(int rawDamage, bool ignoreInvulnerability = false, bool ignoreReduction = false)
         {
             if (IsDead) return 0;
-            float reduction = GameTuning.Current.DamageReduction(Current.kind);
+            if (IsHurtInvulnerable && !ignoreInvulnerability) return 0; // 방금 맞았다 — 잠깐 무적
+            float reduction = ignoreReduction ? 0f : GameTuning.Current.DamageReduction(Current.kind);
             int damage = Mathf.Max(1, Mathf.RoundToInt(rawDamage * (1f - reduction)));
             int blocked = rawDamage - damage;
 
             if (!GameTuning.Current.godMode) Hp = Mathf.Max(0, Hp - damage); // 연습 스위치: 피격 연출은 그대로
             _hurtFlash = 1f;
+            GrantInvulnerability(hurtInvulnerableTime);
 
             Sfx.Play(SfxId.Hurt);
             if (HitFeel.Instance != null) HitFeel.Instance.PlayerHurt();
@@ -107,6 +123,13 @@ namespace ParryRL
         {
             _sr.color = Tinted(Current.color);
             ArtTint = Tinted(Color.white);
+            if (IsHurtInvulnerable)
+            {
+                // 무적 중엔 몸이 깜빡인다 (가려지지 않을 만큼만 — 최소 알파 0.4)
+                float a = 0.4f + 0.6f * (0.5f + 0.5f * Mathf.Sin(Time.time * 28f));
+                var c = _sr.color; c.a = a; _sr.color = c;
+                var t = ArtTint; t.a = a; ArtTint = t;
+            }
         }
 
         private Color Tinted(Color c)

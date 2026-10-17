@@ -148,6 +148,7 @@ namespace ParryRL
             for (int i = 0; i < count; i++)
             {
                 if (_groundHits[i] == _collider || _groundHits[i] == _dropCollider) continue;
+                if (_groundHits[i].GetComponent<PitBridge>() != null) continue; // 구멍 위 다리는 몬스터용 — 플레이어는 못 밟는다
                 // 올라가는 중에 발판을 통과하는 동안은 바닥으로 치지 않는다 (점프 횟수가 공짜로 돌아오지 않게)
                 if (rising && _groundHits[i].GetComponent<PlatformEffector2D>() != null) continue;
                 return true;

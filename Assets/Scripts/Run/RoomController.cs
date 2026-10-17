@@ -47,7 +47,12 @@ namespace ParryRL
             LayoutIndex = RoomLayouts.Pick(IsRunRoom, RunState.Current, RunState.RoomNumber, RunState.Seed, RunState.LastLayout);
             if (IsRunRoom) RunState.LastLayout = LayoutIndex;
             var deco = FindAnyObjectByType<FloorDecorator>();
-            if (deco != null) deco.SetPlatformLayout(Layout.Platforms);
+            if (deco != null)
+            {
+                deco.SetPlatformLayout(Layout.Platforms);
+                deco.SetGroundIntervals(RoomLayouts.GroundIntervals(Layout));
+            }
+            BuildPits();
             if (!IsRunRoom) return;
             _spawner = FindAnyObjectByType<EnemySpawner>();
             if (_spawner != null) _spawner.RoomMode = true; // 스포너 Start보다 먼저 — 몬스터를 계속 유지하는 연습 모드를 끈다
@@ -118,8 +123,79 @@ namespace ParryRL
             Hud.SetRunInfo(text);
         }
 
+        // ── 바닥 구멍: 빠지면 피해를 입고 떨어지기 전 자리로 돌아온다 ──
+        public const int FallDamage = 15;
+        private const float FallKillY = -4.5f;    // 이보다 아래로 떨어지면 추락
+        private const float SafeEdgeMargin = 1.2f; // 구멍 가장자리에서 이만큼 안쪽에서 선 자리만 "안전한 자리"로 기억한다
+
+        public int FallCount { get; private set; }
+        /// <summary>마지막으로 안전하게 서 있던 자리 (추락하면 여기로 돌아온다).</summary>
+        public Vector2 SafePosition => _safePosition;
+        private Vector2 _safePosition;
+        private PlayerParty _fallParty;
+        private PlayerMotor _fallMotor;
+
+        private void BuildPits()
+        {
+            _fallParty = FindAnyObjectByType<PlayerParty>();
+            _fallMotor = _fallParty != null ? _fallParty.GetComponent<PlayerMotor>() : null;
+            if (_fallParty != null) _safePosition = _fallParty.transform.position;
+            var playerCol = _fallParty != null ? _fallParty.GetComponent<Collider2D>() : null;
+            foreach (var pit in Layout.Pits)
+            {
+                // 몬스터는 바닥 AI라 구멍에 빠지면 안 되므로 보이지 않는 다리를 깔고, 플레이어는 그 다리와 충돌하지 않게 한다
+                var bridge = new GameObject("PitBridge");
+                bridge.transform.position = new Vector3(pit.X, -0.5f, 0f);
+                bridge.transform.localScale = new Vector3(pit.Width, 1f, 1f);
+                var col = bridge.AddComponent<BoxCollider2D>();
+                bridge.AddComponent<PitBridge>();
+                if (playerCol != null) Physics2D.IgnoreCollision(playerCol, col, true);
+            }
+        }
+
+        private bool NearPit(float x)
+        {
+            foreach (var pit in Layout.Pits)
+                if (x > pit.Left - SafeEdgeMargin && x < pit.Right + SafeEdgeMargin) return true;
+            return false;
+        }
+
+        private void TrackFall()
+        {
+            if (_fallParty == null || _fallParty.IsDead || Layout.Pits.Length == 0) return;
+            var pos = (Vector2)_fallParty.transform.position;
+            float feet = pos.y - _fallParty.transform.localScale.y * 0.5f;
+            // 땅(발판이 아닌 바닥 높이)에 서 있고 구멍에서 떨어져 있을 때만 안전한 자리로 기억한다
+            if (_fallMotor != null && _fallMotor.IsGrounded && feet < 0.3f && !NearPit(pos.x)) _safePosition = pos;
+            if (pos.y < FallKillY) Fall();
+        }
+
+        /// <summary>구멍에 빠졌다: 피해(무적·방어 무시)를 입고 안전한 자리로 돌아와 잠깐 무적.</summary>
+        public void Fall()
+        {
+            if (_fallParty == null) return;
+            FallCount++;
+            _fallParty.TakeDamage(FallDamage, ignoreInvulnerability: true, ignoreReduction: true);
+            Hud.Popup($"추락!  -{FallDamage}", new Color(1f, 0.55f, 0.55f), false);
+            if (_fallParty.IsDead) return;
+            var pos = new Vector3(_safePosition.x, _safePosition.y + 0.2f, 0f);
+            _fallParty.transform.position = pos;
+            var rb = _fallParty.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.position = pos;
+                rb.linearVelocity = Vector2.zero;
+            }
+            Physics2D.SyncTransforms();
+            _fallParty.GrantInvulnerability(1.5f); // 돌아온 직후 바로 맞지 않게 조금 더 길게
+            Hud.ScreenFlash(new Color(0f, 0f, 0f, 0.5f));
+            Fx.Ring(pos, new Color(0.65f, 0.45f, 1f), 2.5f, 0.5f, 0.1f, 0.35f);
+            if (CameraRig.Instance != null) CameraRig.Instance.SnapToTarget();
+        }
+
         private void Update()
         {
+            if (!GameManager.InputBlocked) TrackFall();
             if (!IsRunRoom || GameManager.InputBlocked) return;
             switch (CurrentPhase)
             {

@@ -71,10 +71,10 @@ namespace ParryRL
         public void SetPlatformLayout(IReadOnlyList<PlatformSpec> layout)
         {
             int used = 0;
-            _unusedPlatforms.Clear();
             foreach (var seg in segments)
             {
                 if (seg.kind != Kind.Platform || seg.solid == null) continue;
+                _unusedPlatforms.Remove(seg.solid);
                 if (used < layout.Count)
                 {
                     var p = layout[used++];
@@ -85,6 +85,29 @@ namespace ParryRL
             }
             Physics2D.SyncTransforms();
             _zone = -1; // 다시 깔기
+        }
+
+        /// <summary>
+        /// 바닥을 구멍을 뺀 구간들로 나눈다: 바닥 오브젝트(Ground 종류 세그먼트)를 순서대로 구간에 맞춰 옮기고 늘리고, 남는 건 판정째 끈다.
+        /// 구간이 하나(전체)면 원래 바닥 그대로다. 그림은 다음 프레임에 다시 깐다.
+        /// </summary>
+        public void SetGroundIntervals(IReadOnlyList<(float x0, float x1)> intervals)
+        {
+            int used = 0;
+            foreach (var seg in segments)
+            {
+                if (seg.kind != Kind.Ground || seg.solid == null) continue;
+                if (used < intervals.Count)
+                {
+                    var (x0, x1) = intervals[used++];
+                    seg.solid.position = new Vector3((x0 + x1) * 0.5f, -0.5f, 0f);
+                    seg.solid.localScale = new Vector3(x1 - x0, 1f, 1f);
+                    _unusedPlatforms.Remove(seg.solid);
+                }
+                else _unusedPlatforms.Add(seg.solid);
+            }
+            Physics2D.SyncTransforms();
+            _zone = -1;
         }
 
         /// <summary>지금 쓰는(켜진) 발판 개수 (테스트·디버그).</summary>
@@ -113,6 +136,8 @@ namespace ParryRL
             foreach (var seg in segments)
                 if (seg.kind == Kind.Platform && seg.solid != null)
                     seg.solid.gameObject.SetActive(!_unusedPlatforms.Contains(seg.solid) && (platforms || set == null || set.top.Length == 0));
+                else if (seg.kind == Kind.Ground && seg.solid != null)
+                    seg.solid.gameObject.SetActive(!_unusedPlatforms.Contains(seg.solid)); // 구멍을 뺀 구간에 안 쓰이는 바닥 조각은 끈다
             if (set == null || set.top.Length == 0) return;
 
             for (int i = 0; i < segments.Length; i++)
@@ -121,7 +146,9 @@ namespace ParryRL
                 if (seg.solid == null) continue;
                 switch (seg.kind)
                 {
-                    case Kind.Ground: BuildGround(set, seg.solid); _boxHasArt[i] = true; break;
+                    case Kind.Ground:
+                        if (!_unusedPlatforms.Contains(seg.solid)) { BuildGround(set, seg.solid); _boxHasArt[i] = true; }
+                        break;
                     case Kind.Wall:
                         if (set.fill.Length > 0) { BuildWall(set, seg.solid); _boxHasArt[i] = true; }
                         break;

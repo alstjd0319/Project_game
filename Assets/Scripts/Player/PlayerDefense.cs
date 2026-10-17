@@ -172,6 +172,13 @@ namespace ParryRL
                 return;
             }
 
+            if (_party.IsHurtInvulnerable)
+            {
+                // 방금 맞아서 무적: 공격은 몸을 그냥 통과한다 (맞은 직후 계속 맞는 느낌을 없앤다)
+                attack.Resolve(AttackResolution.PassThrough);
+                return;
+            }
+
             if (State == DefenseState.Cooldown) Report(new DefenseTiming(TimingKind.TooEarly, Time.time - _pressTime));
             _lastHitTime = Time.time;
 

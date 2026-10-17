@@ -131,12 +131,17 @@ namespace ParryRL.EditorTools
             for (int i = 0; i < platExtra.Length; i++)
                 platExtra[i] = CreateOneWay($"Platform_{i + 4}", new Vector2(0f, -20f), new Vector2(3f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
             // 바닥 그림: 판정 네모 위에 구간 타일을 깐다 (구간은 F1 연습 탭의 배경 구간과 함께 바뀐다)
+            // 바닥 구멍(RoomLayout.Pits)을 낼 수 있게 바닥을 여분 조각까지 만들어 둔다 — 쓰지 않는 조각은 RoomController가 레이아웃을 적용할 때 꺼진다
+            var groundExtra = new Transform[RoomLayouts.MaxPits];
+            for (int i = 0; i < groundExtra.Length; i++)
+                groundExtra[i] = CreateSolid($"Ground_{i + 2}", new Vector2(0f, -20f), new Vector2(3f, 1f), new Color(0.3f, 0.32f, 0.38f, 0.55f), level);
             var levelSegments = new List<(Transform solid, FloorDecorator.Kind kind)>
             {
                 (ground, FloorDecorator.Kind.Ground), (wallL, FloorDecorator.Kind.Wall), (wallR, FloorDecorator.Kind.Wall),
                 (platL, FloorDecorator.Kind.Platform), (platR, FloorDecorator.Kind.Platform), (platTop, FloorDecorator.Kind.Platform),
             };
             foreach (var extra in platExtra) levelSegments.Add((extra, FloorDecorator.Kind.Platform));
+            foreach (var extra in groundExtra) levelSegments.Add((extra, FloorDecorator.Kind.Ground));
             AddFloorDecorator(level, floorSets, -1, levelSegments.ToArray());
 
             // 배경 (판정 없음): 먼·중간·가까운 3겹 시차 스크롤. 구간은 F1 연습 탭에서 바꾼다.
