@@ -41,17 +41,17 @@ namespace ParryRL.Tests
                 Physics2D.SyncTransforms();
             }
             yield return new WaitForSeconds(2.2f);
-            yield return Capture("run_wave");                 // 1파도: 상단 "방 1 / 6 · 일반"
+            yield return Capture("run_wave");                 // 방에 들어오면 가장 왼쪽에서 시작                 // 1파도: 상단 "방 1 / 6 · 일반"
             for (int i = 0; i < 2; i++)
             {
                 foreach (var e in Object.FindObjectsByType<EnemyController>()) if (!e.IsDead) e.TakeDamage(99999, 1f, false);
                 yield return new WaitForSeconds(2.4f);
             }
-            Put(room.Gates[1].transform.position.x + 1.5f);
-            yield return new WaitForSeconds(1.0f);
-            yield return Capture("run_gate_right");           // 안쪽 문 앞: 종류 표시 + 안내 (두 문 모두 왼쪽 끝)
-            Put(room.Gates[0].transform.position.x + 1.5f);
-            yield return new WaitForSeconds(1.0f);
+            Put(room.Gates[1].transform.position.x - 1.5f);
+            yield return new WaitForSeconds(1.2f);
+            yield return Capture("run_gate_right");           // 안쪽 문 앞: 종류 표시 + 안내 + 일렁이는 소용돌이 (두 문 모두 오른쪽 끝)
+            Put(room.Gates[0].transform.position.x - 1.5f);
+            yield return new WaitForSeconds(1.2f);
             yield return Capture("run_gate_left");            // 바깥 문 앞
         }
 

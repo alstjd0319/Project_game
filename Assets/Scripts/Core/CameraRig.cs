@@ -27,6 +27,18 @@ namespace ParryRL
             _basePos = transform.position;
         }
 
+        /// <summary>목표 위치로 카메라를 바로 옮긴다 (방에 들어왔을 때 천천히 따라오지 않게).</summary>
+        public void SnapToTarget()
+        {
+            if (target == null) return;
+            if (_cam == null) _cam = GetComponent<Camera>();
+            float halfWidth = _cam.orthographicSize * _cam.aspect;
+            float x = Mathf.Clamp(target.position.x, arenaMinX + halfWidth, arenaMaxX - halfWidth);
+            if (arenaMaxX - arenaMinX < halfWidth * 2f) x = (arenaMinX + arenaMaxX) * 0.5f;
+            _basePos = new Vector3(x, fixedY, _basePos.z);
+            transform.position = _basePos;
+        }
+
         public void Shake(float amplitude, float duration)
         {
             // 진행 중인 흔들림보다 약하면 무시

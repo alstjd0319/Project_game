@@ -60,6 +60,20 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 방에_들어오면_플레이어는_가장_왼쪽에서_시작하고_카메라가_바로_따라온다()
+        {
+            yield return TestScene.LoadRun();
+            var left = Object.FindAnyObjectByType<EnemySpawner>().ArenaMinX;
+            Assert.AreEqual(left + 2f, Party.transform.position.x, 0.2f);
+            var cam = Camera.main;
+            float halfWidth = cam.orthographicSize * cam.aspect;
+            Assert.LessOrEqual(Mathf.Abs(cam.transform.position.x - (left + halfWidth - 1f)), 1.5f, "카메라는 왼쪽 끝에 붙어 있다");
+            // 연습 모드는 예전 시작 위치
+            yield return TestScene.LoadPrototype();
+            Assert.AreEqual(-3f, Party.transform.position.x, 0.2f);
+        }
+
+        [UnityTest]
         public IEnumerator 일반방은_웨이브가_이어지고_다_깨면_문_두_개가_열린다()
         {
             yield return TestScene.LoadRun();
@@ -81,9 +95,10 @@ namespace ParryRL.Tests
             yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
             Assert.AreEqual(2, Room.Gates.Count, "방을 깨면 문이 둘");
             Assert.AreNotEqual(Room.Gates[0].Type, Room.Gates[1].Type);
-            Assert.Less(Room.Gates[0].transform.position.x, Room.Gates[1].transform.position.x, "바깥 문 · 안쪽 문 순서");
-            Assert.Less(Room.Gates[1].transform.position.x, -12f, "문은 둘 다 왼쪽 끝에 나란히 선다");
-            Assert.Greater(Room.Gates[1].transform.position.x - Room.Gates[0].transform.position.x, 3.4f, "글자가 겹치지 않을 간격");
+            Assert.Greater(Room.Gates[0].transform.position.x, Room.Gates[1].transform.position.x, "바깥 문 · 안쪽 문 순서");
+            Assert.Greater(Room.Gates[1].transform.position.x, 12f, "문은 둘 다 오른쪽 끝에 나란히 선다");
+            Assert.Greater(Room.Gates[0].transform.position.x - Room.Gates[1].transform.position.x, 3.4f, "글자가 겹치지 않을 간격");
+            foreach (var gate in Room.Gates) Assert.IsNotNull(gate.GetComponent<DoorEffects>(), "문마다 일렁이는 소용돌이·빛무리");
         }
 
         [UnityTest]

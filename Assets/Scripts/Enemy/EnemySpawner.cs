@@ -103,7 +103,7 @@ namespace ParryRL
             // 여러 마리면 한 줄로 겹치지 않게 간격을 두고 바깥쪽으로 늘어세운다
             float offset = count * spawnSpacing + Random.Range(0f, 1f);
             float x = px + side * (spawnDistanceFromPlayer + offset);
-            if (x < arenaMinX + half || x > arenaMaxX - half) x = px - side * (spawnDistanceFromPlayer + offset);
+            if (x < arenaMinX + half || x > arenaMaxX - half) x = px - side * (spawnDistanceFromPlayer + offset + 3f); // 반대쪽으로 넘어갈 땐 같은 쪽 몬스터와 겹치지 않게 조금 더 멀리
             if (x < arenaMinX + half || x > arenaMaxX - half) x = Random.Range(arenaMinX + half, arenaMaxX - half);
             x = Mathf.Clamp(x, arenaMinX + half, arenaMaxX - half);
 

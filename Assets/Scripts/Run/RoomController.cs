@@ -14,8 +14,9 @@ namespace ParryRL
         [SerializeField, Tooltip("문 그림 (바닥 가운데 피벗). 없으면 색 네모")] private Sprite gateSprite;
         [SerializeField] private float introDelay = 1.2f;
         [SerializeField] private float betweenWaves = 1.6f;
-        [SerializeField, Tooltip("다음 방 문은 왼쪽 끝에 나란히 선다: 가장 바깥 문이 바닥 왼쪽 끝에서 안쪽으로 떨어진 거리")] private float gateInset = 1.8f;
-        [SerializeField, Tooltip("왼쪽 문들 사이 간격 (문 글자가 겹치지 않게)")] private float gateSpacing = 4.2f;
+        [SerializeField, Tooltip("다음 방 문은 오른쪽 끝에 나란히 선다: 가장 바깥 문이 바닥 오른쪽 끝에서 안쪽으로 떨어진 거리")] private float gateInset = 1.8f;
+        [SerializeField, Tooltip("문들 사이 간격 (문 글자가 겹치지 않게)")] private float gateSpacing = 4.2f;
+        [SerializeField, Tooltip("방에 들어오면 플레이어는 바닥 왼쪽 끝에서 이만큼 안쪽에서 시작한다 (문은 오른쪽 끝)")] private float startInset = 2f;
 
         public static RoomController Instance { get; private set; }
 
@@ -74,8 +75,27 @@ namespace ParryRL
             _timer = introDelay;
             EnemyController.AnyDied += OnEnemyDied;
             RunState.Changed += UpdateInfo;
+            PlacePlayerAtStart();
             UpdateInfo();
             Hud.Popup($"방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}  ({Layout.Name})", RoomInfo.Color(RunState.Current), true);
+        }
+
+        /// <summary>방에 들어오면 플레이어는 가장 왼쪽에서 시작한다 (문은 오른쪽 끝 — 왼쪽에서 오른쪽으로 나아가는 흐름). 카메라도 바로 따라간다.</summary>
+        private void PlacePlayerAtStart()
+        {
+            var party = FindAnyObjectByType<PlayerParty>();
+            if (party == null) return;
+            float left = _spawner != null ? _spawner.ArenaMinX : -22f;
+            var pos = new Vector3(left + startInset, party.transform.position.y, 0f);
+            party.transform.position = pos;
+            var rb = party.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.position = pos;
+                rb.linearVelocity = Vector2.zero;
+            }
+            Physics2D.SyncTransforms();
+            if (CameraRig.Instance != null) CameraRig.Instance.SnapToTarget();
         }
 
         private void UpdateInfo()
@@ -194,10 +214,10 @@ namespace ParryRL
             {
                 if (announce) Hud.Popup("문을 고른다", new Color(0.8f, 0.7f, 1f), true);
                 var options = RunState.RollOptions();
-                // 다음 방 문은 전부 왼쪽 끝에 나란히 (둘이면 바깥 · 안쪽, 하나면 두 자리 사이)
+                // 다음 방 문은 전부 오른쪽 끝에 나란히 (둘이면 바깥 · 안쪽, 하나면 두 자리 사이)
                 for (int i = 0; i < options.Length; i++)
                 {
-                    float x = left + gateInset + (options.Length == 1 ? gateSpacing * 0.5f : i * gateSpacing);
+                    float x = right - gateInset - (options.Length == 1 ? gateSpacing * 0.5f : i * gateSpacing);
                     _gates.Add(RoomGate.Create(new Vector3(x, 0f, 0f), options[i], false, gateSprite));
                 }
             }

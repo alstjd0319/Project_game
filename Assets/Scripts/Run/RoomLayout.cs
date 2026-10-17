@@ -20,8 +20,8 @@ namespace ParryRL
     {
         /// <summary>발판 오브젝트는 빌더가 이만큼 만들어 둔다 (레이아웃이 쓰는 개수가 이보다 적으면 나머지는 꺼 둔다).</summary>
         public const int MaxPlatforms = 6;
-        /// <summary>다음 방 문(왼쪽 끝 x≈-20 · -16, 글자 폭 약 3.4)을 가리지 않도록 발판 왼쪽 끝이 닿을 수 있는 한계.</summary>
-        public const float MaxLeftReach = 14.2f;
+        /// <summary>다음 방 문(오른쪽 끝 x≈20 · 16, 글자 폭 약 3.4)을 가리지 않도록 발판이 바깥(오른쪽)으로 닿을 수 있는 한계. 좌우 대칭으로 두어 왼쪽도 같은 한계 안쪽이다.</summary>
+        public const float MaxGateReach = 14.2f;
 
         public const int Basic = 0, Stairs = 1, Zigzag = 2, Tower = 3, Roof = 4, Flat = 5;
 

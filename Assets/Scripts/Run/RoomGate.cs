@@ -16,9 +16,6 @@ namespace ParryRL
         public RoomType Type { get; private set; }
         public string Label { get; private set; }
 
-        private SpriteRenderer _halo;
-        private float _time;
-
         /// <summary>문을 만든다. gateSprite는 아래 가운데 피벗(바닥에 선다), 없으면 색 네모로 대신 그린다.</summary>
         public static RoomGate Create(Vector3 groundPos, RoomType type, bool isExit, Sprite gateSprite)
         {
@@ -41,8 +38,10 @@ namespace ParryRL
             string hint = IsExit ? "귀문을 닫았다 · 사당으로 돌아간다" : RoomInfo.Hint(Type);
             GetComponent<Interactable>().SetPrompt(IsExit ? "사당으로 돌아가기" : $"{Label} 방으로 들어가기  ({hint})");
 
-            // 문 뒤 빛무리 (종류 색)
-            _halo = MakeSprite("Halo", FxSprites.Glow, new Vector3(0f, 0.05f, 0f), new Vector2(4.6f / Width, 4.8f / Height), 8, new Color(color.r, color.g, color.b, 0.5f));
+            // 문 안쪽 일렁이는 소용돌이·빛무리 (사당 포탈과 같은 연출, 방 종류 색을 섞는다 — 가까이 가면 밝아진다)
+            var effects = gameObject.AddComponent<DoorEffects>();
+            effects.Tint = color;
+            effects.SwirlTintAmount = 0.5f;
             // 문 그림 (바닥에 선다: 판정 네모 아래 끝 = 문 아래 끝)
             if (gateSprite != null)
             {
@@ -87,15 +86,6 @@ namespace ParryRL
             tm.fontSize = 64;
             tm.characterSize = worldSize;
             tm.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
-        }
-
-        private void Update()
-        {
-            if (_halo == null) return;
-            _time += Time.deltaTime;
-            var c = _halo.color;
-            c.a = 0.4f + 0.15f * Mathf.Sin(_time * 2.2f);
-            _halo.color = c;
         }
 
         private void OnEnable() => GetComponent<Interactable>().Interacted += Enter;

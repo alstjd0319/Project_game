@@ -36,11 +36,11 @@ namespace ParryRL.Tests
         }
 
         [Test]
-        public void 발판은_왼쪽_끝의_다음_방_문_글자를_가리지_않는다()
+        public void 발판은_오른쪽_끝의_다음_방_문_글자를_가리지_않는다()
         {
             foreach (var layout in RoomLayouts.All)
                 foreach (var p in layout.Platforms)
-                    Assert.GreaterOrEqual(p.X - p.Width * 0.5f, -RoomLayouts.MaxLeftReach, $"{layout.Name}: x={p.X}");
+                    Assert.LessOrEqual(p.X + p.Width * 0.5f, RoomLayouts.MaxGateReach, $"{layout.Name}: x={p.X}");
         }
 
         [Test]
