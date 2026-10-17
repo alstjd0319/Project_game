@@ -14,6 +14,17 @@ namespace ParryRL
 
         public const float EliteHpMultiplier = 3f;
 
+        /// <summary>
+        /// 방을 깼을 때 얻는 경험치 (가안). 런 중엔 몬스터를 잡아도 경험치가 없고 방 단위로만 준다 — 몬스터마다 주면 한 방에 레벨이 여러 번 올라 스킬 포인트가 너무 많았다.
+        /// 싸움이 없는 보상·상점방은 0. 한 판(일반 3 · 엘리트 1 · 관문 1 정도)에 약 140 → Lv.1에서 Lv.4~5.
+        /// </summary>
+        public static int XpReward(RoomType type, bool finalRoom) => finalRoom ? 50 : type switch
+        {
+            RoomType.Normal => 20,
+            RoomType.Elite => 35,
+            _ => 0,
+        };
+
         public static List<Wave> For(RoomType type, int roomNumber)
         {
             int n = System.Math.Max(1, roomNumber);

@@ -25,6 +25,7 @@ namespace ParryRL
 
         private void OnEnemyDied(EnemyController enemy)
         {
+            if (RunState.Active) return; // 한 판(런) 중에는 몬스터마다가 아니라 방을 깼을 때 경험치를 준다 (RoomController.GrantRoomXp)
             if (enemy.XpReward <= 0) return;
             int reward = Mathf.Max(1, Mathf.RoundToInt(enemy.XpReward * SkillTreeState.XpMultiplier));
             Hud.WorldText(enemy.transform.position + Vector3.up * 1.4f, $"+{reward} EXP", new Color(0.45f, 0.9f, 1f), 1.1f);

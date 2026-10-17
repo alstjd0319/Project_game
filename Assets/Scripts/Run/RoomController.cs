@@ -245,6 +245,7 @@ namespace ParryRL
             CurrentPhase = Phase.Cleared;
             Sfx.Play(SfxId.LevelUp, 0.7f);
             var type = RunState.Current;
+            GrantRoomXp(type);
             if (RunState.IsFinalRoom || !(type == RoomType.Elite || type == RoomType.Reward || type == RoomType.Shop))
             {
                 OpenGates();
@@ -267,6 +268,22 @@ namespace ParryRL
             }
             else Hud.Popup(type == RoomType.Elite ? "엘리트를 쓰러뜨렸다 — 하나를 고른다" : "보상 — 하나를 고른다", RoomInfo.Color(type), true);
         }
+
+        /// <summary>방을 깬 경험치 (스킬 트리·아이템의 경험치 배율 적용). 런 중엔 몬스터 처치 경험치가 없다.</summary>
+        private void GrantRoomXp(RoomType type)
+        {
+            int baseXp = RoomPlan.XpReward(type, RunState.IsFinalRoom);
+            if (baseXp <= 0) return;
+            var level = FindAnyObjectByType<PlayerLevel>();
+            if (level == null) return;
+            int xp = Mathf.Max(1, Mathf.RoundToInt(baseXp * SkillTreeState.XpMultiplier));
+            Hud.WorldText(level.transform.position + Vector3.up * 1.6f, $"방 클리어 +{xp} EXP", new Color(0.45f, 0.9f, 1f), 1.2f);
+            level.AddXp(xp);
+            LastRoomXp = xp;
+        }
+
+        /// <summary>마지막으로 방을 깨서 얻은 경험치 (테스트·디버그).</summary>
+        public int LastRoomXp { get; private set; }
 
         /// <summary>하나만 고르는 방: 하나를 얻으면 나머지는 잠기고 문이 열린다.</summary>
         private void OnChosen(RoomAltar chosen)

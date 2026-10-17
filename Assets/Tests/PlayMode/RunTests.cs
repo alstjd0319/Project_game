@@ -154,6 +154,48 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 런_중엔_몬스터를_잡아도_경험치가_없고_방을_깨면_한_번에_얻는다()
+        {
+            yield return TestScene.LoadRun();
+            GameTuning.Current.godMode = true;
+            var level = Object.FindAnyObjectByType<PlayerLevel>();
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Fighting);
+            yield return KillAll();
+            yield return null;
+            Assert.AreEqual(0, level.Xp, "몬스터 처치 경험치 없음");
+            Assert.AreEqual(1, level.Level);
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Fighting && Room.WaveIndex == 1);
+            yield return KillAll();
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
+            int expected = RoomPlan.XpReward(RoomType.Normal, false);
+            Assert.AreEqual(expected, Room.LastRoomXp);
+            Assert.AreEqual(expected, level.Xp + (level.Level - 1) * 20, "방을 깨면 일반방 경험치를 한 번에");
+        }
+
+        [UnityTest]
+        public IEnumerator 보상방과_상점방은_경험치가_없고_엘리트는_더_많다()
+        {
+            Assert.Greater(RoomPlan.XpReward(RoomType.Elite, false), RoomPlan.XpReward(RoomType.Normal, false));
+            Assert.Greater(RoomPlan.XpReward(RoomType.Elite, true), RoomPlan.XpReward(RoomType.Elite, false), "마지막 관문이 가장 많다");
+            yield return TestScene.LoadRun(RoomType.Shop);
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
+            Assert.AreEqual(0, Object.FindAnyObjectByType<PlayerLevel>().Xp);
+            Assert.AreEqual(0, Room.LastRoomXp);
+        }
+
+        [UnityTest]
+        public IEnumerator 연습_모드는_예전처럼_몬스터마다_경험치를_얻는다()
+        {
+            yield return TestScene.LoadPrototype();
+            var level = Object.FindAnyObjectByType<PlayerLevel>();
+            var enemy = Enemies().First();
+            int reward = enemy.XpReward;
+            enemy.TakeDamage(99999, 1f, false);
+            yield return null;
+            Assert.AreEqual(reward, level.Xp);
+        }
+
+        [UnityTest]
         public IEnumerator 몬스터를_잡으면_엽전을_얻는다_엘리트는_훨씬_많다()
         {
             yield return TestScene.LoadRun(RoomType.Elite);
