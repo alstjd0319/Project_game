@@ -14,7 +14,8 @@ namespace ParryRL
         [SerializeField, Tooltip("문 그림 (바닥 가운데 피벗). 없으면 색 네모")] private Sprite gateSprite;
         [SerializeField] private float introDelay = 1.2f;
         [SerializeField] private float betweenWaves = 1.6f;
-        [SerializeField, Tooltip("문이 서는 자리: 바닥 끝에서 안쪽으로 이 거리")] private float gateInset = 4f;
+        [SerializeField, Tooltip("다음 방 문은 왼쪽 끝에 나란히 선다: 가장 바깥 문이 바닥 왼쪽 끝에서 안쪽으로 떨어진 거리")] private float gateInset = 1.8f;
+        [SerializeField, Tooltip("왼쪽 문들 사이 간격 (문 글자가 겹치지 않게)")] private float gateSpacing = 4.2f;
 
         public static RoomController Instance { get; private set; }
 
@@ -193,10 +194,10 @@ namespace ParryRL
             {
                 if (announce) Hud.Popup("문을 고른다", new Color(0.8f, 0.7f, 1f), true);
                 var options = RunState.RollOptions();
-                // 문이 둘이면 왼쪽 끝·오른쪽 끝에 하나씩, 하나면 오른쪽
+                // 다음 방 문은 전부 왼쪽 끝에 나란히 (둘이면 바깥 · 안쪽, 하나면 두 자리 사이)
                 for (int i = 0; i < options.Length; i++)
                 {
-                    float x = options.Length == 1 ? right - gateInset : (i == 0 ? left + gateInset : right - gateInset);
+                    float x = left + gateInset + (options.Length == 1 ? gateSpacing * 0.5f : i * gateSpacing);
                     _gates.Add(RoomGate.Create(new Vector3(x, 0f, 0f), options[i], false, gateSprite));
                 }
             }

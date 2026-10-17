@@ -81,8 +81,9 @@ namespace ParryRL.Tests
             yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
             Assert.AreEqual(2, Room.Gates.Count, "방을 깨면 문이 둘");
             Assert.AreNotEqual(Room.Gates[0].Type, Room.Gates[1].Type);
-            Assert.Less(Room.Gates[0].transform.position.x, 0f, "한쪽은 왼쪽 끝");
-            Assert.Greater(Room.Gates[1].transform.position.x, 0f, "한쪽은 오른쪽 끝");
+            Assert.Less(Room.Gates[0].transform.position.x, Room.Gates[1].transform.position.x, "바깥 문 · 안쪽 문 순서");
+            Assert.Less(Room.Gates[1].transform.position.x, -12f, "문은 둘 다 왼쪽 끝에 나란히 선다");
+            Assert.Greater(Room.Gates[1].transform.position.x - Room.Gates[0].transform.position.x, 3.4f, "글자가 겹치지 않을 간격");
         }
 
         [UnityTest]

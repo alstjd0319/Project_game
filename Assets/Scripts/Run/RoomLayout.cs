@@ -20,8 +20,8 @@ namespace ParryRL
     {
         /// <summary>발판 오브젝트는 빌더가 이만큼 만들어 둔다 (레이아웃이 쓰는 개수가 이보다 적으면 나머지는 꺼 둔다).</summary>
         public const int MaxPlatforms = 6;
-        /// <summary>문 앞 글자가 가려지지 않도록 발판이 바깥으로 뻗을 수 있는 한계 (문은 x=±18 근처).</summary>
-        public const float MaxReach = 16.4f;
+        /// <summary>다음 방 문(왼쪽 끝 x≈-20 · -16, 글자 폭 약 3.4)을 가리지 않도록 발판 왼쪽 끝이 닿을 수 있는 한계.</summary>
+        public const float MaxLeftReach = 14.2f;
 
         public const int Basic = 0, Stairs = 1, Zigzag = 2, Tower = 3, Roof = 4, Flat = 5;
 
@@ -35,13 +35,13 @@ namespace ParryRL
             } },
             new() { Name = "지그재그", Platforms = new[]
             {
-                new PlatformSpec(-13f, 2.4f, 5f), new PlatformSpec(0f, 2.4f, 5f), new PlatformSpec(13f, 2.4f, 5f),
+                new PlatformSpec(-11.5f, 2.4f, 5f), new PlatformSpec(0f, 2.4f, 5f), new PlatformSpec(11.5f, 2.4f, 5f),
                 new PlatformSpec(-7f, 4.6f, 4f), new PlatformSpec(7f, 4.6f, 4f), new PlatformSpec(0f, 6.6f, 3f),
             } },
             new() { Name = "탑", Platforms = new[]
             {
                 new PlatformSpec(0f, 4.6f, 8f), new PlatformSpec(-9f, 2.2f, 4f), new PlatformSpec(9f, 2.2f, 4f),
-                new PlatformSpec(-13f, 3.8f, 4f), new PlatformSpec(13f, 3.8f, 4f),
+                new PlatformSpec(-12f, 3.8f, 4f), new PlatformSpec(12f, 3.8f, 4f),
             } },
             new() { Name = "지붕", Platforms = new[]
             {
