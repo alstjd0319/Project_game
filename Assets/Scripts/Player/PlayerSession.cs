@@ -26,6 +26,7 @@ namespace ParryRL
         public static void Reset()
         {
             HasData = false;
+            RunState.Reset();
             SkillTreeState.Reset(); // 포인트는 레벨에서 나오므로 익힌 랭크도 같이 비운다
         }
 

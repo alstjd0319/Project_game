@@ -25,6 +25,7 @@ namespace ParryRL
         private readonly List<Image> _gaugeRings = new();
         private SkillBar _skillBar;
         private TuningPanel _tuningPanel;
+        private Text _runInfo;
         private PlayerLevel _level;
         private Text _levelText;
         private Image _xpFill;
@@ -112,6 +113,14 @@ namespace ParryRL
             _instance._popupText.fontSize = big ? 64 : 46;
             _instance._popupTimer = big ? 1.0f : 0.7f;
             _instance._popupScale = big ? 1.6f : 1.35f;
+        }
+
+        /// <summary>화면 상단 중앙에 붙어 있는 한 줄 (방 번호·종류 등). null이면 숨긴다.</summary>
+        public static void SetRunInfo(string message)
+        {
+            if (_instance == null || _instance._runInfo == null) return;
+            _instance._runInfo.text = message;
+            _instance._runInfo.enabled = !string.IsNullOrEmpty(message);
         }
 
         public static void WorldText(Vector3 worldPos, string message, Color color, float scale = 1f)
@@ -360,6 +369,13 @@ namespace ParryRL
             _popupText.rectTransform.anchoredPosition = new Vector2(0, -170);
             _popupText.rectTransform.sizeDelta = new Vector2(1200, 100);
             _popupText.enabled = false;
+
+            // 상단 중앙: 방 번호·종류 (런 중에만 채워진다)
+            _runInfo = UiKit.Text("RunInfo", _root, 32, TextAnchor.UpperCenter);
+            _runInfo.color = new Color(0.95f, 0.9f, 1f);
+            UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(900f, 44f));
+            _runInfo.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _runInfo.enabled = false;
 
             // 우상단 조작 안내 (스킬 키는 하단 스킬바에 표시되므로 이동·점프·일시정지만)
             var help = UiKit.Text("Help", _root, 22, TextAnchor.UpperRight);

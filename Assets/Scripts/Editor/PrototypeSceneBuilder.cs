@@ -147,6 +147,11 @@ namespace ParryRL.EditorTools
             SetFloat(spawner, "arenaMinX", -ArenaHalfWidth);
             SetFloat(spawner, "arenaMaxX", ArenaHalfWidth);
 
+            // ── 방 진행 (런 중에만 동작 — RunState.Active가 아니면 예전 연습 모드 그대로) ──
+            var roomController = new GameObject("RoomController").AddComponent<RoomController>();
+            var runGateSprite = AssetDatabase.LoadAssetAtPath<Sprite>(GateSpritePath);
+            if (runGateSprite != null) Set(roomController, "gateSprite", runGateSprite);
+
             // ── 카메라 ──
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
             camGo.transform.position = new Vector3(0f, 3.5f, -10f);

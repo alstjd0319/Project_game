@@ -68,6 +68,23 @@ namespace ParryRL
         public event Action Staggered;
         public float HpRatio => (float)_hp / maxHp;
         public int XpReward => xpReward;
+        /// <summary>엘리트 몬스터 (체력이 많고 경험치도 많다). 크기는 판정이라 그대로 두고 보라 빛무리로 구분한다.</summary>
+        public bool IsElite { get; private set; }
+
+        /// <summary>엘리트로 만든다 — 체력 배율·경험치 배율. 판정 크기는 바꾸지 않는다.</summary>
+        public void MakeElite(float hpMultiplier, int xpMultiplier)
+        {
+            IsElite = true;
+            maxHp = Mathf.RoundToInt(maxHp * hpMultiplier);
+            _hp = maxHp;
+            xpReward *= Mathf.Max(1, xpMultiplier);
+            var aura = new GameObject("EliteAura").AddComponent<SpriteRenderer>();
+            aura.transform.SetParent(transform, false);
+            aura.transform.localScale = new Vector3(2.4f / Mathf.Max(0.1f, transform.localScale.x), 2.8f / Mathf.Max(0.1f, transform.localScale.y), 1f);
+            aura.sprite = FxSprites.Glow;
+            aura.color = new Color(0.75f, 0.4f, 1f, 0.55f);
+            aura.sortingOrder = _sr != null ? _sr.sortingOrder - 1 : 0;
+        }
         public bool IsStunned => !IsDead && Time.time < _stunUntil;
         /// <summary>몸 가로 절반 (예비 모션 크기 변화 제외).</summary>
         public float HalfWidth => _baseScale.x * 0.5f;

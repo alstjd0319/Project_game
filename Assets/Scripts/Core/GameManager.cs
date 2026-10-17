@@ -95,6 +95,7 @@ namespace ParryRL
         /// <summary>사당(대기 씬)으로 간다.</summary>
         public static void LoadHub()
         {
+            RunState.End(); // 판이 끝나고 사당으로 (이 판의 방 진행은 버린다)
             PlayerSession.Capture();
             Time.timeScale = 1f;
             SceneManager.LoadScene(HubSceneName);
@@ -102,7 +103,9 @@ namespace ParryRL
 
         public void Restart()
         {
+            bool wasRun = RunState.Active;
             PlayerSession.Reset(); // 다시 시작 = 이 씬을 처음 상태로
+            if (wasRun) RunState.Begin(); // 판 도중이면 첫 방부터 새로 시작
             Time.timeScale = 1f;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }

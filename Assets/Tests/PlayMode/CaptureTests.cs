@@ -26,6 +26,36 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 런_방_진행_웨이브와_문_고르기()
+        {
+            yield return TestScene.LoadRun();
+            GameTuning.Current.godMode = true;
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            var room = Object.FindAnyObjectByType<RoomController>();
+            void Put(float x)
+            {
+                var pos = new Vector3(x, player.transform.position.y, 0f);
+                player.transform.position = pos;
+                player.GetComponent<Rigidbody2D>().position = pos;
+                player.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+            }
+            yield return new WaitForSeconds(2.2f);
+            yield return Capture("run_wave");                 // 1파도: 상단 "방 1 / 6 · 일반"
+            for (int i = 0; i < 2; i++)
+            {
+                foreach (var e in Object.FindObjectsByType<EnemyController>()) if (!e.IsDead) e.TakeDamage(99999, 1f, false);
+                yield return new WaitForSeconds(2.4f);
+            }
+            Put(room.Gates[1].transform.position.x - 1.5f);
+            yield return new WaitForSeconds(1.0f);
+            yield return Capture("run_gate_right");           // 오른쪽 문 앞: 종류 표시 + 안내
+            Put(room.Gates[0].transform.position.x + 1.5f);
+            yield return new WaitForSeconds(1.0f);
+            yield return Capture("run_gate_left");
+        }
+
+        [UnityTest]
         public IEnumerator 스킬_D_F_연출()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

@@ -136,6 +136,7 @@ namespace ParryRL
         private void Enter()
         {
             Hud.ScreenFlash(new Color(0.65f, 0.45f, 1f, 0.8f));
+            RunState.Begin(); // 한 판 시작 (첫 방은 일반방)
             GameManager.LoadRun();
         }
     }

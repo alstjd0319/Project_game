@@ -277,3 +277,9 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 연습 탭 테스트 항목: `GameTuning.infiniteSkillPoints`(스킬 포인트 무제한, 저장 안 됨 — `SkillTreeState.Available`이 99) · "스킬 트리 초기화" · "레벨 초기화". 테스트: `PauseMenuTests`.
 
 - (2026-10-17) 스킬 트리 줄이 **체력 · 근접 · 원거리 · 자원** 4개로 바뀌었다(공격력 줄을 `MeleeAttack`/`RangedAttack`으로 분리: `SkillStat.MeleeAttackPercent/RangedAttackPercent`, `SkillTreeState.AttackMultiplier(ranged)`를 `DamageCalc`가 `hit.Ranged`로 고름). 줄을 늘릴 땐 `SkillBranch`·`BranchNames`·`SkillTreePanel.Rows`와 줄 아이콘만 맞추면 된다.
+
+## 런 구조 1단계: 방 흐름 (2026-10-17, 노션 "다음 작업: 런 구조" 진행 중)
+- 코드 `Assets/Scripts/Run/`: `RoomType`(일반·엘리트·보상·상점) + `RoomInfo`(라벨·색·힌트; 엘리트=귀문 보라, 빨강 금지) · `RunState`(static: `Active`·`RoomNumber`·`Current`·`TotalRooms`=6, `Begin/Enter/End/Reset`, `RollOptions`=서로 다른 문 둘, 마지막 방 직전은 엘리트 관문 하나) · `RoomPlan`(방 종류·번호 → 파도 구성, 가안) · `RoomController`(플레이 씬에 하나, 빌더가 만듦; `RunState.Active`일 때만 동작) · `RoomGate`(방을 깬 뒤 열리는 문; 종류 색·글자, E로 들어감, 마지막 방은 사당 출구).
+- **런 모드 vs 연습 모드**: 사당 포탈(`ShrinePortal.Enter`)이 `RunState.Begin()` 후 `LoadRun`. `RunState.Active`가 아니면(테스트가 `LoadPrototype`으로 바로 연 경우 등) `RoomController`는 손대지 않고 `EnemySpawner`가 예전처럼 몬스터를 계속 유지한다. 런 중엔 `EnemySpawner.RoomMode=true`로 유지를 끄고 `SpawnEnemy(kind, index, elite)`로 웨이브를 세운다(`EnemyController.MakeElite`: 체력·경험치 배율 + 보라 빛무리, 크기 불변).
+- 방 이동 = 같은 플레이 씬을 다시 불러온다(`RunState.Enter(type)` → `GameManager.LoadRun`, `PlayerSession`이 체력·도력 등을 이어줌). `GameManager.LoadHub`는 `RunState.End`, `Restart`는 판 도중이면 첫 방부터 새로 시작, `PlayerSession.Reset`은 `RunState.Reset`도 부른다. HUD 상단 중앙 `Hud.SetRunInfo`("방 N / 6 · 종류").
+- 테스트: `RunTests`(`TestScene.LoadRun(params RoomType[])`로 거쳐 온 방을 지정해 시작), 캡처 `런_방_진행_웨이브와_문_고르기`(`run_wave/run_gate_left/run_gate_right.png`). 보상방·상점방은 지금 몬스터·내용 없이 문만 열린다 — 2단계에서 채운다. 맵 구조(발판 배치 다양화)는 3단계.

@@ -20,6 +20,19 @@ namespace ParryRL.Tests
             SetMoveSkillCharges(1); // 기존 규칙 테스트는 대시 1회 기준 — 2회 충전은 따로 검증
         }
 
+        /// <summary>한 판(런)을 시작한 상태로 플레이 씬을 연다. enterRooms가 있으면 그 종류의 방들을 거쳐 온 것처럼 방 번호를 올린다.</summary>
+        public static IEnumerator LoadRun(params ParryRL.RoomType[] enterRooms)
+        {
+            GameTuning.UseDefaultsForTests();
+            PlayerSession.Reset();
+            UnityEngine.Time.timeScale = 1f;
+            ParryRL.RunState.Begin();
+            foreach (var type in enterRooms) ParryRL.RunState.Enter(type);
+            SceneManager.LoadScene("Prototype");
+            yield return null;
+            yield return null;
+        }
+
         /// <summary>사당(대기) 씬을 연다.</summary>
         public static IEnumerator LoadHub()
         {

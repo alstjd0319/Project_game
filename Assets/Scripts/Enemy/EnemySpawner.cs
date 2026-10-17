@@ -36,6 +36,11 @@ namespace ParryRL
         private Slot _melee;
         private Slot _ranged;
 
+        /// <summary>true면 몬스터를 계속 유지하지 않는다 — 방 흐름(<see cref="RoomController"/>)이 직접 <see cref="SpawnEnemy"/>로 세운다.</summary>
+        public bool RoomMode { get; set; }
+        public float ArenaMinX => arenaMinX;
+        public float ArenaMaxX => arenaMaxX;
+
         private void Start()
         {
             var defense = FindAnyObjectByType<PlayerDefense>();
@@ -43,12 +48,14 @@ namespace ParryRL
 
             _melee = new Slot { prefab = meleePrefab, side = 1f, enabledInScene = spawnMelee && meleePrefab != null };
             _ranged = new Slot { prefab = rangedPrefab, side = -1f, enabledInScene = spawnRanged && rangedPrefab != null };
+            if (RoomMode) return;
             Maintain(_melee, GameTuning.Current.hideMelee);
             Maintain(_ranged, GameTuning.Current.hideRanged);
         }
 
         private void Update()
         {
+            if (RoomMode) return;
             Maintain(_melee, GameTuning.Current.hideMelee);
             Maintain(_ranged, GameTuning.Current.hideRanged);
         }
@@ -73,13 +80,30 @@ namespace ParryRL
 
         private void Spawn(Slot slot)
         {
-            var prefab = slot.prefab;
+            var enemy = SpawnAt(slot.prefab, slot.side, slot.live.Count, new Color(0.95f, 0.3f, 0.35f));
+            enemy.Died += _ => StartCoroutine(Respawn(slot));
+            slot.live.Add(enemy);
+        }
+
+        /// <summary>방 흐름용: 종류·엘리트 여부를 정해 하나 세운다. index는 같은 웨이브 안의 순번(겹치지 않게 간격을 둔다).</summary>
+        public EnemyController SpawnEnemy(EnemyKind kind, int index, bool elite)
+        {
+            var prefab = kind == EnemyKind.Melee ? meleePrefab : rangedPrefab;
+            if (prefab == null) return null;
+            float side = kind == EnemyKind.Melee ? 1f : -1f;
+            var enemy = SpawnAt(prefab, side, index, elite ? new Color(0.8f, 0.45f, 1f) : new Color(0.95f, 0.3f, 0.35f));
+            if (elite) enemy.MakeElite(RoomPlan.EliteHpMultiplier, 3);
+            return enemy;
+        }
+
+        private EnemyController SpawnAt(EnemyController prefab, float side, int count, Color barColor)
+        {
             float px = _player != null ? _player.position.x : 0f;
             float half = prefab.transform.localScale.x * 0.5f;
             // 여러 마리면 한 줄로 겹치지 않게 간격을 두고 바깥쪽으로 늘어세운다
-            float offset = slot.live.Count * spawnSpacing + Random.Range(0f, 1f);
-            float x = px + slot.side * (spawnDistanceFromPlayer + offset);
-            if (x < arenaMinX + half || x > arenaMaxX - half) x = px - slot.side * (spawnDistanceFromPlayer + offset);
+            float offset = count * spawnSpacing + Random.Range(0f, 1f);
+            float x = px + side * (spawnDistanceFromPlayer + offset);
+            if (x < arenaMinX + half || x > arenaMaxX - half) x = px - side * (spawnDistanceFromPlayer + offset);
             if (x < arenaMinX + half || x > arenaMaxX - half) x = Random.Range(arenaMinX + half, arenaMaxX - half);
             x = Mathf.Clamp(x, arenaMinX + half, arenaMaxX - half);
 
@@ -87,10 +111,9 @@ namespace ParryRL
             var enemy = Instantiate(prefab, pos, Quaternion.identity);
             enemy.name = prefab.name;
             enemy.SetArena(arenaMinX, arenaMaxX);
-            enemy.Died += _ => StartCoroutine(Respawn(slot));
-            slot.live.Add(enemy);
-            WorldBar.Create(enemy.transform, 1.2f, new Color(0.95f, 0.3f, 0.35f), () => enemy != null ? enemy.HpRatio : 0f);
+            WorldBar.Create(enemy.transform, 1.2f, barColor, () => enemy != null ? enemy.HpRatio : 0f);
             Fx.Ring(pos, Color.white, 2.5f, 0.5f, 0.1f, 0.3f);
+            return enemy;
         }
 
         private IEnumerator Respawn(Slot slot)
