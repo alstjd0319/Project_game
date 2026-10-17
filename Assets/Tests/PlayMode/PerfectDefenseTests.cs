@@ -80,19 +80,17 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 플레이어_일반공격은_칼을_따라_살짝_내딛는다_무적은_아니다()
+        public IEnumerator 플레이어_일반공격은_제자리에서_벤다_내딛지_않는다()
         {
+            // (예전엔 칼을 따라 0.45유닛 내딛었다 — 사용자 요청으로 없앰)
             var motor = _defense.GetComponent<PlayerMotor>();
             TestScene.SetAttackSkillFree(true);
             motor.SetFacing(1f);
             float x0 = _defense.transform.position.x;
             Assert.IsTrue(_combat.TryAttackSkill());
             yield return new WaitForSeconds(0.3f);
-            float moved = _defense.transform.position.x - x0;
-            Assert.That(moved, Is.InRange(0.3f, 0.6f), "내딛기 거리 ≈ 0.45");
-            Assert.IsFalse(motor.IsDashInvulnerable, "내딛기는 무적이 아님");
-            yield return new WaitForSeconds(0.3f);
-            Assert.AreEqual(_defense.transform.position.x - x0, moved, 0.05f, "내딛기가 끝나면 멈춤");
+            Assert.AreEqual(x0, _defense.transform.position.x, 0.02f, "제자리");
+            Assert.IsFalse(motor.IsDashInvulnerable);
         }
     }
 }

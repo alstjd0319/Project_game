@@ -91,6 +91,26 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 근접_평타와_패링_반격은_앞으로_내딛지_않는다()
+        {
+            TestScene.SetAttackSkillFree(true);
+            Place(_enemy, 15f);
+            float x0 = PlayerPos.x;
+            Assert.IsTrue(_combat.TryAttackSkill());
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(x0, PlayerPos.x, 0.02f, "평타: 제자리");
+
+            var defense = _combat.GetComponent<PlayerDefense>();
+            yield return new WaitForSeconds(0.2f);
+            x0 = PlayerPos.x;
+            Assert.IsTrue(defense.TryActivate());
+            EnemyAttack.Spawn(null, AttackType.Normal, new Vector2(PlayerPos.x + 0.72f, PlayerPos.y), Vector2.left, new Vector2(0.6f, 0.6f), 10f, 6f, Color.red, 10);
+            yield return new WaitForSeconds(0.35f);
+            Assert.IsTrue(defense.SucceededThisActive, "패링 성공");
+            Assert.AreEqual(x0, PlayerPos.x, 0.02f, "패링 반격: 제자리");
+        }
+
+        [UnityTest]
         public IEnumerator 봉_1_2단은_몬스터를_경직시키지_않고_3단만_경직시킨다()
         {
             TestScene.SetAttackSkillFree(true);

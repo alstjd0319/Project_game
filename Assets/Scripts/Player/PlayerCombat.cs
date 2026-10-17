@@ -284,7 +284,7 @@ namespace ParryRL
                 var boxColor = new Color(color.r, color.g, color.b, 0.6f);
                 MeleeStrike.Spawn(center, new Vector2(meleeCounterRange, meleeCounterHeight), boxColor, counterDamage, hit,
                     art: GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeCounter : null, facing: dir, follow: transform);
-                _motor.Lunge(dir);
+                // (패링 반격 때 앞으로 내딛던 Lunge는 없앴다 — 사용자 요청: 막은 자리에서 그대로 반격)
             }
             CounterFired?.Invoke(new CounterShot(hit, pos, target, dir));
         }
@@ -357,7 +357,7 @@ namespace ParryRL
                     if (stage == 3) HitFeel.Instance.Play(new HitFeelProfile { hitStop = 0.05f, slowMotion = 0f, slowScale = 1f, shake = 0.2f, shakeDuration = 0.15f });
                     else HitFeel.Instance.SkillHit();
                 }
-                _motor.Lunge(dir);
+                // (평타 때 앞으로 내딛던 Lunge는 없앴다 — 사용자 요청: 제자리에서 벤다)
             }
             return true;
         }

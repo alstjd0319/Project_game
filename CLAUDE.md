@@ -316,3 +316,4 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 ## 구멍 앞 멈춤 · 바닥 판정 깊이 (2026-10-17)
 - 몬스터는 **키네마틱**(중력 없음, `SetPosition`으로만 이동)이라 구멍에 빠지지 않는다. 걷는 몬스터(`EnemyController.Walks` = 근접)는 `Move`에서 앞발 아래 땅을 `GroundProbe.HasGround(x, feetY)`(World/GroundProbe.cs: 리지드바디 없는 비트리거·비발판 콜라이더)로 검사해 없으면 멈추고, 밀릴 때(`KnockbackX`)도 구멍 쪽으로 안 밀린다. 도깨비불(원거리)은 그대로 건넌다. `EnemySpawner.SpawnAt`은 근접을 `GroundProbe.NudgeOntoGround`로 땅 위에 세운다. `RoomController`는 y < `FallKillY`로 내려간 몬스터를 `Despawn`.
 - **바닥 판정 깊이**: `FloorDecorator.SetGroundIntervals`가 바닥 조각을 윗면 y=0, 깊이 `GroundDepth`(5)로 둔다(구멍 옆이 벽이 되어 떨어질 때 뚫고 지나가지 않음, 보이는 속 채움 = 판정). 연습 모드 바닥도 같은 깊이. 테스트 `HazardTests`·`FloorTests`.
+- (2026-10-17) **근접 평타·근접 패링 반격은 앞으로 내딛지 않는다**(`PlayerCombat`에서 `_motor.Lunge` 호출 제거, 사용자 요청). D 휩쓸기·부적 부채꼴은 아직 `Lunge`가 남아 있다. 위 "전사는 벨 때 0.45유닛 내딛는다" 문장은 더 이상 평타·반격에 해당하지 않는다. 테스트 `SkillTests`·`PerfectDefenseTests`.
