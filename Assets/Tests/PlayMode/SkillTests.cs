@@ -91,6 +91,24 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 스킬_쿨타임은_봉과_부적이_따로다()
+        {
+            GameTuning.Current.infiniteGauge = true;
+            Assert.IsTrue(_combat.TrySkill(1), "봉 D");
+            Assert.Greater(_combat.Skill1CooldownLeft, 0f);
+            Assert.IsFalse(_combat.TrySkill(1), "봉 D는 쿨타임 중");
+            yield return new WaitForSeconds(0.6f); // 무기 전환 쿨타임
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            Assert.AreEqual(0f, _combat.Skill1CooldownLeft, "부적 D 쿨타임은 따로 — 비어 있다");
+            Assert.IsTrue(_combat.TrySkill(1), "봉 D를 막 썼어도 부적 D는 바로 쓴다");
+            Assert.Greater(_combat.SkillCooldownLeft(WeaponMode.Melee, 1), 0f, "봉 D 쿨타임은 부적을 든 동안에도 흐르고 남아 있다");
+            yield return new WaitForSeconds(0.6f);
+            Assert.IsTrue(_combat.TrySwitchWeapon());
+            Assert.IsFalse(_combat.TrySkill(1), "봉으로 돌아오면 봉 D는 아직 쿨타임");
+            Assert.Greater(_combat.SkillCooldownLeft(WeaponMode.Ranged, 1), 0f);
+        }
+
+        [UnityTest]
         public IEnumerator 근접_평타와_패링_반격은_앞으로_내딛지_않는다()
         {
             TestScene.SetAttackSkillFree(true);

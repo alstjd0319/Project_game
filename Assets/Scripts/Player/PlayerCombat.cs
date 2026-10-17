@@ -140,8 +140,11 @@ namespace ParryRL
         public int Skill2Cost => skill2Cost;
         public float Skill1Cooldown => skill1Cooldown;
         public float Skill2Cooldown => skill2Cooldown;
-        public float Skill1CooldownLeft => _skill1Cd;
-        public float Skill2CooldownLeft => _skill2Cd;
+        /// <summary>지금 든 무기의 D / F 남은 쿨타임 (봉과 부적은 쿨타임을 따로 센다).</summary>
+        public float Skill1CooldownLeft => _skillCd[WeaponIndex, 0];
+        public float Skill2CooldownLeft => _skillCd[WeaponIndex, 1];
+        /// <summary>무기를 지정해 D / F 남은 쿨타임 (테스트·UI용).</summary>
+        public float SkillCooldownLeft(WeaponMode weapon, int slot) => _skillCd[weapon == WeaponMode.Ranged ? 1 : 0, slot == 1 ? 0 : 1];
         public string Skill1Name => IsRanged ? "부채꼴" : "휩쓸기";
         public string Skill2Name => IsRanged ? "봉인진" : "내려찍기";
         /// <summary>대시를 쓸 수 없을 때(충전 0) 다음 1회분이 찰 때까지 남은 시간. 충전이 남아 있으면 0.</summary>
@@ -171,8 +174,9 @@ namespace ParryRL
         private float _moveCd;        // 다음 충전까지 남은 시간 (충전이 가득이면 0)
         private int _moveCharges = -1; // -1 = 아직 초기화 안 됨 (Awake에서 최대치로)
         private float _weaponCd;
-        private float _skill1Cd;
-        private float _skill2Cd;
+        // D / F 쿨타임을 무기별로 따로 센다 [무기(봉 0 · 부적 1), 칸(D 0 · F 1)] — 봉 스킬을 쓰고 부적으로 바꾸면 부적 스킬은 바로 쓸 수 있다
+        private readonly float[,] _skillCd = new float[2, 2];
+        private int WeaponIndex => IsRanged ? 1 : 0;
 
         private void Awake()
         {
@@ -204,8 +208,8 @@ namespace ParryRL
                 }
             }
             _weaponCd = Mathf.Max(0f, _weaponCd - Time.deltaTime);
-            _skill1Cd = Mathf.Max(0f, _skill1Cd - Time.deltaTime);
-            _skill2Cd = Mathf.Max(0f, _skill2Cd - Time.deltaTime);
+            for (int w = 0; w < 2; w++)
+                for (int k = 0; k < 2; k++) _skillCd[w, k] = Mathf.Max(0f, _skillCd[w, k] - Time.deltaTime); // 들고 있지 않은 무기의 쿨타임도 흐른다
 
             if (GameManager.InputBlocked || _party.IsDead) return;
             if (Input.GetKeyDown(Controls.AttackSkill)) PressAttack();
@@ -371,7 +375,7 @@ namespace ParryRL
             int cost = slot == 1 ? skill1Cost : skill2Cost;
             // 패링을 막 켠 동안(아직 못 막음)은 못 쓴다 — 막은 뒤에는 바로 쓸 수 있다 (일반공격과 같은 규칙)
             bool parrying = _defense.State == DefenseState.Active && !_defense.SucceededThisActive;
-            if (_party.IsDead || parrying || (slot == 1 ? _skill1Cd : _skill2Cd) > 0f)
+            if (_party.IsDead || parrying || _skillCd[WeaponIndex, slot == 1 ? 0 : 1] > 0f)
             {
                 ActionDenied?.Invoke(action);
                 return false;
@@ -382,7 +386,7 @@ namespace ParryRL
                 return false;
             }
 
-            if (slot == 1) _skill1Cd = skill1Cooldown; else _skill2Cd = skill2Cooldown;
+            _skillCd[WeaponIndex, slot == 1 ? 0 : 1] = slot == 1 ? skill1Cooldown : skill2Cooldown;
             ActionUsed?.Invoke(action);
             Sfx.Play(SfxId.Skill);
             int dir = _motor.Facing;
