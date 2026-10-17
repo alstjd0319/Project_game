@@ -27,6 +27,16 @@ namespace ParryRL
             _basePos = transform.position;
         }
 
+        /// <summary>카메라 크기와 높이를 바꾼다 (보스방: 큰 보스가 화면에 들어오게 넓게). 바닥이 화면에서 같은 높이에 오도록 높이를 함께 준다.</summary>
+        public void SetView(float orthographicSize, float y)
+        {
+            if (_cam == null) _cam = GetComponent<Camera>();
+            _cam.orthographicSize = orthographicSize;
+            fixedY = y;
+            _basePos = new Vector3(_basePos.x, fixedY, _basePos.z);
+            transform.position = _basePos;
+        }
+
         /// <summary>목표 위치로 카메라를 바로 옮긴다 (방에 들어왔을 때 천천히 따라오지 않게).</summary>
         public void SnapToTarget()
         {

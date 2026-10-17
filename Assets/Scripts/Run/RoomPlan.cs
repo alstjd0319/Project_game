@@ -8,6 +8,8 @@ namespace ParryRL
         public struct Wave
         {
             public int Melee, Ranged;
+            /// <summary>보스(불가살이) 수 (보스방만 1).</summary>
+            public int Boss;
             /// <summary>엘리트 몬스터 수 (근접·원거리 중 위 숫자에 이미 포함되지 않는 추가분이 아니라, 그 중 몇 마리가 엘리트인지).</summary>
             public int EliteMelee, EliteRanged;
         }
@@ -34,6 +36,9 @@ namespace ParryRL
                 case RoomType.Normal:
                     waves.Add(new Wave { Melee = System.Math.Min(4, 2 + n / 3), Ranged = System.Math.Min(3, 1 + n / 4) });
                     waves.Add(new Wave { Melee = System.Math.Min(4, 2 + n / 2), Ranged = System.Math.Min(3, 1 + n / 3) });
+                    break;
+                case RoomType.Boss:
+                    waves.Add(new Wave { Boss = 1 }); // 보스 혼자 (졸개 없음, 가안)
                     break;
                 case RoomType.Elite:
                     // 엘리트 한 마리(방 번호가 홀수면 근접, 짝수면 원거리) + 졸개

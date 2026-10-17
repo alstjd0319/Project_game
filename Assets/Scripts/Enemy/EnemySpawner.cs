@@ -12,6 +12,7 @@ namespace ParryRL
     {
         [SerializeField] private EnemyController meleePrefab;
         [SerializeField] private EnemyController rangedPrefab;
+        [SerializeField, Tooltip("보스(불가살이) — 런의 마지막 방에서만 나온다")] private EnemyController bossPrefab;
         [SerializeField] private bool spawnMelee = true;
         [SerializeField] private bool spawnRanged = true;
         [SerializeField] private float respawnDelay = 2.5f;
@@ -94,6 +95,21 @@ namespace ParryRL
             var enemy = SpawnAt(prefab, side, index, elite ? new Color(0.8f, 0.45f, 1f) : new Color(0.95f, 0.3f, 0.35f));
             if (elite) enemy.MakeElite(RoomPlan.EliteHpMultiplier, 3);
             return enemy;
+        }
+
+        /// <summary>보스를 세운다: 방 가운데에서 오른쪽(플레이어는 왼쪽 끝에서 시작). 머리 위 체력바 대신 화면 상단 보스 체력바(BossController).</summary>
+        public EnemyController SpawnBoss()
+        {
+            if (bossPrefab == null) return null;
+            float half = bossPrefab.transform.localScale.x * 0.5f;
+            float x = Mathf.Clamp((arenaMinX + arenaMaxX) * 0.5f + 6f, arenaMinX + half, arenaMaxX - half);
+            var pos = new Vector3(x, groundY + bossPrefab.transform.localScale.y * 0.5f, 0f);
+            var boss = Instantiate(bossPrefab, pos, Quaternion.identity);
+            boss.name = bossPrefab.name;
+            boss.SetArena(arenaMinX, arenaMaxX);
+            Fx.Ring(pos, new Color(1f, 0.55f, 0.2f), 3f, 6f, 0.15f, 0.6f);
+            if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.3f, 0.5f);
+            return boss;
         }
 
         private EnemyController SpawnAt(EnemyController prefab, float side, int count, Color barColor)

@@ -34,6 +34,10 @@ namespace ParryRL
         [Tooltip("사당 포탈 (반복 재생)")] public SpriteClip gatePortal = new();
         [Tooltip("사당 문 안쪽에 겹치는 일렁이는 소용돌이 (16장 반복, 칸 192×224 · 내용 138×181 — 원본 8장을 줄마다 물결치게 밀어 만든 것)")] public SpriteClip portalSwirl = new();
         [Tooltip("도깨비불 불덩이 — 앞 4장 청록(일반) · 뒤 4장 빨강(강공격), 반복 재생")] public SpriteClip dokkaebiProjectile = new();
+        [Header("보스 불가살이 특수 패턴 (bulgasari-vfx 시트, 96×96 × 8장, 오른쪽을 봄)")]
+        [Tooltip("돌진 — 몸 앞 잔상·속도선")] public SpriteClip bossDash = new();
+        [Tooltip("가시 발사 — 날아가는 가시 하나 (반복)")] public SpriteClip bossSpine = new();
+        [Tooltip("땅 찍기 — 바닥에 퍼지는 원형 충격파·균열")] public SpriteClip bossSlam = new();
 
         public SpriteClip EnemySlash(AttackType type) => type == AttackType.Heavy ? enemyHeavySlash : enemySlash;
     }

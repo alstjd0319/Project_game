@@ -1,0 +1,241 @@
+{
+    "character":  "bulgasari",
+    "pixelsPerUnit":  90,
+    "note":  "가로 한 줄 스트립. 칸(cellW×cellH)을 왼쪽부터 frames개로 자르면 프레임. 그림은 오른쪽을 봄(왼쪽은 좌우 반전). pivotPx는 칸 왼쪽 위 기준 px, unityPivot은 Unity 스프라이트 피벗(0~1, 아래가 0).",
+    "sheets":  [
+                   {
+                       "sheet":  "p1_idle",
+                       "label":  "불가살이 1 · 대기",
+                       "file":  "bulgasari_p1_idle_strip.png",
+                       "frames":  4,
+                       "fps":  5,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p1_walk",
+                       "label":  "불가살이 1 · 걷기",
+                       "file":  "bulgasari_p1_walk_strip.png",
+                       "frames":  4,
+                       "fps":  6,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p1_combo",
+                       "label":  "불가살이 1 · 3연타",
+                       "file":  "bulgasari_p1_combo_strip.png",
+                       "frames":  6,
+                       "fps":  10,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p1_heavy_windup",
+                       "label":  "불가살이 1 · 강공격 준비",
+                       "file":  "bulgasari_p1_heavy_windup_strip.png",
+                       "frames":  4,
+                       "fps":  5,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p1_heavy_attack",
+                       "label":  "불가살이 1 · 강공격",
+                       "file":  "bulgasari_p1_heavy_attack_strip.png",
+                       "frames":  4,
+                       "fps":  10,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "transform",
+                       "label":  "불가살이 · 변신",
+                       "file":  "bulgasari_transform_strip.png",
+                       "frames":  6,
+                       "fps":  5,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "hurt",
+                       "label":  "불가살이 · 피격 (1·1·2·2)",
+                       "file":  "bulgasari_hurt_strip.png",
+                       "frames":  4,
+                       "fps":  8,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p2_idle",
+                       "label":  "불가살이 2 · 대기",
+                       "file":  "bulgasari_p2_idle_strip.png",
+                       "frames":  4,
+                       "fps":  5,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p2_walk",
+                       "label":  "불가살이 2 · 걷기",
+                       "file":  "bulgasari_p2_walk_strip.png",
+                       "frames":  4,
+                       "fps":  5,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p2_attack_normal",
+                       "label":  "불가살이 2 · 코 휘두르기",
+                       "file":  "bulgasari_p2_attack_normal_strip.png",
+                       "frames":  6,
+                       "fps":  10,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p2_heavy_windup",
+                       "label":  "불가살이 2 · 강공격 준비",
+                       "file":  "bulgasari_p2_heavy_windup_strip.png",
+                       "frames":  4,
+                       "fps":  5,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "p2_heavy_attack",
+                       "label":  "불가살이 2 · 강공격",
+                       "file":  "bulgasari_p2_heavy_attack_strip.png",
+                       "frames":  4,
+                       "fps":  10,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   },
+                   {
+                       "sheet":  "death",
+                       "label":  "불가살이 · 사망",
+                       "file":  "bulgasari_death_strip.png",
+                       "frames":  6,
+                       "fps":  6,
+                       "cellW":  1024,
+                       "cellH":  640,
+                       "pivotPx":  [
+                                       512,
+                                       620
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0312
+                                      ]
+                   }
+               ]
+}

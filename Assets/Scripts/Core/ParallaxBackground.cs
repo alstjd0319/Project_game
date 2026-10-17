@@ -21,6 +21,20 @@ namespace ParryRL
 
         [SerializeField] private BackgroundSet[] sets;
         [SerializeField, Tooltip("0 이상이면 GameTuning 대신 이 구간을 고정으로 쓴다 (시작 화면: 사당)")] private int forcedZone = -1;
+        [SerializeField, Tooltip("보스방(불가살이) 배경 — 구간 순환(F1 배경 바꾸기)에는 들어가지 않고, 보스방에서만 UseBossBackground로 켠다")] private BackgroundSet bossSet;
+
+        private bool _useBoss;
+        private const int BossZone = -2;
+
+        /// <summary>보스방 배경으로 바꾼다 (런의 마지막 방).</summary>
+        public void UseBossBackground()
+        {
+            if (bossSet == null) return;
+            _useBoss = true;
+            _zone = -1; // 다시 깔기
+        }
+
+        public bool IsBossBackground => _useBoss && _zone == BossZone;
 
         private sealed class Layer
         {
@@ -32,6 +46,9 @@ namespace ParryRL
         private readonly System.Collections.Generic.List<Layer> _layers = new();
         private Camera _cam;
         private int _zone = -1;
+        private float _builtOrtho = -1f;
+        /// <summary>배경 그림 높이(12유닛)가 화면 높이와 맞는 카메라 크기. 카메라를 넓게 빼면(보스방) 그만큼 배경도 키운다.</summary>
+        private const float ReferenceOrtho = 6f;
 
         public int ZoneCount => sets != null ? sets.Length : 0;
         public int Zone => _zone;
@@ -44,8 +61,8 @@ namespace ParryRL
             if (_cam == null) _cam = Camera.main;
             if (_cam == null) return;
 
-            int wanted = Mathf.Clamp(forcedZone >= 0 ? forcedZone : GameTuning.Current.backgroundZone, 0, sets.Length - 1);
-            if (wanted != _zone || _layers.Count == 0) Build(wanted);
+            int wanted = _useBoss ? BossZone : Mathf.Clamp(forcedZone >= 0 ? forcedZone : GameTuning.Current.backgroundZone, 0, sets.Length - 1);
+            if (wanted != _zone || _layers.Count == 0 || Mathf.Abs(_cam.orthographicSize - _builtOrtho) > 0.01f) Build(wanted);
 
             Vector3 camPos = _cam.transform.position;
             foreach (var layer in _layers)
@@ -64,7 +81,8 @@ namespace ParryRL
             foreach (Transform child in transform) Destroy(child.gameObject);
             _layers.Clear();
             _zone = zone;
-            var set = sets[zone];
+            _builtOrtho = _cam.orthographicSize;
+            var set = zone == BossZone ? bossSet : sets[zone];
             float halfW = _cam.orthographicSize * Mathf.Max(_cam.aspect, MaxAspect);
 
             AddLayer("Far", set.far, FarScroll, FarOrder, halfW);
@@ -86,7 +104,8 @@ namespace ParryRL
         private void AddLayer(string name, Sprite sprite, float scroll, int order, float halfW)
         {
             if (sprite == null) return;
-            float w = sprite.bounds.size.x;
+            float k = _cam.orthographicSize / ReferenceOrtho;
+            float w = sprite.bounds.size.x * k;
             int n = RequiredCopies(w, halfW);
 
             var layer = new Layer { copies = new Transform[n], width = w, scroll = scroll };
@@ -96,6 +115,7 @@ namespace ParryRL
             {
                 var go = new GameObject($"{name}_{i}");
                 go.transform.SetParent(root, false);
+                go.transform.localScale = new Vector3(k, k, 1f);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = sprite;
                 sr.sortingOrder = order;

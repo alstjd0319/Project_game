@@ -189,6 +189,11 @@ MonoBehaviour:
   knockback: 0.25
   xpReward: 10
   lightKnockbackRatio: 0.3
+  superArmor: 0
+  stunResist: 0
+  heavyChanceOverride: -1
+  comboHits: 1
+  comboGap: 0.6
   recoverTime: 0.35
   normalDamage: 10
   heavyDamage: 20

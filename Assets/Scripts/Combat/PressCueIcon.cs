@@ -25,11 +25,15 @@ namespace ParryRL
         /// <summary>지금 빨간 정도 0~1 (테스트·디버그).</summary>
         public float Redness => _redAt < 0f ? 0f : Mathf.Clamp01((_age - _redAt) / TurnTime);
 
-        public static PressCueIcon Spawn(EnemyController enemy)
+        private bool _manual;
+
+        /// <param name="manual">true면 몬스터의 예비 모션 상태와 상관없이 <see cref="FadeOut"/>을 부를 때까지 남는다 (보스 특수 패턴)</param>
+        public static PressCueIcon Spawn(EnemyController enemy, bool manual = false)
         {
             var go = new GameObject("PressCueIcon");
             var icon = go.AddComponent<PressCueIcon>();
             icon._enemy = enemy;
+            icon._manual = manual;
             icon.Build();
             icon.Follow();
             return icon;
@@ -70,13 +74,19 @@ namespace ParryRL
             transform.position = new Vector3(p.x, p.y + _enemy.transform.localScale.y * 0.5f + 1.2f + bob, 0f);
         }
 
+        /// <summary>바로 사라지기 시작한다 (연속 공격에서 다음 느낌표로 넘어갈 때).</summary>
+        public void FadeOut()
+        {
+            if (_fadeAt < 0f) _fadeAt = _age;
+        }
+
         private void Update()
         {
             _age += Time.deltaTime;
             Follow();
 
             // 몬스터가 예비 모션을 끝냈거나(베기가 나감) 끊기면 서서히 사라진다
-            if (_fadeAt < 0f && (_enemy == null || _enemy.IsDead || !_enemy.IsWindingUp)) _fadeAt = _age;
+            if (_fadeAt < 0f && (_enemy == null || _enemy.IsDead || (!_manual && !_enemy.IsWindingUp))) _fadeAt = _age;
 
             // 톡 튀어나오기: 0 → 1.25 → 1
             float pop = Mathf.Clamp01(_age / PopTime);

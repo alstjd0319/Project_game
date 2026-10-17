@@ -23,5 +23,9 @@ namespace ParryRL
         public int slashHitFrame = 0;
         [Tooltip("강공격 베기 시트의 앞 장면(칼을 뒤로 젖힘)은 준비 자세라 건너뛰고 내려찍는 장면부터")]
         public int heavySlashHitFrame = 3;
+
+        [Header("연속 공격 (보스 3연타 등) — 있으면 일반 공격 대신 이 시트 하나로 예비 모션 → 타격 n번 → 회복을 그린다")]
+        [Tooltip("연속 공격 전체 시트 (비우면 연속 공격도 windup/slash로 그린다)")] public SpriteClip combo = new();
+        [Tooltip("타격마다 보여 줄 장면 번호 (n번째 타격 = n번째 값). 그 앞 장면들은 첫 예비 모션")] public int[] comboHitFrames = { 2, 3, 4 };
     }
 }

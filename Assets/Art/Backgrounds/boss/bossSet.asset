@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26d3c2195596e46dab220b84d0af6acf, type: 3}
+  m_Name: bossSet
+  m_EditorClassIdentifier: ParryRL::ParryRL.BackgroundSet
+  zoneName: "\uBD88\uAC00\uC0B4\uC774 \uBCF4\uC2A4\uBC29"
+  far: {fileID: 21300000, guid: 914f0e15ae63949208ab300b9eb50e89, type: 3}
+  mid: {fileID: 21300000, guid: 19190556c92d246b59a5cfe85a1cbd9a, type: 3}
+  near: {fileID: 0}
+  nearInFront: 0

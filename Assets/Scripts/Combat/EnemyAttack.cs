@@ -139,7 +139,8 @@ namespace ParryRL
         /// 투사체(원거리) 그림: clip의 start부터 count장을 반복 재생. 박스 대신 보이고(판정 박스는 "판정 상자 보기"에서만),
         /// 그림 원본 색을 그대로 쓴다. scale은 원본 크기 배율.
         /// </summary>
-        public void AttachProjectileArt(SpriteClip clip, int start, int count, float scale)
+        /// <param name="rotate">true면 그림을 날아가는 방향으로 돌린다 (가시처럼 길쭉한 그림 — 판정 상자는 정사각에 가깝게 둘 것)</param>
+        public void AttachProjectileArt(SpriteClip clip, int start, int count, float scale, bool rotate = false)
         {
             if (clip == null || clip.IsEmpty || start >= clip.frames.Length) return;
             var go = new GameObject("Art");
@@ -149,6 +150,11 @@ namespace ParryRL
             _art = go.AddComponent<SpriteRenderer>();
             _art.sortingOrder = ArtOrder;
             _art.flipX = _direction.x < 0f;
+            if (rotate)
+            {
+                _art.flipX = false;
+                go.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg);
+            }
             _artClip = clip;
             _loopArt = true;
             _loopStart = start;

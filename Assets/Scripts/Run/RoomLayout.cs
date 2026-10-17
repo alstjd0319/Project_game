@@ -88,12 +88,12 @@ namespace ParryRL
 
         private static readonly int[] FightPool = { Stairs, Zigzag, Tower, Roof };
 
-        /// <summary>이 방의 레이아웃 번호. 연습 모드·첫 방은 기본, 보상·상점은 제단이 가려지지 않게 평지, 마지막 관문은 탑, 그 밖의 싸움방은 바로 앞 방과 다르게 돌려 뽑는다.</summary>
+        /// <summary>이 방의 레이아웃 번호. 연습 모드·첫 방은 기본, 보상·상점은 제단이 가려지지 않게 평지, 마지막 보스방은 평지, 그 밖의 싸움방은 바로 앞 방과 다르게 돌려 뽑는다.</summary>
         public static int Pick(bool run, RoomType type, int roomNumber, int seed, int previous)
         {
             if (ForcedIndex >= 0) return ForcedIndex;
             if (!run || roomNumber <= 1) return Basic;
-            if (roomNumber >= RunState.TotalRooms) return Tower;
+            if (roomNumber >= RunState.TotalRooms || type == RoomType.Boss) return Flat; // 보스방은 평지로 고정
             if (type == RoomType.Reward || type == RoomType.Shop) return Flat;
             var rng = new System.Random(seed * 31 + roomNumber);
             var pool = new List<int>(FightPool);

@@ -116,10 +116,10 @@ namespace ParryRL
             (RoomType.Normal, 45), (RoomType.Elite, 20), (RoomType.Reward, 20), (RoomType.Shop, 15),
         };
 
-        /// <summary>다음 방으로 가는 문 두 개의 종류 (서로 다르다). 마지막 방 직전이면 문은 하나이고 정해진 방(엘리트 관문)이다.</summary>
+        /// <summary>다음 방으로 가는 문 두 개의 종류 (서로 다르다). 마지막 방 직전이면 문은 하나이고 보스방(불가살이)이다.</summary>
         public static RoomType[] RollOptions(System.Random rng = null)
         {
-            if (RoomNumber + 1 >= TotalRooms) return new[] { RoomType.Elite };
+            if (RoomNumber + 1 >= TotalRooms) return new[] { RoomType.Boss };
             rng ??= new System.Random();
             var pool = new List<(RoomType type, int weight)>(Weights);
             var result = new RoomType[2];

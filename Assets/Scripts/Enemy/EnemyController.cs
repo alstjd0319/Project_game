@@ -22,6 +22,13 @@ namespace ParryRL
         [SerializeField, Tooltip("처치 시 경험치")] private int xpReward = 10;
         [SerializeField, Tooltip("약한 경직(부적 평타)에 맞았을 때 밀리는 거리 비율 (보통 밀림 대비)")] private float lightKnockbackRatio = 0.3f;
 
+        [Header("보스")]
+        [SerializeField, Tooltip("슈퍼 아머: 어떤 공격에도 경직(공격 끊김)이 걸리지 않는다 (보스). 기절은 stunResist만큼 짧게 걸린다")] private bool superArmor;
+        [SerializeField, Range(0f, 1f), Tooltip("기절 시간을 이 비율만큼 줄인다 (보스)")] private float stunResist;
+        [SerializeField, Tooltip("강공격 확률 (0 이상이면 GameTuning 값 대신 이 값)")] private float heavyChanceOverride = -1f;
+        [SerializeField, Tooltip("일반 공격 연속 타격 수 (1 = 한 번). 보스 1페이즈 3연타 — 타격마다 느낌표가 다시 노랑 → 빨강")] private int comboHits = 1;
+        [SerializeField, Tooltip("연속 공격에서 다음 타격까지의 간격(초, Tempo 적용) — 이 간격이 다음 타격의 반응시간")] private float comboGap = 0.6f;
+
         [Header("공격 공통 — 강공격 확률·공격 간격·예비 모션 길이·반응시간·원거리 속도는 GameTuning (F1 패널)")]
         [SerializeField] private float recoverTime = 0.35f;
         [SerializeField] private int normalDamage = 10;
@@ -115,6 +122,86 @@ namespace ParryRL
         private float _arenaMinX = -20f;
         private float _arenaMaxX = 20f;
 
+        /// <summary>공격 박자 배율 — 예비 모션·회복·공격 간격에 곱한다 (1보다 작으면 빨라진다, 보스 2페이즈).</summary>
+        public float Tempo { get; set; } = 1f;
+        /// <summary>피해를 받지 않는다 (보스 변신 중).</summary>
+        public bool Invulnerable { get; set; }
+        /// <summary>움직이지도 공격하지도 않는다 (보스 변신 연출 중).</summary>
+        public bool Frozen { get; set; }
+        /// <summary>체력이 이 아래로 내려가지 않는다 (보스 1페이즈: 한 방에 2페이즈를 건너뛰고 죽지 않게).</summary>
+        public int HpFloor { get; set; }
+        public bool SuperArmor => superArmor;
+        public int ComboHits { get => comboHits; set => comboHits = Mathf.Max(1, value); }
+        public int NormalDamage { get => normalDamage; set => normalDamage = value; }
+        /// <summary>지금 공격이 연속 공격(일반 공격 · 타격 2번 이상)인가 — 그림이 연속 공격 시트를 쓴다.</summary>
+        public bool IsComboAttack { get; private set; }
+        /// <summary>연속 공격에서 지금까지 나간 타격 수 (0 = 첫 예비 모션 중).</summary>
+        public int ComboStep { get; private set; }
+        /// <summary>연속 공격 타격 횟수 (테스트용 — 공격마다 늘어난다).</summary>
+        public int ComboStrikeCount { get; private set; }
+        public int MaxHp => maxHp;
+
+        public float HeavyChanceOverride
+        {
+            get => heavyChanceOverride;
+            set => heavyChanceOverride = value;
+        }
+
+        /// <summary>몸(판정) 크기를 바꾼다 — 발끝은 그대로 (보스 2페이즈에서 모습이 커질 때).</summary>
+        public void SetBodySize(Vector2 size)
+        {
+            _baseScale = new Vector3(size.x, size.y, 1f);
+            SetScaleFeetAnchored(_baseScale);
+        }
+
+        /// <summary>근접 베기 모양을 바꾼다 (보스 2페이즈: 더 길고 높게).</summary>
+        public void SetMeleeGeometry(float range, float reach, float attackHeight, float normalHeight, float heavyHeight)
+        {
+            meleeRange = range;
+            meleeReach = reach;
+            meleeAttackHeight = attackHeight;
+            meleeNormalSlashHeight = normalHeight;
+            meleeHeavySlashHeight = heavyHeight;
+        }
+
+        /// <summary>하던 일이 있는가 (예비 모션·회복·경직·기절) — 보스 특수 패턴은 한가할 때만 시작한다.</summary>
+        public bool IsBusy => _state != State.Idle || IsStunned;
+
+        /// <summary>그 쪽을 바라본다 (보스 특수 패턴).</summary>
+        public void FaceTowardsX(float x)
+        {
+            float dx = x - transform.position.x;
+            if (Mathf.Abs(dx) > 0.05f) Facing = Mathf.Sign(dx);
+        }
+
+        /// <summary>땅 위에서 x로 옮긴다 (보스 돌진). 바닥 범위 안으로 자른다.</summary>
+        public float MoveToX(float x)
+        {
+            float half = _baseScale.x * 0.5f;
+            x = Mathf.Clamp(x, _arenaMinX + half, _arenaMaxX - half);
+            SetPosition(new Vector2(x, transform.position.y));
+            return x;
+        }
+
+        public float ArenaMinX => _arenaMinX;
+        public float ArenaMaxX => _arenaMaxX;
+        public float FeetY => _feetY;
+
+        /// <summary>"지금 패링" 느낌표를 노랑 → 빨강으로 (보스 특수 패턴이 직접 부른다).</summary>
+        public void TurnCueRed(PressCueIcon icon) => ShowPressCue(icon);
+
+        /// <summary>하던 공격(예비 모션·회복)을 그만둔다. 이미 나간 공격은 남는다.</summary>
+        public void CancelAttack()
+        {
+            if (IsDead) return;
+            StopAllCoroutines();
+            RestoreBody();
+            _state = State.Idle;
+            _tint = _baseColor;
+            _artTint = Color.white;
+            WindupProgress = 0f;
+        }
+
         public void SetArena(float minX, float maxX)
         {
             _arenaMinX = minX;
@@ -154,6 +241,7 @@ namespace ParryRL
             if (_player != null && _state == State.Idle && Mathf.Abs(DxToPlayer) > 0.05f)
                 Facing = Mathf.Sign(DxToPlayer);
 
+            if (Frozen) { IsMoving = false; return; }
             if (_state != State.Idle || IsStunned || _player == null || GameManager.InputBlocked) return;
 
             Move();
@@ -221,18 +309,21 @@ namespace ParryRL
             // 공격 방향은 시작하는 순간 정해 둔다: 이후 플레이어가 이동·대시로 반대편에 가도 따라 돌지 않고 그 자리에서 그대로 벤다
             _attackDir = Mathf.Abs(DxToPlayer) > 0.05f ? Mathf.Sign(DxToPlayer) : (Facing != 0f ? Facing : -1f);
             Facing = _attackDir;
-            float heavyChance = T.heavyOnly ? 1f : T.heavyChance;
+            float heavyChance = T.heavyOnly ? 1f : heavyChanceOverride >= 0f ? heavyChanceOverride : T.heavyChance;
             var type = UnityEngine.Random.value < heavyChance ? AttackType.Heavy : AttackType.Normal;
             bool heavy = type == AttackType.Heavy;
             // 근접: 베기가 한 번에 나가므로 예비 모션이 곧 반응시간 / 원거리: 짧은 예비 모션 + 날아오는 동안
             float windup = kind == EnemyKind.Melee
                 ? (heavy ? T.meleeHeavyReaction : T.meleeNormalReaction)
                 : (heavy ? T.heavyWindup : T.normalWindup);
+            windup *= Mathf.Max(0.1f, Tempo);
             float pulse = heavy ? heavyWindupScale : normalWindupScale;
             Color attackColor = heavy ? heavyAttackColor : normalAttackColor;
             Color windupColor = new(attackColor.r, attackColor.g, attackColor.b, 1f);
             IsHeavyAttack = heavy;
             WindupProgress = 0f;
+            IsComboAttack = !heavy && comboHits > 1 && kind == EnemyKind.Melee;
+            ComboStep = 0;
 
             Sfx.Play(heavy ? SfxId.HeavyCue : SfxId.NormalCue);
             // 예비 모션 시작 때의 경고는 원거리 강공격에만 있다. 근접(창귀)은 일반·강공격 모두 베기 직전의 "지금 눌러" 느낌표 하나뿐.
@@ -271,10 +362,37 @@ namespace ParryRL
             RestoreBody();
             if (_player != null) Launch(type);
 
+            // 연속 공격(보스 3연타): 같은 방향으로 짧은 간격을 두고 다시 벤다. 타격마다 새 느낌표가 노랑 → 빨강으로 타이밍을 알려 준다
+            if (IsComboAttack)
+            {
+                ComboStrikeCount++;
+                for (int k = 1; k < comboHits && !IsDead; k++)
+                {
+                    ComboStep = k;
+                    if (cueIcon != null) cueIcon.FadeOut();
+                    cueIcon = PressCueIcon.Spawn(this);
+                    float gap = comboGap * Mathf.Max(0.1f, Tempo);
+                    float nextCue = gap - T.defenseActiveTime * pressCueFraction;
+                    bool nextShown = false;
+                    for (float t = 0f; t < gap; t += Time.deltaTime)
+                    {
+                        if (!nextShown && t >= nextCue)
+                        {
+                            nextShown = true;
+                            ShowPressCue(cueIcon);
+                        }
+                        yield return null;
+                    }
+                    if (_player != null) Launch(type);
+                    ComboStrikeCount++;
+                }
+                ComboStep = comboHits;
+            }
+
             _state = State.Recover;
-            yield return new WaitForSeconds(recoverTime);
+            yield return new WaitForSeconds(recoverTime * Mathf.Max(0.1f, Tempo));
             _state = State.Idle;
-            _cooldown = RollInterval();
+            _cooldown = RollInterval() * Mathf.Max(0.1f, Tempo);
         }
 
         /// <summary>"지금 패링을 눌러": 노란 느낌표가 빨갛게 바뀐다 (빨강은 적 공격 경고 전용).</summary>
@@ -348,7 +466,9 @@ namespace ParryRL
         {
             if (IsDead) return;
 
-            if (!T.enemyInvincible) _hp -= damage;
+            if (Invulnerable) return; // 보스 변신 중: 피해 없음
+            if (superArmor && stagger == HitStagger.Full) stagger = HitStagger.Light; // 보스는 경직에 걸리지 않는다 (강공격 반격도 — 사용자 요청). 넉백 0이라 밀리지도 않는다
+            if (!T.enemyInvincible) _hp = Mathf.Max(HpFloor, _hp - damage);
             _flash = 1f;
             Sfx.Play(SfxId.EnemyHit);
             Fx.Sparks(transform.position, Color.white, heavy ? 12 : 7, heavy ? 9f : 6f);
@@ -387,9 +507,11 @@ namespace ParryRL
         /// 이미 날아간 공격은 그대로 둔다 — 이미 텔레그래프된 공격이라 플레이어가 막을 수 있고, 지우면 "막을 기회"도 사라지기 때문.
         /// 기절 중 맞아도 경직(0.35초)이 기절을 줄이지 않는다.
         /// </summary>
-        public void Stun(float seconds)
+        /// <param name="ignoreResist">기절 저항(stunResist)을 무시하고 그대로 건다 (보스 연속 패링 보상)</param>
+        public void Stun(float seconds, bool ignoreResist = false)
         {
             if (IsDead || seconds <= 0f) return;
+            if (!ignoreResist) seconds *= 1f - stunResist;
             bool fresh = !IsStunned;
             _stunUntil = Mathf.Max(_stunUntil, Time.time + seconds);
             if (_state == State.Windup || _state == State.Recover)

@@ -45,7 +45,7 @@ namespace ParryRL.Tests
             for (int i = 0; i < RunState.TotalRooms - 2; i++) RunState.Enter(RoomType.Normal);
             var last = RunState.RollOptions();
             Assert.AreEqual(1, last.Length, "마지막 방 직전은 문이 하나");
-            Assert.AreEqual(RoomType.Elite, last[0], "마지막 관문은 엘리트");
+            Assert.AreEqual(RoomType.Boss, last[0], "마지막 관문은 보스(불가살이)");
             RunState.Reset();
         }
 
@@ -310,7 +310,7 @@ namespace ParryRL.Tests
         [UnityTest]
         public IEnumerator 마지막_방을_깨면_사당으로_나가는_문이_열리고_판이_끝난다()
         {
-            var rooms = Enumerable.Repeat(RoomType.Normal, RunState.TotalRooms - 2).Append(RoomType.Elite).ToArray();
+            var rooms = Enumerable.Repeat(RoomType.Normal, RunState.TotalRooms - 2).Append(RoomType.Boss).ToArray();
             yield return TestScene.LoadRun(rooms);
             Assert.IsTrue(RunState.IsFinalRoom);
             GameTuning.Current.godMode = true;

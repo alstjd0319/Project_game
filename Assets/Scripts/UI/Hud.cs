@@ -26,6 +26,15 @@ namespace ParryRL
         private SkillBar _skillBar;
         private TuningPanel _tuningPanel;
         private Text _runInfo;
+        // 보스 체력바 (화면 상단, 퍼센트)
+        private GameObject _bossRoot;
+        private Image _bossFill;
+        private Text _bossText;
+        private System.Func<float> _bossRatio;
+        private System.Func<int> _bossPhase;
+        private System.Func<string> _bossExtra;
+        private string _bossName;
+        private float _bossShown = 1f;
         private Text _help;
         private PlayerLevel _level;
         private Text _levelText;
@@ -113,8 +122,33 @@ namespace ParryRL
             _instance._popupText.color = color;
             _instance._popupText.fontSize = big ? 64 : 46;
             _instance._popupTimer = big ? 1.0f : 0.7f;
+            // 보스 체력바(화면 위쪽)가 떠 있으면 그 아래로 내려 가리지 않게
+            _instance._popupText.rectTransform.anchoredPosition = new Vector2(0f, BossBarVisible ? -330f : -170f);
             _instance._popupScale = big ? 1.6f : 1.35f;
         }
+
+        /// <summary>화면 상단에 보스 체력바(용 장식 틀 + 퍼센트)를 띄운다. ratio = 체력 비율, phase = 지금 페이즈.</summary>
+        /// <param name="extra">체력 글자 뒤에 붙일 한 줄 (연속 패링 수 등, 빈 문자열이면 없음)</param>
+        public static void ShowBossBar(string name, System.Func<float> ratio, System.Func<int> phase, System.Func<string> extra = null)
+        {
+            if (_instance == null || _instance._bossRoot == null) return;
+            _instance._bossExtra = extra;
+            _instance._bossName = name;
+            _instance._bossRatio = ratio;
+            _instance._bossPhase = phase;
+            _instance._bossShown = ratio != null ? ratio() : 1f;
+            _instance._bossRoot.SetActive(true);
+        }
+
+        public static void HideBossBar()
+        {
+            if (_instance == null || _instance._bossRoot == null) return;
+            _instance._bossRoot.SetActive(false);
+            _instance._bossRatio = null;
+        }
+
+        public static bool BossBarVisible => _instance != null && _instance._bossRoot != null && _instance._bossRoot.activeSelf;
+        public static string BossBarText => _instance != null && _instance._bossText != null ? _instance._bossText.text : "";
 
         /// <summary>화면 상단 중앙에 붙어 있는 한 줄 (방 번호·종류 등). null이면 숨긴다.</summary>
         public static void SetRunInfo(string message)
@@ -156,8 +190,50 @@ namespace ParryRL
 
         // ───────────── 갱신 ─────────────
 
+        private void UpdateBossBar(float dt)
+        {
+            if (_bossRoot == null || !_bossRoot.activeSelf || _bossRatio == null) return;
+            float ratio = Mathf.Clamp01(_bossRatio());
+            _bossShown = Mathf.MoveTowards(_bossShown, ratio, dt * 1.5f); // 줄어드는 모습이 보이게 살짝 따라간다
+            _bossFill.fillAmount = _bossShown;
+            int phase = _bossPhase != null ? _bossPhase() : 1;
+            // 2페이즈는 채움 색이 더 붉게 타오른다 (주황 계열 — 빨강은 적 공격 경고 전용)
+            _bossFill.color = phase >= 2 ? new Color(1f, 0.38f, 0.12f) : new Color(1f, 0.62f, 0.2f);
+            int pct = Mathf.CeilToInt(ratio * 100f);
+            string extra = _bossExtra != null ? _bossExtra() : "";
+            _bossText.text = $"{_bossName}  <b>{pct}%</b>" + (phase >= 2 ? "  <size=22><color=#FFB070>2페이즈</color></size>" : "")
+                             + (string.IsNullOrEmpty(extra) ? "" : $"   <size=22>{extra}</size>");
+        }
+
+        private void BuildBossBar()
+        {
+            var art = GameAssets.Ui;
+            const float width = 980f, height = 151f;
+            var root = UiKit.Image("BossBar", _root, art != null && art.dragonFrame != null ? Color.white : new Color(0.1f, 0.08f, 0.14f, 0.9f));
+            if (art != null && art.dragonFrame != null) root.sprite = art.dragonFrame;
+            UiKit.Place(root.rectTransform, new Vector2(0.5f, 1f), new Vector2(190f, -112f), new Vector2(width, height)); // 화면 위쪽, 왼쪽 위 상태 창(오른쪽 끝 약 644px)과 겹치지 않게 조금 오른쪽으로
+            root.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _bossRoot = root.gameObject;
+
+            // 틀 안쪽 홈(용 장식 틀 그림의 어두운 띠)에 채움 — 틀보다 먼저 그려야 하므로 틀의 형제로 앞에 둔다
+            var groove = UiKit.Image("BossFillBack", root.rectTransform, new Color(0.05f, 0.03f, 0.08f, 0.9f)).rectTransform;
+            groove.anchorMin = new Vector2(0.125f, 0.57f);
+            groove.anchorMax = new Vector2(0.875f, 0.765f);
+            groove.offsetMin = groove.offsetMax = Vector2.zero;
+            _bossFill = UiKit.Image("BossFill", groove, new Color(1f, 0.62f, 0.2f));
+            _bossFill.sprite = GameAssets.Square;
+            _bossFill.type = Image.Type.Filled;
+            _bossFill.fillMethod = Image.FillMethod.Horizontal;
+            _bossFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            UiKit.Stretch(_bossFill.rectTransform);
+            _bossText = UiKit.Text("BossText", groove, 26, TextAnchor.MiddleCenter);
+            UiKit.Stretch(_bossText.rectTransform);
+            _bossRoot.SetActive(false);
+        }
+
         private void Update()
         {
+            UpdateBossBar(Time.unscaledDeltaTime);
             float dt = Time.unscaledDeltaTime;
             UpdateStatus();
             _skillBar.Tick(dt);
@@ -378,6 +454,8 @@ namespace ParryRL
             UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(900f, 80f));
             _runInfo.rectTransform.pivot = new Vector2(0.5f, 1f);
             _runInfo.enabled = false;
+
+            BuildBossBar();
 
             // 우상단 조작 안내 (스킬 키는 하단 스킬바에 표시되므로 이동·점프·일시정지만)
             var help = UiKit.Text("Help", _root, 22, TextAnchor.UpperRight);

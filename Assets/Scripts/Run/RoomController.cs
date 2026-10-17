@@ -33,7 +33,7 @@ namespace ParryRL
         private readonly List<RoomGate> _gates = new();
         private readonly List<RoomAltar> _altars = new();
         private bool _gatesOpen;
-        private const int GoldMelee = 5, GoldRanged = 7, GoldElite = 25;
+        private const int GoldMelee = 5, GoldRanged = 7, GoldElite = 25, GoldBoss = 60;
         private float _timer;
 
         public int LayoutIndex { get; private set; }
@@ -68,7 +68,7 @@ namespace ParryRL
         /// <summary>몬스터를 잡으면 엽전을 얻는다 (엘리트가 훨씬 많다).</summary>
         private void OnEnemyDied(EnemyController enemy)
         {
-            int gold = enemy.IsElite ? GoldElite : enemy.Kind == EnemyKind.Ranged ? GoldRanged : GoldMelee;
+            int gold = enemy.GetComponent<BossController>() != null ? GoldBoss : enemy.IsElite ? GoldElite : enemy.Kind == EnemyKind.Ranged ? GoldRanged : GoldMelee;
             RunState.AddGold(gold);
             Hud.WorldText(enemy.transform.position + Vector3.up * 0.8f, $"+{gold} 엽전", new Color(1f, 0.85f, 0.35f), 1f);
         }
@@ -80,6 +80,13 @@ namespace ParryRL
             _timer = introDelay;
             EnemyController.AnyDied += OnEnemyDied;
             RunState.Changed += UpdateInfo;
+            if (RunState.Current == RoomType.Boss)
+            {
+                var bg = FindAnyObjectByType<ParallaxBackground>();
+                if (bg != null) bg.UseBossBackground(); // 쇠사슬 감긴 거대한 문 — 불가살이 보스방 전용 배경
+            }
+            if (RunState.Current == RoomType.Boss && CameraRig.Instance != null)
+                CameraRig.Instance.SetView(BossViewSize, BossViewSize - 2.5f); // 보스방은 넓게 — 큰 보스(2페이즈)가 화면에 다 들어오게. 바닥은 같은 높이(아래 끝 y=−2.5)
             PlacePlayerAtStart();
             UpdateInfo();
             Hud.Popup($"방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}  ({Layout.Name})", RoomInfo.Color(RunState.Current), true);
@@ -125,6 +132,8 @@ namespace ParryRL
 
         // ── 바닥 구멍: 빠지면 피해를 입고 떨어지기 전 자리로 돌아온다 ──
         public const int FallDamage = 15;
+        /// <summary>보스방 카메라 크기 (평소 6). 화면 아래 끝은 y=−2.5로 같게 둔다.</summary>
+        public const float BossViewSize = 7.2f;
         private const float FallKillY = -4.5f;    // 이보다 아래로 떨어지면 추락
         private const float SafeEdgeMargin = 1.2f; // 구멍 가장자리에서 이만큼 안쪽에서 선 자리만 "안전한 자리"로 기억한다
 
@@ -221,6 +230,7 @@ namespace ParryRL
             var w = _waves[index];
             if (_waves.Count > 1) Hud.Popup($"{index + 1} / {_waves.Count} 파도", new Color(1f, 1f, 1f), false);
             int i = 0;
+            if (w.Boss > 0) Track(_spawner.SpawnBoss());
             for (int m = 0; m < w.Melee; m++) Track(_spawner.SpawnEnemy(EnemyKind.Melee, i++, m < w.EliteMelee));
             i = 0;
             for (int r = 0; r < w.Ranged; r++) Track(_spawner.SpawnEnemy(EnemyKind.Ranged, i++, r < w.EliteRanged));

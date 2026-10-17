@@ -152,6 +152,115 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 보스_불가살이_1페이즈_변신_2페이즈()
+        {
+            var rooms = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Append(System.Linq.Enumerable.Repeat(RoomType.Normal, RunState.TotalRooms - 2), RoomType.Boss));
+            yield return TestScene.LoadRun(rooms);
+            GameTuning.Current.godMode = true;
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            float t = 0f;
+            while (BossController.Instance == null && t < 5f) { t += Time.deltaTime; yield return null; }
+            var boss = BossController.Instance;
+            // 보스 앞(왼쪽)으로 플레이어를 옮겨 한 화면에
+            var pos = new Vector3(boss.transform.position.x - 6f, player.transform.position.y, 0f);
+            player.transform.position = pos;
+            player.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            if (CameraRig.Instance != null) CameraRig.Instance.SnapToTarget();
+            GameTuning.Current.enemyPassive = false;
+            boss.Enemy.HeavyChanceOverride = 0f;
+            for (float w = 0f; w < 5f && boss.Enemy.ComboStrikeCount < 2; w += Time.deltaTime) yield return null;
+            yield return new WaitForSeconds(0.05f);
+            yield return Capture("boss_combo");               // 1페이즈 3연타 중 (둘째 타격 뒤 셋째 느낌표)
+            boss.Enemy.HeavyChanceOverride = 0.35f;
+            GameTuning.Current.enemyPassive = true;
+            yield return new WaitForSeconds(1.2f);
+            boss.Enemy.TakeDamage(boss.Enemy.MaxHp / 5, 1f, false, null, HitStagger.Light);
+            yield return new WaitForSeconds(0.6f);
+            yield return Capture("boss_phase1");              // 1페이즈 + 상단 체력바(80%)
+            boss.Enemy.TakeDamage(boss.Enemy.MaxHp / 3, 1f, false, null, HitStagger.Light);
+            yield return new WaitForSeconds(0.9f);
+            yield return Capture("boss_transform");           // 변신 중
+            while (boss.IsTransforming) yield return null;
+            yield return new WaitForSeconds(0.8f);
+            yield return Capture("boss_phase2");              // 2페이즈 (더 큰 모습, 체력바 "2페이즈")
+            GameTuning.Current.enemyPassive = false;
+            GameTuning.Current.heavyOnly = true;
+            for (float w = 0f; w < 4f && !boss.Enemy.IsWindingUp; w += Time.deltaTime) yield return null;
+            yield return new WaitForSeconds(0.45f);
+            yield return Capture("boss_phase2_heavy");        // 2페이즈 강공격 예비 모션
+            GameTuning.Current.heavyOnly = false;
+        }
+
+        [UnityTest]
+        public IEnumerator 보스_특수_패턴_가시_땅찍기_돌진()
+        {
+            var rooms = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Append(System.Linq.Enumerable.Repeat(RoomType.Normal, RunState.TotalRooms - 2), RoomType.Boss));
+            IEnumerator Setup(float dx)
+            {
+                yield return TestScene.LoadRun(rooms);
+                GameTuning.Current.godMode = true;
+                GameTuning.Current.enemyPassive = true;
+                float w = 0f;
+                while (BossController.Instance == null && w < 5f) { w += Time.deltaTime; yield return null; }
+                var player = Object.FindAnyObjectByType<PlayerDefense>();
+                var pos = new Vector3(BossController.Instance.transform.position.x + dx, player.transform.position.y, 0f);
+                player.transform.position = pos;
+                player.GetComponent<Rigidbody2D>().position = pos;
+                Physics2D.SyncTransforms();
+                if (CameraRig.Instance != null) CameraRig.Instance.SnapToTarget();
+                yield return new WaitForSeconds(0.5f);
+            }
+            yield return Setup(-8f);
+            BossController.Instance.StartPattern(BossPattern.SpineVolley);
+            yield return new WaitForSeconds(0.75f);
+            yield return Capture("boss_pattern_windup");      // 예비 동작 + 느낌표
+            yield return new WaitForSeconds(0.45f);
+            yield return Capture("boss_pattern_spines");      // 가시 발사
+
+            yield return Setup(-8f);
+            BossController.Instance.StartPattern(BossPattern.GroundSlam);
+            yield return new WaitForSeconds(1.15f);
+            yield return Capture("boss_pattern_slam");        // 땅 찍기 충격파
+
+            yield return Setup(-11f);
+            BossController.Instance.ForcePhase2();
+            while (BossController.Instance.IsTransforming) yield return null;
+            BossController.Instance.StartPattern(BossPattern.Dash);
+            yield return new WaitForSeconds(1.05f);
+            yield return Capture("boss_pattern_dash");        // 2페이즈 돌진
+        }
+
+        [UnityTest]
+        public IEnumerator 보스_연속_패링_기절()
+        {
+            var rooms = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Append(System.Linq.Enumerable.Repeat(RoomType.Normal, RunState.TotalRooms - 2), RoomType.Boss));
+            yield return TestScene.LoadRun(rooms);
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            float w = 0f;
+            while (BossController.Instance == null && w < 5f) { w += Time.deltaTime; yield return null; }
+            var boss = BossController.Instance;
+            var defense = Object.FindAnyObjectByType<PlayerDefense>();
+            var pos = new Vector3(boss.transform.position.x - 5f, defense.transform.position.y, 0f);
+            defense.transform.position = pos;
+            defense.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            if (CameraRig.Instance != null) CameraRig.Instance.SnapToTarget();
+            for (int i = 0; i < 5; i++)
+            {
+                yield return new WaitForSeconds(1.1f);
+                defense.TryActivate();
+                Vector2 p = defense.transform.position;
+                EnemyAttack.Spawn(boss.Enemy, AttackType.Normal, new Vector2(p.x + 0.72f, p.y), Vector2.left, new Vector2(0.6f, 0.6f), 10f, 6f, Color.red, 10);
+                yield return new WaitForSeconds(0.25f);
+                if (i == 3) yield return Capture("boss_parry_streak");   // 체력바 "연속 패링 4 / 5"
+            }
+            yield return new WaitForSeconds(0.25f);
+            yield return Capture("boss_parry_stun");                  // 5연속 패링 → 기절
+        }
+
+        [UnityTest]
         public IEnumerator 스킬_D_F_연출()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

@@ -50,9 +50,63 @@ namespace ParryRL
         // 연속으로 맞으면 피격 그림을 처음부터
         private void OnStaggered() => _clipTime = 0f;
 
+        private SpriteClip _override;
+        private float _overrideTime;
+
+        /// <summary>그림 묶음을 바꾼다 (보스 2페이즈 모습).</summary>
+        public void SetArt(EnemyArt newArt)
+        {
+            art = newArt;
+            _lastClip = "";
+        }
+
+        /// <summary>이 동작을 처음부터 끝까지 한 번 재생하는 동안 다른 동작보다 앞선다 (보스 변신). 길이(초)를 돌려준다.</summary>
+        public float PlayOnce(SpriteClip clip) => Play(clip, false);
+
+        /// <summary>이 동작을 <see cref="StopOverride"/>할 때까지 반복한다 (보스 돌진).</summary>
+        public void PlayLoop(SpriteClip clip) => Play(clip, true);
+
+        public void StopOverride()
+        {
+            _override = null;
+            _lastClip = "";
+        }
+
+        private bool _overrideLoop;
+
+        private float Play(SpriteClip clip, bool loop)
+        {
+            if (clip == null || clip.IsEmpty) return 0f;
+            _override = clip;
+            _overrideLoop = loop;
+            _overrideTime = 0f;
+            return clip.frames.Length / Mathf.Max(0.1f, clip.fps);
+        }
+
+        public bool IsPlayingOnce => _override != null;
+
         private void LateUpdate()
         {
             _clipTime += Time.deltaTime; // 히트스탑 동안 그림도 멈춘다
+            if (_override != null && artRenderer != null)
+            {
+                _overrideTime += Time.deltaTime;
+                int f = (int)(_overrideTime * _override.fps);
+                if (_overrideLoop) f %= _override.frames.Length;
+                if (f < _override.frames.Length)
+                {
+                    artRenderer.enabled = true;
+                    _box.enabled = GameTuning.Current.showHitboxes;
+                    artRenderer.sprite = _override.frames[f];
+                    artRenderer.flipX = _enemy.Facing < 0f;
+                    artRenderer.color = Color.white;
+                    Clip = "once";
+                    Frame = f;
+                    return;
+                }
+                _override = null;
+                _lastClip = "";
+            }
 
             if (art == null || artRenderer == null)
             {
@@ -93,6 +147,11 @@ namespace ParryRL
         {
             if (_enemy.IsStunned && !art.stun.IsEmpty) { source = art.stun; return "stun"; }
             if (_enemy.IsStaggered && !art.hit.IsEmpty) { source = art.hit; return "hit"; }
+            if (_enemy.IsComboAttack && !art.combo.IsEmpty && (_enemy.IsWindingUp || _enemy.IsRecovering))
+            {
+                source = art.combo;
+                return "combo" + _enemy.ComboStep; // 타격마다 이름이 바뀌어 장면 시간이 처음부터
+            }
             if (_enemy.IsWindingUp)
             {
                 source = _enemy.IsHeavyAttack ? art.heavyWindup : art.windup;
@@ -112,6 +171,17 @@ namespace ParryRL
         {
             if (source.IsEmpty) return 0;
             int n = source.frames.Length;
+            if (clip.StartsWith("combo"))
+            {
+                // 연속 공격: 첫 예비 모션은 첫 타격 장면 앞까지 진행도에 맞춰, 그 뒤엔 방금 친 타격 장면, 끝나면 마지막 장면까지
+                var hits = art.comboHitFrames;
+                int step = _enemy.ComboStep;
+                if (hits == null || hits.Length == 0) return 0;
+                if (step == 0) return Mathf.Clamp((int)(_enemy.WindupProgress * hits[0]), 0, Mathf.Max(0, hits[0] - 1));
+                int last = Mathf.Clamp(hits[Mathf.Min(step, hits.Length) - 1], 0, n - 1);
+                if (_enemy.IsRecovering) return Mathf.Min(n - 1, last + (int)(_clipTime * source.fps));
+                return last;
+            }
             switch (clip)
             {
                 case "windup":

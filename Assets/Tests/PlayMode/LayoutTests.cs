@@ -53,11 +53,11 @@ namespace ParryRL.Tests
         [Test]
         public void 방마다_지형이_다르고_바로_앞_방과_같은_지형이_연달아_나오지_않는다()
         {
-            // 첫 방은 기본, 보상·상점은 평지, 마지막은 탑
+            // 첫 방은 기본, 보상·상점은 평지, 마지막(보스)도 평지
             Assert.AreEqual(RoomLayouts.Basic, RoomLayouts.Pick(true, RoomType.Normal, 1, 7, RoomLayouts.Basic));
             Assert.AreEqual(RoomLayouts.Flat, RoomLayouts.Pick(true, RoomType.Shop, 3, 7, 1));
             Assert.AreEqual(RoomLayouts.Flat, RoomLayouts.Pick(true, RoomType.Reward, 3, 7, 1));
-            Assert.AreEqual(RoomLayouts.Tower, RoomLayouts.Pick(true, RoomType.Elite, RunState.TotalRooms, 7, 1));
+            Assert.AreEqual(RoomLayouts.Flat, RoomLayouts.Pick(true, RoomType.Boss, RunState.TotalRooms, 7, 1), "보스방은 평지 고정");
             Assert.AreEqual(RoomLayouts.Basic, RoomLayouts.Pick(false, RoomType.Normal, 4, 7, 1), "연습 모드는 기본");
             var seen = new System.Collections.Generic.HashSet<int>();
             for (int seed = 0; seed < 50; seed++)

@@ -43,6 +43,12 @@ namespace ParryRL.EditorTools
         private const string HeroArtDir = "Assets/Art/Characters/Hero";
         private const string StaffArtPath = HeroArtDir + "/StaffArt.asset";
         private const string TalismanArtPath = HeroArtDir + "/TalismanArt.asset";
+        private const string BossArtDir = "Assets/Art/Enemies/Bulgasari";
+        private const string BossP1ArtPath = BossArtDir + "/BulgasariP1Art.asset";
+        private const string BossP2ArtPath = BossArtDir + "/BulgasariP2Art.asset";
+        private const string BossPrefabPath = "Assets/Prefabs/Enemy_Boss_Bulgasari.prefab";
+        private static readonly Vector2 BossPivot = new(0.5f, 0.0312f); // 불가살이 시트 발끝 (manifest)
+        private static readonly Vector2 BossBodyP1 = new(3.6f, 3.0f);     // 1페이즈 몸(판정) — 그림의 몸통(꼬리 제외)에 맞춤
         private const string ChanggwiArtDir = "Assets/Art/Enemies/Changgwi";
         private const string ChanggwiArtPath = ChanggwiArtDir + "/ChanggwiArt.asset";
         private const string DokkaebibulArtDir = "Assets/Art/Enemies/Dokkaebibul";
@@ -79,6 +85,7 @@ namespace ParryRL.EditorTools
                 new Vector2(1f, 1.6f), new Color(0.58f, 0.46f, 0.78f), changgwiArt, floating: false);
             CreateEnemyPrefab(RangedPrefabPath, "Enemy_Ranged", EnemyKind.Ranged,
                 new Vector2(0.9f, 1.3f), new Color(0.35f, 0.62f, 0.8f), dokkaebibulArt, floating: true);
+            CreateBossPrefab();
             CreateHeroArt(WeaponMode.Melee, StaffArtPath, "staff");
             CreateHeroArt(WeaponMode.Ranged, TalismanArtPath, "talisman");
             CreateAttackFxArt();
@@ -150,6 +157,8 @@ namespace ParryRL.EditorTools
             var bgList = bgSerialized.FindProperty("sets");
             bgList.arraySize = bgSets.Length;
             for (int b = 0; b < bgSets.Length; b++) bgList.GetArrayElementAtIndex(b).objectReferenceValue = bgSets[b];
+            var bossBg = CreateBossBackgroundSet();
+            if (bossBg != null) bgSerialized.FindProperty("bossSet").objectReferenceValue = bossBg;
             bgSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             // ── 플레이어 ──
@@ -159,6 +168,8 @@ namespace ParryRL.EditorTools
             var spawner = new GameObject("EnemySpawner").AddComponent<EnemySpawner>();
             Set(spawner, "meleePrefab", meleePrefab);
             Set(spawner, "rangedPrefab", rangedPrefab);
+            var bossPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(BossPrefabPath);
+            if (bossPrefab != null) Set(spawner, "bossPrefab", bossPrefab.GetComponent<EnemyController>());
             SetFloat(spawner, "arenaMinX", -ArenaHalfWidth);
             SetFloat(spawner, "arenaMaxX", ArenaHalfWidth);
 
@@ -405,6 +416,44 @@ namespace ParryRL.EditorTools
             return art.AddComponent<ClipPlayer>();
         }
 
+        /// <summary>보스방 배경(Assets/Art/Backgrounds/boss/far·mid.png — 에셋 미리보기/bg/boss 사본). 구간 순환과 따로 둔다.</summary>
+        private static BackgroundSet CreateBossBackgroundSet()
+        {
+            string dir = $"{BgDir}/boss";
+            if (!AssetDatabase.IsValidFolder(dir)) return null;
+            foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
+            {
+                var importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid));
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.spriteAlignment = (int)SpriteAlignment.Center;
+                settings.spritePixelsPerUnit = 1024f / 12f;
+                settings.spriteMeshType = SpriteMeshType.FullRect;
+                settings.filterMode = FilterMode.Point;
+                settings.mipmapEnabled = false;
+                settings.alphaIsTransparency = true;
+                importer.SetTextureSettings(settings);
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+            }
+            string assetPath = $"{dir}/bossSet.asset";
+            var set = AssetDatabase.LoadAssetAtPath<BackgroundSet>(assetPath);
+            if (set == null)
+            {
+                set = ScriptableObject.CreateInstance<BackgroundSet>();
+                AssetDatabase.CreateAsset(set, assetPath);
+            }
+            set.zoneName = "불가살이 보스방";
+            set.far = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/far.png");
+            set.mid = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/mid.png");
+            set.near = null;
+            set.nearInFront = false;
+            EditorUtility.SetDirty(set);
+            return set;
+        }
+
         private static BackgroundSet[] LoadBackgroundSets()
         {
             var list = new System.Collections.Generic.List<BackgroundSet>();
@@ -522,6 +571,101 @@ namespace ParryRL.EditorTools
             art.heavySlashHitFrame = 1;  // 강공격 시트: 0 내리치기 시작 · 1 맞는 순간
             EditorUtility.SetDirty(art);
             return art;
+        }
+
+        /// <summary>
+        /// 보스 불가살이(Tools/gwimun_sprites/cut_boss.py가 자른 프레임, 칸 1024×640, 피벗 발끝)를 1·2페이즈 EnemyArt로 묶고 보스 프리팹을 만든다.
+        /// 일반 공격(3연타 / 코 휘두르기) 6장 = 앞 3장 예비 모션 + 뒤 3장 베기. 피격 시트는 앞 2장 = 1페이즈, 뒤 2장 = 2페이즈.
+        /// </summary>
+        private static void CreateBossPrefab()
+        {
+            if (!AssetDatabase.IsValidFolder(BossArtDir)) return;
+            ImportFrames(BossArtDir, _ => BossPivot);
+            EnemyArt Make(string path, string idle, string walk, string normal, string heavyWindup, string heavyAttack, int hurtStart)
+            {
+                var art = AssetDatabase.LoadAssetAtPath<EnemyArt>(path);
+                if (art == null)
+                {
+                    art = ScriptableObject.CreateInstance<EnemyArt>();
+                    AssetDatabase.CreateAsset(art, path);
+                }
+                art.idle = LoadClip(BossArtDir, "bulgasari", idle, 5f);
+                art.walk = LoadClip(BossArtDir, "bulgasari", walk, 6f);
+                art.windup = LoadClipRange(BossArtDir, "bulgasari", normal, 0, 3, 10f);
+                art.slash = LoadClipRange(BossArtDir, "bulgasari", normal, 3, 3, 10f);
+                art.heavyWindup = LoadClip(BossArtDir, "bulgasari", heavyWindup, 5f);
+                art.heavySlash = LoadClip(BossArtDir, "bulgasari", heavyAttack, 10f);
+                // 피격 시트(hurt)는 1·2페이즈 프레임이 섞여 있지만 전부 1페이즈 크기로 그려져 있어서(에셋 안내 7절),
+                // 2페이즈에서 쓰면 맞거나 기절할 때마다 잠깐 작은 1페이즈 모습으로 돌아가 보였다 → 2페이즈는 대기 그림을 쓴다(맞은 번쩍임·기절 색은 그대로)
+                art.hit = hurtStart >= 0 ? LoadClipRange(BossArtDir, "bulgasari", "hurt", hurtStart, 2, 8f) : LoadClipRange(BossArtDir, "bulgasari", idle, 0, 2, 8f);
+                art.stun = hurtStart >= 0 ? LoadClipRange(BossArtDir, "bulgasari", "hurt", hurtStart, 2, 3f) : LoadClip(BossArtDir, "bulgasari", idle, 3f);
+                art.death = LoadClip(BossArtDir, "bulgasari", "death", 6f);
+                art.slashHitFrame = 0;
+                art.heavySlashHitFrame = 1;
+                art.combo = new SpriteClip();
+                EditorUtility.SetDirty(art);
+                return art;
+            }
+            var p1 = Make(BossP1ArtPath, "p1_idle", "p1_walk", "p1_combo", "p1_heavy_windup", "p1_heavy_attack", 0);
+            var p2 = Make(BossP2ArtPath, "p2_idle", "p2_walk", "p2_attack_normal", "p2_heavy_windup", "p2_heavy_attack", -1); // -1 = 피격 시트 안 씀 (1페이즈 크기라)
+            // 1페이즈 3연타: 시트 6장 = 0 웅크림 · 1 들어올림 · 2 첫 할퀴기 · 3 둘째 · 4 크게 내지르는 셋째 · 5 회복
+            p1.combo = LoadClip(BossArtDir, "bulgasari", "p1_combo", 10f);
+            p1.comboHitFrames = new[] { 2, 3, 4 };
+            EditorUtility.SetDirty(p1);
+
+            var go = CreateVisual("Enemy_Boss_Bulgasari", Vector2.zero, BossBodyP1, new Color(0.85f, 0.45f, 0.2f), 8, null);
+            go.AddComponent<BoxCollider2D>().isTrigger = true;
+            go.AddComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+            var enemy = go.AddComponent<EnemyController>();
+            var so = new SerializedObject(enemy);
+            so.FindProperty("kind").enumValueIndex = (int)EnemyKind.Melee;
+            so.FindProperty("maxHp").intValue = 900;          // 가안
+            so.FindProperty("moveSpeed").floatValue = 1.5f;
+            so.FindProperty("knockback").floatValue = 0f;      // 크고 무거워서 밀리지 않는다
+            so.FindProperty("xpReward").intValue = 0;          // 경험치는 방을 깼을 때 (마지막 관문 50)
+            so.FindProperty("recoverTime").floatValue = 0.5f;
+            so.FindProperty("normalDamage").intValue = 10;      // 3연타라 한 번당은 약하게 (2페이즈 코 휘두르기는 16)
+            so.FindProperty("comboHits").intValue = 3;
+            so.FindProperty("comboGap").floatValue = 0.6f;
+            so.FindProperty("heavyDamage").intValue = 24;
+            so.FindProperty("normalWindupScale").floatValue = 1.02f; // 몸이 커서 예비 모션 부풀기는 아주 조금만
+            so.FindProperty("heavyWindupScale").floatValue = 1.06f;
+            so.FindProperty("meleeRange").floatValue = 3.4f;
+            so.FindProperty("meleeReach").floatValue = 4.4f;
+            so.FindProperty("meleeAttackHeight").floatValue = 1.1f;
+            so.FindProperty("meleeNormalSlashHeight").floatValue = 2.2f;
+            so.FindProperty("meleeHeavySlashHeight").floatValue = 2.8f;
+            so.FindProperty("superArmor").boolValue = true;
+            so.FindProperty("stunResist").floatValue = 0.6f;
+            so.FindProperty("heavyChanceOverride").floatValue = 0.35f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            var artGo = new GameObject("Art");
+            artGo.transform.SetParent(go.transform, false);
+            artGo.transform.localPosition = new Vector3(0f, -0.5f, 0f); // 발끝 = 네모 바닥
+            artGo.transform.localScale = new Vector3(1f / BossBodyP1.x, 1f / BossBodyP1.y, 1f);
+            var artSr = artGo.AddComponent<SpriteRenderer>();
+            artSr.sortingOrder = 7; // 플레이어(10)·이펙트보다 뒤
+            var sprite = go.AddComponent<EnemySprite>();
+            Set(sprite, "artRenderer", artSr);
+            Set(sprite, "art", p1);
+
+            var boss = go.AddComponent<BossController>();
+            var bso = new SerializedObject(boss);
+            bso.FindProperty("phase2Art").objectReferenceValue = p2;
+            var clip = LoadClip(BossArtDir, "bulgasari", "transform", 4f);
+            var clipProp = bso.FindProperty("transformClip");
+            var frames = clipProp.FindPropertyRelative("frames");
+            frames.arraySize = clip.frames.Length;
+            for (int i = 0; i < clip.frames.Length; i++) frames.GetArrayElementAtIndex(i).objectReferenceValue = clip.frames[i];
+            clipProp.FindPropertyRelative("fps").floatValue = clip.fps;
+            bso.FindProperty("phase2Body").vector2Value = new Vector2(5.0f, 4.0f);
+            bso.FindProperty("phase2RangeReach").vector2Value = new Vector2(4.6f, 5.8f);
+            bso.FindProperty("phase2Heights").vector3Value = new Vector3(1.4f, 2.8f, 3.6f);
+            bso.ApplyModifiedPropertiesWithoutUndo();
+
+            PrefabUtility.SaveAsPrefabAsset(go, BossPrefabPath);
+            Object.DestroyImmediate(go);
         }
 
         /// <summary>만신(사당 NPC) 프레임(mentor_&lt;시트&gt;_&lt;번호&gt;.png)을 임포트하고 NpcArt로 묶는다.</summary>
@@ -680,6 +824,9 @@ namespace ParryRL.EditorTools
             fx.heavyWarning = LoadClip(FxDir, "fx", "heavy_warning", 12f);
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
             fx.yogiAbsorb = LoadClip(FxDir, "fxhero", "yogi_gain", 12f);
+            fx.bossDash = LoadClip(FxDir, "bossfx", "dash", 16f);    // 불가살이 특수 패턴 (Tools/gwimun_sprites/cut_bossfx.py)
+            fx.bossSpine = LoadClip(FxDir, "bossfx", "spine", 14f);
+            fx.bossSlam = LoadClip(FxDir, "bossfx", "slam", 14f);
             fx.gatePortal = LoadClip(FxDir, "fx", "gate_portal", 10f);
             fx.portalSwirl = LoadClip(FxDir, "fx", "portal_swirl", 14f); // 16장 (Tools/gwimun_sprites/make_portal_swirl.py), 한 바퀴 약 1.1초
             fx.staffSlam = LoadClip(FxDir, "fxhero", "quake_wave", 12f);

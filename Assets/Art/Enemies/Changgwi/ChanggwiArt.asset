@@ -75,3 +75,7 @@ MonoBehaviour:
     fps: 8
   slashHitFrame: 0
   heavySlashHitFrame: 1
+  combo:
+    frames: []
+    fps: 10
+  comboHitFrames: 020000000300000004000000i
