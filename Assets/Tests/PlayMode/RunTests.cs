@@ -127,16 +127,126 @@ namespace ParryRL.Tests
             Assert.Greater(elites[0].HpRatio, normal.HpRatio);
         }
 
-        [UnityTest]
-        public IEnumerator 보상방과_상점방은_몬스터_없이_바로_문이_열린다()
+        private static IEnumerator ClearFight()
         {
-            foreach (var type in new[] { RoomType.Reward, RoomType.Shop })
+            for (int i = 0; i < 6 && Room.CurrentPhase != RoomController.Phase.Cleared; i++)
             {
-                yield return TestScene.LoadRun(type);
-                yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
-                Assert.AreEqual(0, Enemies().Length);
-                Assert.AreEqual(2, Room.Gates.Count);
+                yield return new WaitForSeconds(1.4f);
+                yield return KillAll();
             }
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared, 12f);
+        }
+
+        [UnityTest]
+        public IEnumerator 몬스터를_잡으면_엽전을_얻는다_엘리트는_훨씬_많다()
+        {
+            yield return TestScene.LoadRun(RoomType.Elite);
+            GameTuning.Current.godMode = true;
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Fighting);
+            Assert.AreEqual(0, RunState.Gold);
+            var normal = Enemies().First(e => !e.IsElite && e.Kind == EnemyKind.Melee);
+            normal.TakeDamage(99999, 1f, false);
+            Assert.AreEqual(5, RunState.Gold, "근접 5");
+            var elite = Enemies().First(e => e.IsElite);
+            elite.TakeDamage(99999, 1f, false);
+            Assert.AreEqual(30, RunState.Gold, "엘리트 +25");
+        }
+
+        [UnityTest]
+        public IEnumerator 엘리트방을_깨면_영혼석_또는_아이템_제단이_뜨고_하나를_고르면_문이_열린다()
+        {
+            yield return TestScene.LoadRun(RoomType.Elite);
+            GameTuning.Current.godMode = true;
+            yield return ClearFight();
+            Assert.AreEqual(2, Room.Altars.Count);
+            Assert.AreEqual(0, Room.Gates.Count, "하나를 고르기 전엔 문이 닫혀 있다");
+            Assert.IsTrue(Room.Altars.Any(a => a.Offer.Kind == OfferKind.Soul));
+            Assert.IsTrue(Room.Altars.Any(a => a.Offer.Kind == OfferKind.Item));
+
+            var soul = Room.Altars.First(a => a.Offer.Kind == OfferKind.Soul);
+            Assert.IsTrue(soul.TryTake());
+            Assert.AreEqual(RoomOffer.EliteSoulStones, RunState.SoulStones);
+            Assert.AreEqual(2, Room.Gates.Count, "고르면 문이 열린다");
+            var other = Room.Altars.First(a => a != soul);
+            Assert.IsTrue(other.Locked);
+            Assert.IsFalse(other.TryTake(), "하나만 고를 수 있다");
+            Assert.AreEqual(0, RunState.Items.Count);
+        }
+
+        [UnityTest]
+        public IEnumerator 아이템을_고르면_스탯에_더해지고_최대체력_아이템은_체력도_찬다()
+        {
+            yield return TestScene.LoadRun(RoomType.Reward);
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
+            Assert.AreEqual(3, Room.Altars.Count, "보상방: 아이템 · 회복 · 영혼석");
+            Assert.AreEqual(0, Enemies().Length);
+            int max = Party.MaxHp;
+            RoomOffer.ForReward(); // 목록 생성이 안전한지
+            var amber = RunItemCatalog.All.First(i => i.Id == "amber");
+            new RoomOffer { Kind = OfferKind.Item, Item = amber }.Apply();
+            Assert.AreEqual(max + 20, Party.MaxHp);
+            var red = RunItemCatalog.All.First(i => i.Id == "bell_red");
+            Assert.AreEqual(1f, SkillTreeState.MeleeAttackMultiplier, 0.001f);
+            RunState.AddItem(red);
+            Assert.AreEqual(1.1f, SkillTreeState.MeleeAttackMultiplier, 0.001f);
+            Assert.AreEqual(1f, SkillTreeState.RangedAttackMultiplier, 0.001f, "근접 아이템은 원거리에 영향 없음");
+        }
+
+        [UnityTest]
+        public IEnumerator 보상방에서_체력_회복을_고르면_체력이_차고_문이_열린다()
+        {
+            yield return TestScene.LoadRun(RoomType.Reward);
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
+            Party.TakeDamage(50);
+            Assert.Less(Party.Hp, Party.MaxHp);
+            Room.Altars.First(a => a.Offer.Kind == OfferKind.Heal).TryTake();
+            Assert.AreEqual(Party.MaxHp, Party.Hp);
+            Assert.AreEqual(2, Room.Gates.Count);
+        }
+
+        [UnityTest]
+        public IEnumerator 상점은_엽전으로_사고_모자라면_못_사고_문은_바로_열려_있다()
+        {
+            yield return TestScene.LoadRun(RoomType.Shop);
+            yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Cleared);
+            Assert.AreEqual(4, Room.Altars.Count);
+            Assert.AreEqual(2, Room.Gates.Count, "상점은 문이 바로 열려 있다");
+            var heal = Room.Altars.First(a => a.Offer.Kind == OfferKind.Heal);
+            Assert.AreEqual(30, heal.Offer.Price);
+
+            Party.TakeDamage(60);
+            int hp = Party.Hp;
+            Assert.IsFalse(heal.TryTake(), "엽전 0이면 못 산다");
+            Assert.AreEqual(hp, Party.Hp);
+            Assert.IsFalse(heal.Taken);
+
+            RunState.AddGold(100);
+            Assert.IsTrue(heal.TryTake());
+            Assert.AreEqual(70, RunState.Gold, "30 지불");
+            Assert.Greater(Party.Hp, hp);
+            Assert.IsTrue(heal.Taken);
+            Assert.IsFalse(heal.TryTake(), "품절");
+            // 여러 개 살 수 있다 (하나만 고르는 방이 아니다)
+            var gauge = Room.Altars.First(a => a.Offer.Kind == OfferKind.Gauge);
+            Assert.IsTrue(gauge.TryTake());
+            Assert.AreEqual(50, RunState.Gold);
+            Assert.AreEqual(Object.FindAnyObjectByType<SkillGauge>().Max, Object.FindAnyObjectByType<SkillGauge>().Value);
+        }
+
+        [UnityTest]
+        public IEnumerator 엽전과_아이템은_판이_끝나면_사라지고_영혼석은_남고_새_게임에서_비워진다()
+        {
+            yield return TestScene.LoadRun();
+            RunState.AddGold(40);
+            RunState.AddSoulStones(3);
+            RunState.AddItem(RunItemCatalog.All[0]);
+            GameManager.LoadHub();
+            yield return null; yield return null; yield return null;
+            Assert.AreEqual(0, RunState.Gold);
+            Assert.AreEqual(0, RunState.Items.Count);
+            Assert.AreEqual(3, RunState.SoulStones, "영혼석은 판이 끝나도 남는다");
+            PlayerSession.Reset();
+            Assert.AreEqual(0, RunState.SoulStones, "새 게임은 비운다");
         }
 
         [UnityTest]

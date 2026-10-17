@@ -283,3 +283,9 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - **런 모드 vs 연습 모드**: 사당 포탈(`ShrinePortal.Enter`)이 `RunState.Begin()` 후 `LoadRun`. `RunState.Active`가 아니면(테스트가 `LoadPrototype`으로 바로 연 경우 등) `RoomController`는 손대지 않고 `EnemySpawner`가 예전처럼 몬스터를 계속 유지한다. 런 중엔 `EnemySpawner.RoomMode=true`로 유지를 끄고 `SpawnEnemy(kind, index, elite)`로 웨이브를 세운다(`EnemyController.MakeElite`: 체력·경험치 배율 + 보라 빛무리, 크기 불변).
 - 방 이동 = 같은 플레이 씬을 다시 불러온다(`RunState.Enter(type)` → `GameManager.LoadRun`, `PlayerSession`이 체력·도력 등을 이어줌). `GameManager.LoadHub`는 `RunState.End`, `Restart`는 판 도중이면 첫 방부터 새로 시작, `PlayerSession.Reset`은 `RunState.Reset`도 부른다. HUD 상단 중앙 `Hud.SetRunInfo`("방 N / 6 · 종류").
 - 테스트: `RunTests`(`TestScene.LoadRun(params RoomType[])`로 거쳐 온 방을 지정해 시작), 캡처 `런_방_진행_웨이브와_문_고르기`(`run_wave/run_gate_left/run_gate_right.png`). 보상방·상점방은 지금 몬스터·내용 없이 문만 열린다 — 2단계에서 채운다. 맵 구조(발판 배치 다양화)는 3단계.
+
+## 런 구조 2단계: 방 종류 내용·재화·아이템 (2026-10-17)
+- `RunState`에 **Gold(엽전, 이번 판)·SoulStones(영혼석, 판이 끝나도 남음 — `End`는 유지, `Reset`(새 게임·시작 화면)은 비움)·Items(이번 판 아이템)** + `Changed` 이벤트. `RoomController.OnEnemyDied`가 몬스터 처치마다 엽전(근접 5 · 원거리 7 · 엘리트 25)을 준다. HUD 상단 중앙(`Hud.SetRunInfo`)에 방·엽전·영혼석·아이템, 런 중엔 조작 안내(`_help`)를 숨긴다.
+- `RunItem`/`RunItemCatalog`(5종 가안, 효과 = `SkillStat` + 수치) → `RunState.ItemSum(stat)`가 `SkillTreeState.Sum`에 더해진다(근접·원거리 공격력·최대 체력·패링 도력·경험치). 최대 체력 아이템은 `RoomOffer.Apply`가 `SetMaxHpBonus(.., heal:true)`를 불러 체력도 올린다.
+- `RoomOffer`(상품: Item/Soul/Heal/Gauge, 가격, `For(RoomType)`이 방 종류별 구성) · `RoomAltar`(제단: E로 `TryTake`, 가격이 있으면 엽전 지불·모자라면 팝업만, 하나만 고르는 방이면 `TakenEvent` 뒤 `Lock`). `RoomController.Clear`: 일반·마지막 방 = 바로 문, 엘리트·보상 = 제단 → 하나 고르면 문(`OnChosen`/`OpenGates`), 상점 = 제단 + 문 동시. 영혼석은 얻기만 하고 쓸 곳이 아직 없다(스킬 포인트 재화로 쓸지 미정 — 임의로 연결하지 말 것).
+- 테스트 `RunTests`(엽전·제단·잠금·상점 구매·판 종료 시 정리), 캡처 `런_방_종류별_제단_상점_보상_엘리트`(`run_shop/run_reward/run_elite_fight/run_elite_reward.png`).

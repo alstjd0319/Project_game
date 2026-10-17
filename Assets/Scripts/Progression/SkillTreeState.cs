@@ -118,7 +118,7 @@ namespace ParryRL
         {
             int s = 0;
             for (int i = 0; i < Nodes.Length; i++) if (Nodes[i].Stat == stat) s += Ranks[i] * Nodes[i].PerRank;
-            return s;
+            return s + RunState.ItemSum(stat); // 이번 판 아이템 효과도 같은 합산에 들어간다
         }
 
         public static int MaxHpBonus => Sum(SkillStat.MaxHp);

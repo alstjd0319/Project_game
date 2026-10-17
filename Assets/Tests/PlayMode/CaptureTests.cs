@@ -56,6 +56,52 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 런_방_종류별_제단_상점_보상_엘리트()
+        {
+            void Put(float x)
+            {
+                var player = Object.FindAnyObjectByType<PlayerDefense>();
+                var pos = new Vector3(x, player.transform.position.y, 0f);
+                player.transform.position = pos;
+                player.GetComponent<Rigidbody2D>().position = pos;
+                player.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+            }
+            // 상점: 엽전 100, 아이템 두 개를 가진 상태
+            yield return TestScene.LoadRun(RoomType.Shop);
+            RunState.AddGold(100);
+            RunState.AddSoulStones(2);
+            RunState.AddItem(RunItemCatalog.All[0]);
+            RunState.AddItem(RunItemCatalog.All[2]);
+            yield return new WaitForSeconds(2.0f);
+            Put(-3.25f);
+            yield return new WaitForSeconds(0.6f);
+            yield return Capture("run_shop");
+
+            // 보상방
+            yield return TestScene.LoadRun(RoomType.Reward);
+            yield return new WaitForSeconds(2.0f);
+            Put(0f);
+            yield return new WaitForSeconds(0.6f);
+            yield return Capture("run_reward");
+
+            // 엘리트방: 깬 뒤 영혼석/아이템 제단
+            yield return TestScene.LoadRun(RoomType.Elite);
+            GameTuning.Current.godMode = true;
+            yield return new WaitForSeconds(2.2f);
+            Capture("run_elite_fight");
+            yield return new WaitForSeconds(0.1f);
+            for (int i = 0; i < 4 && RoomController.Instance.CurrentPhase != RoomController.Phase.Cleared; i++)
+            {
+                foreach (var e in Object.FindObjectsByType<EnemyController>()) if (!e.IsDead) e.TakeDamage(99999, 1f, false);
+                yield return new WaitForSeconds(2.0f);
+            }
+            Put(-3.25f);
+            yield return new WaitForSeconds(0.8f);
+            yield return Capture("run_elite_reward");
+        }
+
+        [UnityTest]
         public IEnumerator 스킬_D_F_연출()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

@@ -26,6 +26,7 @@ namespace ParryRL
         private SkillBar _skillBar;
         private TuningPanel _tuningPanel;
         private Text _runInfo;
+        private Text _help;
         private PlayerLevel _level;
         private Text _levelText;
         private Image _xpFill;
@@ -121,6 +122,7 @@ namespace ParryRL
             if (_instance == null || _instance._runInfo == null) return;
             _instance._runInfo.text = message;
             _instance._runInfo.enabled = !string.IsNullOrEmpty(message);
+            if (_instance._help != null) _instance._help.enabled = string.IsNullOrEmpty(message); // 런 중엔 상단 중앙을 방 정보가 쓰므로 조작 안내는 숨긴다
         }
 
         public static void WorldText(Vector3 worldPos, string message, Color color, float scale = 1f)
@@ -373,12 +375,13 @@ namespace ParryRL
             // 상단 중앙: 방 번호·종류 (런 중에만 채워진다)
             _runInfo = UiKit.Text("RunInfo", _root, 32, TextAnchor.UpperCenter);
             _runInfo.color = new Color(0.95f, 0.9f, 1f);
-            UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(900f, 44f));
+            UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(900f, 80f));
             _runInfo.rectTransform.pivot = new Vector2(0.5f, 1f);
             _runInfo.enabled = false;
 
             // 우상단 조작 안내 (스킬 키는 하단 스킬바에 표시되므로 이동·점프·일시정지만)
             var help = UiKit.Text("Help", _root, 22, TextAnchor.UpperRight);
+            _help = help;
             help.color = new Color(1f, 1f, 1f, 0.55f);
             help.text = "←/→ 이동   Space 점프 (2단)   ↓+Space 발판 내려가기   Q 무기 전환   ESC 일시정지 · 설정";
             UiKit.Place(help.rectTransform, new Vector2(1f, 1f), new Vector2(-28f, -28f), new Vector2(900f, 32f));

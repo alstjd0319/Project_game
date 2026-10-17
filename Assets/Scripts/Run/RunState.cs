@@ -21,12 +21,60 @@ namespace ParryRL
 
         public static bool IsFinalRoom => Active && RoomNumber >= TotalRooms;
 
+        /// <summary>이번 판의 엽전 (판이 끝나면 사라진다). 상점에서 쓴다.</summary>
+        public static int Gold { get; private set; }
+        /// <summary>영혼석 — 판이 끝나도 남는다 (새 게임·시작 화면으로 나가면 비워진다). 쓰임은 아직 없다.</summary>
+        public static int SoulStones { get; private set; }
+        /// <summary>이번 판에 얻은 아이템 (같은 걸 여러 번 얻으면 겹쳐서 쌓인다).</summary>
+        public static IReadOnlyList<RunItem> Items => _items;
+        private static readonly List<RunItem> _items = new();
+
+        /// <summary>엽전·영혼석·아이템이 바뀌었다 (HUD 갱신용).</summary>
+        public static event System.Action Changed;
+
+        public static void AddGold(int amount)
+        {
+            if (amount <= 0) return;
+            Gold += amount;
+            Changed?.Invoke();
+        }
+
+        public static void SpendGold(int amount)
+        {
+            Gold = Mathf.Max(0, Gold - Mathf.Max(0, amount));
+            Changed?.Invoke();
+        }
+
+        public static void AddSoulStones(int amount)
+        {
+            SoulStones = Mathf.Max(0, SoulStones + amount);
+            Changed?.Invoke();
+        }
+
+        public static void AddItem(RunItem item)
+        {
+            if (item == null) return;
+            _items.Add(item);
+            Changed?.Invoke();
+        }
+
+        /// <summary>이번 판 아이템이 주는 스탯 합 (스킬 트리 합산에 더해진다).</summary>
+        public static int ItemSum(SkillStat stat)
+        {
+            int s = 0;
+            foreach (var item in _items) if (item.Stat == stat) s += item.Amount;
+            return s;
+        }
+
         /// <summary>새 판을 시작한다 (첫 방은 일반방).</summary>
         public static void Begin()
         {
             Active = true;
             RoomNumber = 1;
             Current = RoomType.Normal;
+            Gold = 0;
+            _items.Clear();
+            Changed?.Invoke();
         }
 
         /// <summary>문을 골라 다음 방으로 (씬을 다시 불러오기 직전에 부른다).</summary>
@@ -42,9 +90,18 @@ namespace ParryRL
         {
             Active = false;
             RoomNumber = 0;
+            Gold = 0; // 엽전·아이템은 이번 판 것 (영혼석은 남는다)
+            _items.Clear();
+            Changed?.Invoke();
         }
 
-        public static void Reset() => End();
+        /// <summary>새 게임·시작 화면: 영혼석까지 전부 비운다.</summary>
+        public static void Reset()
+        {
+            End();
+            SoulStones = 0;
+            Changed?.Invoke();
+        }
 
         // 방 종류 뽑기 가중치 (일반이 가장 많다)
         private static readonly (RoomType type, int weight)[] Weights =

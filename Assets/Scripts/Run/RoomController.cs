@@ -22,12 +22,16 @@ namespace ParryRL
         public int WaveIndex { get; private set; }
         public int WaveCount => _waves.Count;
         public IReadOnlyList<RoomGate> Gates => _gates;
+        public IReadOnlyList<RoomAltar> Altars => _altars;
         public bool IsRunRoom { get; private set; }
 
         private EnemySpawner _spawner;
         private List<RoomPlan.Wave> _waves = new();
         private readonly List<EnemyController> _alive = new();
         private readonly List<RoomGate> _gates = new();
+        private readonly List<RoomAltar> _altars = new();
+        private bool _gatesOpen;
+        private const int GoldMelee = 5, GoldRanged = 7, GoldElite = 25;
         private float _timer;
 
         private void Awake()
@@ -42,6 +46,16 @@ namespace ParryRL
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            EnemyController.AnyDied -= OnEnemyDied;
+            RunState.Changed -= UpdateInfo;
+        }
+
+        /// <summary>몬스터를 잡으면 엽전을 얻는다 (엘리트가 훨씬 많다).</summary>
+        private void OnEnemyDied(EnemyController enemy)
+        {
+            int gold = enemy.IsElite ? GoldElite : enemy.Kind == EnemyKind.Ranged ? GoldRanged : GoldMelee;
+            RunState.AddGold(gold);
+            Hud.WorldText(enemy.transform.position + Vector3.up * 0.8f, $"+{gold} 엽전", new Color(1f, 0.85f, 0.35f), 1f);
         }
 
         private void Start()
@@ -49,12 +63,31 @@ namespace ParryRL
             if (!IsRunRoom) return;
             _waves = RoomPlan.For(RunState.Current, RunState.RoomNumber);
             _timer = introDelay;
+            EnemyController.AnyDied += OnEnemyDied;
+            RunState.Changed += UpdateInfo;
             UpdateInfo();
             Hud.Popup($"방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}", RoomInfo.Color(RunState.Current), true);
         }
 
-        private void UpdateInfo() =>
-            Hud.SetRunInfo($"방 {RunState.RoomNumber} / {RunState.TotalRooms}  ·  {RoomInfo.Label(RunState.Current)}");
+        private void UpdateInfo()
+        {
+            string text = $"방 {RunState.RoomNumber} / {RunState.TotalRooms}  ·  {RoomInfo.Label(RunState.Current)}" +
+                          $"      <color=#FFD95A>엽전 {RunState.Gold}</color>   <color=#C9A6FF>영혼석 {RunState.SoulStones}</color>";
+            if (RunState.Items.Count > 0)
+            {
+                var counts = new List<string>();
+                var seen = new HashSet<string>();
+                foreach (var item in RunState.Items)
+                {
+                    if (!seen.Add(item.Id)) continue;
+                    int n = 0;
+                    foreach (var other in RunState.Items) if (other.Id == item.Id) n++;
+                    counts.Add(n > 1 ? $"{item.Name} ×{n}" : item.Name);
+                }
+                text += $"\n<size=22><color=#E8D9A0>아이템  {string.Join(" · ", counts)}</color></size>";
+            }
+            Hud.SetRunInfo(text);
+        }
 
         private void Update()
         {
@@ -101,11 +134,46 @@ namespace ParryRL
             if (enemy != null) _alive.Add(enemy);
         }
 
-        /// <summary>방을 깼다: 문을 연다 (마지막 방이면 사당으로 나가는 문).</summary>
+        /// <summary>방을 깼다. 엘리트·보상은 제단에서 하나를 고르면 문이 열리고, 상점은 제단과 문이 함께 열리고, 일반방은 바로 문이 열린다. 마지막 방은 사당 출구.</summary>
         private void Clear()
         {
             CurrentPhase = Phase.Cleared;
             Sfx.Play(SfxId.LevelUp, 0.7f);
+            var type = RunState.Current;
+            if (RunState.IsFinalRoom || !(type == RoomType.Elite || type == RoomType.Reward || type == RoomType.Shop))
+            {
+                OpenGates();
+                return;
+            }
+
+            var offers = RoomOffer.For(type);
+            bool shop = type == RoomType.Shop;
+            for (int i = 0; i < offers.Count; i++)
+            {
+                float x = (i - (offers.Count - 1) * 0.5f) * 6.5f;
+                var altar = RoomAltar.Create(new Vector3(x, 0f, 0f), offers[i]);
+                if (!shop) altar.TakenEvent += OnChosen;
+                _altars.Add(altar);
+            }
+            if (shop)
+            {
+                Hud.Popup("상점 — 엽전으로 산다", RoomInfo.Color(type), true);
+                OpenGates(announce: false);
+            }
+            else Hud.Popup(type == RoomType.Elite ? "엘리트를 쓰러뜨렸다 — 하나를 고른다" : "보상 — 하나를 고른다", RoomInfo.Color(type), true);
+        }
+
+        /// <summary>하나만 고르는 방: 하나를 얻으면 나머지는 잠기고 문이 열린다.</summary>
+        private void OnChosen(RoomAltar chosen)
+        {
+            foreach (var altar in _altars) if (altar != chosen) altar.Lock();
+            OpenGates();
+        }
+
+        private void OpenGates(bool announce = true)
+        {
+            if (_gatesOpen) return;
+            _gatesOpen = true;
             float left = _spawner != null ? _spawner.ArenaMinX : -22f;
             float right = _spawner != null ? _spawner.ArenaMaxX : 22f;
             if (RunState.IsFinalRoom)
@@ -115,7 +183,7 @@ namespace ParryRL
             }
             else
             {
-                Hud.Popup("방을 깼다 — 문을 고른다", new Color(0.8f, 0.7f, 1f), true);
+                if (announce) Hud.Popup("문을 고른다", new Color(0.8f, 0.7f, 1f), true);
                 var options = RunState.RollOptions();
                 // 문이 둘이면 왼쪽 끝·오른쪽 끝에 하나씩, 하나면 오른쪽
                 for (int i = 0; i < options.Length; i++)
