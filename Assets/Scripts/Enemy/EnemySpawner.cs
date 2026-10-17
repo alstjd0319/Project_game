@@ -106,6 +106,8 @@ namespace ParryRL
             if (x < arenaMinX + half || x > arenaMaxX - half) x = px - side * (spawnDistanceFromPlayer + offset + 3f); // 반대쪽으로 넘어갈 땐 같은 쪽 몬스터와 겹치지 않게 조금 더 멀리
             if (x < arenaMinX + half || x > arenaMaxX - half) x = Random.Range(arenaMinX + half, arenaMaxX - half);
             x = Mathf.Clamp(x, arenaMinX + half, arenaMaxX - half);
+            // 걷는 몬스터가 바닥 구멍 위에 생기지 않게 가까운 땅으로 옮긴다 (도깨비불은 떠다녀서 상관없다)
+            if (prefab.Kind == EnemyKind.Melee) x = GroundProbe.NudgeOntoGround(x, half, groundY, arenaMinX, arenaMaxX);
 
             var pos = new Vector3(x, groundY + prefab.transform.localScale.y * 0.5f, 0f);
             var enemy = Instantiate(prefab, pos, Quaternion.identity);

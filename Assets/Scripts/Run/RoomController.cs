@@ -140,17 +140,7 @@ namespace ParryRL
             _fallParty = FindAnyObjectByType<PlayerParty>();
             _fallMotor = _fallParty != null ? _fallParty.GetComponent<PlayerMotor>() : null;
             if (_fallParty != null) _safePosition = _fallParty.transform.position;
-            var playerCol = _fallParty != null ? _fallParty.GetComponent<Collider2D>() : null;
-            foreach (var pit in Layout.Pits)
-            {
-                // 몬스터는 바닥 AI라 구멍에 빠지면 안 되므로 보이지 않는 다리를 깔고, 플레이어는 그 다리와 충돌하지 않게 한다
-                var bridge = new GameObject("PitBridge");
-                bridge.transform.position = new Vector3(pit.X, -0.5f, 0f);
-                bridge.transform.localScale = new Vector3(pit.Width, 1f, 1f);
-                var col = bridge.AddComponent<BoxCollider2D>();
-                bridge.AddComponent<PitBridge>();
-                if (playerCol != null) Physics2D.IgnoreCollision(playerCol, col, true);
-            }
+            // 걷는 몬스터(창귀)는 구멍 앞에서 멈추고(EnemyController가 발밑 땅을 검사), 떠다니는 도깨비불은 그냥 건넌다 — 몬스터는 중력을 받지 않아 빠지지 않는다
         }
 
         private bool NearPit(float x)
@@ -206,6 +196,8 @@ namespace ParryRL
                     else SpawnWave(0);
                     break;
                 case Phase.Fighting:
+                    // 혹시 바닥 밖으로 밀려난 몬스터가 있으면 치운다 (웨이브가 안 끝나는 일이 없게)
+                    foreach (var e in _alive) if (e != null && !e.IsDead && e.transform.position.y < FallKillY) e.Despawn();
                     _alive.RemoveAll(e => e == null || e.IsDead);
                     if (_alive.Count > 0) break;
                     if (WaveIndex + 1 < _waves.Count)

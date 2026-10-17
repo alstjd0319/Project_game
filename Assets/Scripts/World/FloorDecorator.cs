@@ -26,6 +26,8 @@ namespace ParryRL
         private const int FillOrder = 1, TopOrder = 2, PlatformOrder = 3;
         private const float FillDepth = 3.5f;    // 바닥 표면 아래로 속 채움을 깔 깊이(유닛, 화면 아래 끝까지)
         private const float WallTop = 12f;       // 벽 그림이 올라가는 높이(표면 기준)
+        /// <summary>바닥 판정의 깊이 (윗면 y=0에서 아래로). 속 채움 그림(FillDepth)보다 조금 깊게 — 추락 판정(y −4.5)보다도 아래까지.</summary>
+        public const float GroundDepth = 5f;
 
         private int _zone = -1;
         private readonly HashSet<Transform> _unusedPlatforms = new();
@@ -100,8 +102,9 @@ namespace ParryRL
                 if (used < intervals.Count)
                 {
                     var (x0, x1) = intervals[used++];
-                    seg.solid.position = new Vector3((x0 + x1) * 0.5f, -0.5f, 0f);
-                    seg.solid.localScale = new Vector3(x1 - x0, 1f, 1f);
+                    // 바닥 판정을 그림(속 채움)만큼 깊게: 윗면은 y=0 그대로, 아래로 GroundDepth. 구멍에 떨어질 때 구멍 옆 땅(벽)을 몸이 뚫고 지나가지 않게
+                    seg.solid.position = new Vector3((x0 + x1) * 0.5f, -GroundDepth * 0.5f, 0f);
+                    seg.solid.localScale = new Vector3(x1 - x0, GroundDepth, 1f);
                     _unusedPlatforms.Remove(seg.solid);
                 }
                 else _unusedPlatforms.Add(seg.solid);

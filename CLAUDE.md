@@ -302,7 +302,7 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - `PlayerCombat.PressAttack()`(A 키 입력): 쿨타임이 `attackBuffer`(0.22초) 이하로 남았을 때 누르면 `_attackBuffered`로 기억해 뒀다가 `Update`에서 쿨타임이 끝나는 순간 `TryAttackSkill`을 부른다(패링 중·도력 부족이면 거기서 막힘). 쿨타임이 더 남았으면 예전처럼 무시. `Update`의 A 키는 `PressAttack`을 부른다(테스트는 `PressAttack`/`TryAttackSkill`). 무기 전환 시 버퍼를 비운다. 테스트 `SkillTests`.
 
 ## 바닥 구멍·추락, 피격 직후 무적 (2026-10-17)
-- **구멍**: `RoomLayout.Pits`(`PitSpec(x, 폭)`, 지그재그 2 · 탑 1 · 지붕 2, 폭 ≤ `MaxPitWidth` 3.6, `PitZone` 12 안쪽, 개수 ≤ `MaxPits` 2). 빌더가 바닥 조각을 `MaxPits+1`개(Ground, Ground_2, Ground_3) 만들고, `RoomController.Awake`가 `FloorDecorator.SetGroundIntervals(RoomLayouts.GroundIntervals(layout))`로 구멍을 뺀 구간에 맞춰 옮기고 늘린다(남는 조각은 판정째 끔, 구멍이 없으면 원래 전체 바닥). `BuildPits`가 구멍마다 보이지 않는 `PitBridge`(몬스터가 건너게; 플레이어는 `Physics2D.IgnoreCollision`, `PlayerMotor.CheckGround`도 다리를 바닥으로 안 침)를 깐다.
+- **구멍**: `RoomLayout.Pits`(`PitSpec(x, 폭)`, 지그재그 2 · 탑 1 · 지붕 2, 폭 ≤ `MaxPitWidth` 3.6, `PitZone` 12 안쪽, 개수 ≤ `MaxPits` 2). 빌더가 바닥 조각을 `MaxPits+1`개(Ground, Ground_2, Ground_3) 만들고, `RoomController.Awake`가 `FloorDecorator.SetGroundIntervals(RoomLayouts.GroundIntervals(layout))`로 구멍을 뺀 구간에 맞춰 옮기고 늘린다(남는 조각은 판정째 끔, 구멍이 없으면 원래 전체 바닥). (옛 `PitBridge`는 삭제 — 아래 "구멍 앞 멈춤" 참고.)
 - **추락**: `RoomController.TrackFall`(Update): 바닥 높이(발 y<0.3)에서 서 있고 구멍 가장자리 `SafeEdgeMargin`(1.2)보다 안쪽이면 `SafePosition` 기억, 플레이어 y < `FallKillY`(-4.5)면 `Fall()` — `FallDamage`(15, `ignoreInvulnerability`·`ignoreReduction`) + 안전한 자리로 복귀 + 무적 1.5초 + 카메라 스냅. 테스트 `HazardTests`, 캡처 `런_바닥_구멍과_추락_복귀`.
 - **피격 무적**: `PlayerParty.TakeDamage(raw, ignoreInvulnerability, ignoreReduction)` — 맞으면 `hurtInvulnerableTime`(1.0초) 동안 `IsHurtInvulnerable`(또 맞지 않음, 몸 깜빡임: `ArtTint`·`_sr` 알파). `PlayerDefense.ReceiveAttack`은 패링 판정 뒤·대시 무적 판정 옆에서 무적이면 `AttackResolution.PassThrough`(공격이 몸을 통과). 테스트에서 연달아 맞아야 하면 `ClearInvulnerability()`. `GrantInvulnerability(초)`로 추가 무적.
 
@@ -312,3 +312,7 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 ## 평타 경직 구분·데미지 감소 (2026-10-17)
 - `HitStagger { Full, Light, None }`(Combat/DamageCalc.cs) → `HitInfo.Stagger`(기본 Full) → `DamageCalc.Apply` → `EnemyController.TakeDamage(..., stagger)`: Full = 밀림 + 경직 + 공격 취소(예전 그대로) / Light = `lightKnockbackRatio`(0.3)만큼 밀림, 경직·취소 없음 / None = 피해·번쩍임만. `Staggered` 이벤트(피격 모션)는 Full에서만.
 - `PlayerCombat.TryAttackSkill`: 부적 평타 = Light, 봉 1·2단 = None, 봉 3단 = Full(+기절). 반격·스킬은 Full. 데미지: 봉 10/12/20, 부적 7(쿨 0.3). 평타만으로 몬스터 공격이 끊기면 패링할 이유가 없다는 사용자 피드백. 테스트 `SkillTests`·`CoreLoopTests`.
+
+## 구멍 앞 멈춤 · 바닥 판정 깊이 (2026-10-17)
+- 몬스터는 **키네마틱**(중력 없음, `SetPosition`으로만 이동)이라 구멍에 빠지지 않는다. 걷는 몬스터(`EnemyController.Walks` = 근접)는 `Move`에서 앞발 아래 땅을 `GroundProbe.HasGround(x, feetY)`(World/GroundProbe.cs: 리지드바디 없는 비트리거·비발판 콜라이더)로 검사해 없으면 멈추고, 밀릴 때(`KnockbackX`)도 구멍 쪽으로 안 밀린다. 도깨비불(원거리)은 그대로 건넌다. `EnemySpawner.SpawnAt`은 근접을 `GroundProbe.NudgeOntoGround`로 땅 위에 세운다. `RoomController`는 y < `FallKillY`로 내려간 몬스터를 `Despawn`.
+- **바닥 판정 깊이**: `FloorDecorator.SetGroundIntervals`가 바닥 조각을 윗면 y=0, 깊이 `GroundDepth`(5)로 둔다(구멍 옆이 벽이 되어 떨어질 때 뚫고 지나가지 않음, 보이는 속 채움 = 판정). 연습 모드 바닥도 같은 깊이. 테스트 `HazardTests`·`FloorTests`.

@@ -92,22 +92,73 @@ namespace ParryRL.Tests
             Assert.AreEqual(1, Room.FallCount, "다시 떨어지지 않는다");
         }
 
+        private static EnemyController PlaceEnemy(EnemyKind kind, float x)
+        {
+            var enemy = Object.FindObjectsByType<EnemyController>().First(e => !e.IsDead && e.Kind == kind);
+            foreach (var other in Object.FindObjectsByType<EnemyController>()) if (other != enemy && !other.IsDead) other.Despawn();
+            var pos = new Vector3(x, enemy.transform.position.y, 0f);
+            enemy.transform.position = pos;
+            enemy.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            return enemy;
+        }
+
         [UnityTest]
-        public IEnumerator 몬스터는_구멍_위를_건너고_플레이어만_빠진다()
+        public IEnumerator 창귀는_구멍_앞에서_멈추고_도깨비불은_떠서_건너온다()
         {
             RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
             yield return TestScene.LoadRun(RoomType.Normal);
             GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            var pit = RoomLayouts.All[RoomLayouts.Zigzag].Pits[0]; // [-7.2, -3.8]
+            yield return new WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Fighting);
+            MovePlayer(new Vector2(-13f, 0.8f)); // 구멍 왼쪽 (멀리)
+
+            // 창귀: 구멍 오른쪽에서 플레이어 쪽으로 걸어오다 구멍 앞에서 멈춘다
+            var melee = PlaceEnemy(EnemyKind.Melee, -1f);
+            float minLeft = float.MaxValue;
+            for (float t = 0f; t < 3f; t += Time.deltaTime)
+            {
+                minLeft = Mathf.Min(minLeft, melee.transform.position.x - melee.HalfWidth);
+                yield return null;
+            }
+            Assert.GreaterOrEqual(minLeft, pit.Right - 0.05f, "창귀는 구멍 위로 들어가지 않는다");
+            Assert.Less(melee.transform.position.x - melee.HalfWidth, pit.Right + 0.6f, "구멍 바로 앞까지는 온다");
+            Assert.Greater(melee.transform.position.y, 0f);
+        }
+
+        [UnityTest]
+        public IEnumerator 도깨비불은_구멍_위를_떠서_건너온다()
+        {
+            RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
+            yield return TestScene.LoadRun(RoomType.Normal);
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
             var pit = RoomLayouts.All[RoomLayouts.Zigzag].Pits[0];
-            yield return new WaitForSeconds(1.8f); // 웨이브가 나올 때까지
-            var enemy = Object.FindObjectsByType<EnemyController>().First(e => !e.IsDead);
-            enemy.enabled = false;
-            var pos = new Vector3(pit.X, enemy.transform.localScale.y * 0.5f + 0.1f, 0f);
-            enemy.transform.position = pos;
-            enemy.GetComponent<Rigidbody2D>().position = pos;
-            Physics2D.SyncTransforms();
-            yield return new WaitForSeconds(1.2f);
-            Assert.Greater(enemy.transform.position.y, -0.5f, "몬스터는 구멍 위 다리에 서서 떨어지지 않는다");
+            yield return new WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Fighting);
+            MovePlayer(new Vector2(-17f, 0.8f)); // 사정거리(7) 밖 → 다가온다
+            var ranged = PlaceEnemy(EnemyKind.Ranged, -1f);
+            yield return new WaitForSeconds(4f);
+            Assert.Less(ranged.transform.position.x, pit.Left, "도깨비불은 구멍을 건너왔다");
+        }
+
+        [UnityTest]
+        public IEnumerator 구멍_옆_땅은_속까지_판정이_있어_떨어질_때_뚫고_지나가지_않는다()
+        {
+            RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
+            yield return TestScene.LoadRun(RoomType.Normal);
+            yield return null;
+            var pit = RoomLayouts.All[RoomLayouts.Zigzag].Pits[0];
+            var filter = new ContactFilter2D { useTriggers = false };
+            var hits = new Collider2D[4];
+            Assert.Greater(Physics2D.OverlapPoint(new Vector2(pit.Left - 0.3f, -3.5f), filter, hits), 0, "구멍 왼쪽 벽: 깊은 곳까지 땅 판정");
+            Assert.Greater(Physics2D.OverlapPoint(new Vector2(pit.Right + 0.3f, -3.5f), filter, hits), 0, "구멍 오른쪽 벽");
+            Assert.AreEqual(0, Physics2D.OverlapPoint(new Vector2(pit.X, -3.5f), filter, hits), "구멍 안은 비어 있다");
+            Assert.IsFalse(GroundProbe.HasGround(pit.X, 0f));
+            Assert.IsTrue(GroundProbe.HasGround(pit.Left - 1f, 0f));
+            // 걷는 몬스터가 구멍 위에 생기려 하면 가까운 땅으로 옮긴다
+            float x = GroundProbe.NudgeOntoGround(pit.X, 0.5f, 0f, -22f, 22f);
+            Assert.IsTrue(x + 0.5f <= pit.Left + 0.001f || x - 0.5f >= pit.Right - 0.001f, $"구멍 밖으로 옮김: {x}");
         }
 
         [UnityTest]
@@ -116,7 +167,6 @@ namespace ParryRL.Tests
             yield return TestScene.LoadPrototype();
             Assert.AreEqual(0, Room.Layout.Pits.Length);
             Assert.AreEqual(0, Room.FallCount);
-            Assert.AreEqual(0, Object.FindObjectsByType<PitBridge>().Length);
         }
 
         // ───────────── 피격 직후 무적 ─────────────

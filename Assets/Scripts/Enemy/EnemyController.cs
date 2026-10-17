@@ -165,6 +165,18 @@ namespace ParryRL
 
         private float DxToPlayer => _player.position.x - transform.position.x;
 
+        /// <summary>땅을 걷는 몬스터인가 (창귀). 도깨비불(원거리)은 떠다녀서 구멍을 건넌다.</summary>
+        public bool Walks => kind == EnemyKind.Melee;
+
+        /// <summary>밀려날 때: 걷는 몬스터는 구멍 쪽으로 밀려 땅 밖으로 나가지 않게 한다.</summary>
+        private float KnockbackX(float targetX, float half)
+        {
+            if (!Walks) return targetX;
+            float dir = Mathf.Sign(targetX - transform.position.x);
+            if (dir == 0f || GroundProbe.HasGround(targetX + dir * half, _feetY)) return targetX;
+            return transform.position.x;
+        }
+
         private bool InAttackRange()
         {
             if (kind == EnemyKind.Melee)
@@ -189,9 +201,11 @@ namespace ParryRL
             }
 
             if (dir == 0f) return;
-            IsMoving = true;
             float half = _baseScale.x * 0.5f;
             float x = Mathf.Clamp(transform.position.x + dir * moveSpeed * Time.deltaTime, _arenaMinX + half, _arenaMaxX - half);
+            // 걷는 몬스터는 바닥 구멍 앞에서 멈춘다 (앞발 아래에 땅이 없으면 더 가지 않는다). 떠다니는 도깨비불은 그냥 건넌다
+            if (Walks && !GroundProbe.HasGround(x + dir * half, _feetY)) return;
+            IsMoving = true;
             SetPosition(new Vector2(x, transform.position.y));
         }
 
@@ -356,14 +370,14 @@ namespace ParryRL
             {
                 // 살짝 밀리기만 하고 경직·공격 취소는 없다
                 float lx = Mathf.Clamp(transform.position.x + fromDirection * knockback * lightKnockbackRatio, _arenaMinX + half, _arenaMaxX - half);
-                SetPosition(new Vector2(lx, transform.position.y));
+                SetPosition(new Vector2(KnockbackX(lx, half), transform.position.y));
                 return;
             }
 
             StopAllCoroutines();
             RestoreBody();
             float x = Mathf.Clamp(transform.position.x + fromDirection * knockback, _arenaMinX + half, _arenaMaxX - half);
-            SetPosition(new Vector2(x, transform.position.y));
+            SetPosition(new Vector2(KnockbackX(x, half), transform.position.y));
             StartCoroutine(StaggerRoutine());
             Staggered?.Invoke();
         }

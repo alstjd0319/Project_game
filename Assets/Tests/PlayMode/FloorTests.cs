@@ -21,7 +21,9 @@ namespace ParryRL.Tests
             Assert.Greater(deco.TileCount, 30, "윗면·속 채움·벽·발판 타일");
             var ground = GameObject.Find("Ground");
             Assert.IsFalse(ground.GetComponent<SpriteRenderer>().enabled, "그림이 있으면 판정 네모는 숨는다");
-            Assert.AreEqual(Vector3.one.y, ground.transform.localScale.y, "판정 두께는 그대로 1유닛");
+            // 바닥 판정은 속 채움 그림만큼 깊다 (구멍에 떨어질 때 옆 땅을 뚫고 지나가지 않게) — 윗면은 y=0 그대로
+            Assert.AreEqual(FloorDecorator.GroundDepth, ground.transform.localScale.y, 1e-4f, "판정 깊이 = 속 채움 깊이");
+            Assert.AreEqual(0f, ground.transform.position.y + ground.transform.localScale.y * 0.5f, 1e-4f, "윗면은 y=0");
             GameTuning.Current.showHitboxes = true;
             yield return null;
             Assert.IsTrue(ground.GetComponent<SpriteRenderer>().enabled, "판정 상자 보기에서는 겹쳐 보인다");
