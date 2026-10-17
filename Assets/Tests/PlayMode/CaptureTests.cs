@@ -102,6 +102,28 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 런_방_지형_레이아웃_모음()
+        {
+            var names = new[] { "basic", "stairs", "zigzag", "tower", "roof", "flat" };
+            for (int index = 0; index < names.Length; index++)
+            {
+                RoomLayouts.ForcedIndex = index;
+                yield return TestScene.LoadRun(RoomType.Normal);
+                GameTuning.Current.godMode = true;
+                GameTuning.Current.showHitboxes = true; // 배경의 떠 있는 섬과 헷갈리지 않게 발판 판정 네모를 함께 보인다
+                foreach (var e in Object.FindObjectsByType<EnemyController>()) e.enabled = false;
+                var cam = Camera.main;
+                cam.orthographicSize = 9.5f; // 넓게 — 발판 배치 전체가 한 장에 보이도록
+                var rig = cam.GetComponent<CameraRig>();
+                if (rig != null) rig.enabled = false;
+                cam.transform.position = new Vector3(0f, 4.2f, -10f);
+                yield return new WaitForSeconds(0.5f);
+                yield return Capture("layout_" + names[index]);
+            }
+            RoomLayouts.ForcedIndex = -1;
+        }
+
+        [UnityTest]
         public IEnumerator 스킬_D_F_연출()
         {
             var defense = Object.FindAnyObjectByType<PlayerDefense>();

@@ -28,6 +28,7 @@ namespace ParryRL
         private const float WallTop = 12f;       // 벽 그림이 올라가는 높이(표면 기준)
 
         private int _zone = -1;
+        private readonly HashSet<Transform> _unusedPlatforms = new();
         private Transform _art;
         private readonly List<SpriteRenderer> _boxes = new();
         private readonly List<bool> _boxHasArt = new();   // 그 판정 네모에 그림이 깔렸는가 (없으면 네모를 그대로 보인다)
@@ -64,6 +65,40 @@ namespace ParryRL
             }
         }
 
+        /// <summary>
+        /// 방의 발판 배치를 바꾼다: 발판 오브젝트(Platform 종류 세그먼트)를 순서대로 레이아웃에 맞춰 옮기고 늘리고, 남는 발판은 판정째 끈다. 그림은 다음 프레임에 다시 깐다.
+        /// </summary>
+        public void SetPlatformLayout(IReadOnlyList<PlatformSpec> layout)
+        {
+            int used = 0;
+            _unusedPlatforms.Clear();
+            foreach (var seg in segments)
+            {
+                if (seg.kind != Kind.Platform || seg.solid == null) continue;
+                if (used < layout.Count)
+                {
+                    var p = layout[used++];
+                    seg.solid.position = new Vector3(p.X, p.Y, 0f);
+                    seg.solid.localScale = new Vector3(p.Width, 0.4f, 1f);
+                }
+                else _unusedPlatforms.Add(seg.solid);
+            }
+            Physics2D.SyncTransforms();
+            _zone = -1; // 다시 깔기
+        }
+
+        /// <summary>지금 쓰는(켜진) 발판 개수 (테스트·디버그).</summary>
+        public int ActivePlatformCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (var seg in segments)
+                    if (seg.kind == Kind.Platform && seg.solid != null && seg.solid.gameObject.activeSelf) n++;
+                return n;
+            }
+        }
+
         private void Build(int zone)
         {
             if (_art != null) Destroy(_art.gameObject);
@@ -76,7 +111,8 @@ namespace ParryRL
             // 발판 그림이 없는 구간(사당)은 발판 자체를 없앤다 (판정도 함께). 있는 구간에선 다시 켠다.
             bool platforms = set != null && set.HasPlatforms;
             foreach (var seg in segments)
-                if (seg.kind == Kind.Platform && seg.solid != null) seg.solid.gameObject.SetActive(platforms || set == null || set.top.Length == 0);
+                if (seg.kind == Kind.Platform && seg.solid != null)
+                    seg.solid.gameObject.SetActive(!_unusedPlatforms.Contains(seg.solid) && (platforms || set == null || set.top.Length == 0));
             if (set == null || set.top.Length == 0) return;
 
             for (int i = 0; i < segments.Length; i++)
@@ -90,7 +126,7 @@ namespace ParryRL
                         if (set.fill.Length > 0) { BuildWall(set, seg.solid); _boxHasArt[i] = true; }
                         break;
                     case Kind.Platform:
-                        if (set.HasPlatforms) { BuildPlatform(set, seg.solid); _boxHasArt[i] = true; }
+                        if (set.HasPlatforms && !_unusedPlatforms.Contains(seg.solid)) { BuildPlatform(set, seg.solid); _boxHasArt[i] = true; }
                         break;
                 }
             }

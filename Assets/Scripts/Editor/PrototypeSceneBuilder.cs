@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -125,9 +126,18 @@ namespace ParryRL.EditorTools
             var platL = CreateOneWay("Platform_L", new Vector2(-7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
             var platR = CreateOneWay("Platform_R", new Vector2(7f, 2.4f), new Vector2(4f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
             var platTop = CreateOneWay("Platform_Top", new Vector2(0f, 4.4f), new Vector2(3f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
+            // 방 지형(RoomLayout)이 더 많은 발판을 쓸 수 있게 여분을 만들어 둔다 — 쓰지 않는 건 RoomController가 레이아웃을 적용할 때 꺼진다
+            var platExtra = new Transform[RoomLayouts.MaxPlatforms - 3];
+            for (int i = 0; i < platExtra.Length; i++)
+                platExtra[i] = CreateOneWay($"Platform_{i + 4}", new Vector2(0f, -20f), new Vector2(3f, 0.4f), new Color(0.36f, 0.38f, 0.45f, 0.55f), level);
             // 바닥 그림: 판정 네모 위에 구간 타일을 깐다 (구간은 F1 연습 탭의 배경 구간과 함께 바뀐다)
-            AddFloorDecorator(level, floorSets, -1, (ground, FloorDecorator.Kind.Ground), (wallL, FloorDecorator.Kind.Wall), (wallR, FloorDecorator.Kind.Wall),
-                (platL, FloorDecorator.Kind.Platform), (platR, FloorDecorator.Kind.Platform), (platTop, FloorDecorator.Kind.Platform));
+            var levelSegments = new List<(Transform solid, FloorDecorator.Kind kind)>
+            {
+                (ground, FloorDecorator.Kind.Ground), (wallL, FloorDecorator.Kind.Wall), (wallR, FloorDecorator.Kind.Wall),
+                (platL, FloorDecorator.Kind.Platform), (platR, FloorDecorator.Kind.Platform), (platTop, FloorDecorator.Kind.Platform),
+            };
+            foreach (var extra in platExtra) levelSegments.Add((extra, FloorDecorator.Kind.Platform));
+            AddFloorDecorator(level, floorSets, -1, levelSegments.ToArray());
 
             // 배경 (판정 없음): 먼·중간·가까운 3겹 시차 스크롤. 구간은 F1 연습 탭에서 바꾼다.
             var background = new GameObject("Background").AddComponent<ParallaxBackground>();

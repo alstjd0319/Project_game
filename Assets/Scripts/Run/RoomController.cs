@@ -34,10 +34,18 @@ namespace ParryRL
         private const int GoldMelee = 5, GoldRanged = 7, GoldElite = 25;
         private float _timer;
 
+        public int LayoutIndex { get; private set; }
+        public RoomLayout Layout => RoomLayouts.All[LayoutIndex];
+
         private void Awake()
         {
             Instance = this;
             IsRunRoom = RunState.Active;
+            // 방 지형(발판 배치): 연습 모드는 기본, 런은 방마다 다르게 (바닥 그림 데코레이터가 첫 프레임에 그 배치대로 깐다)
+            LayoutIndex = RoomLayouts.Pick(IsRunRoom, RunState.Current, RunState.RoomNumber, RunState.Seed, RunState.LastLayout);
+            if (IsRunRoom) RunState.LastLayout = LayoutIndex;
+            var deco = FindAnyObjectByType<FloorDecorator>();
+            if (deco != null) deco.SetPlatformLayout(Layout.Platforms);
             if (!IsRunRoom) return;
             _spawner = FindAnyObjectByType<EnemySpawner>();
             if (_spawner != null) _spawner.RoomMode = true; // 스포너 Start보다 먼저 — 몬스터를 계속 유지하는 연습 모드를 끈다
@@ -66,7 +74,7 @@ namespace ParryRL
             EnemyController.AnyDied += OnEnemyDied;
             RunState.Changed += UpdateInfo;
             UpdateInfo();
-            Hud.Popup($"방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}", RoomInfo.Color(RunState.Current), true);
+            Hud.Popup($"방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}  ({Layout.Name})", RoomInfo.Color(RunState.Current), true);
         }
 
         private void UpdateInfo()

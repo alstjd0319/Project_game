@@ -289,3 +289,8 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - `RunItem`/`RunItemCatalog`(5종 가안, 효과 = `SkillStat` + 수치) → `RunState.ItemSum(stat)`가 `SkillTreeState.Sum`에 더해진다(근접·원거리 공격력·최대 체력·패링 도력·경험치). 최대 체력 아이템은 `RoomOffer.Apply`가 `SetMaxHpBonus(.., heal:true)`를 불러 체력도 올린다.
 - `RoomOffer`(상품: Item/Soul/Heal/Gauge, 가격, `For(RoomType)`이 방 종류별 구성) · `RoomAltar`(제단: E로 `TryTake`, 가격이 있으면 엽전 지불·모자라면 팝업만, 하나만 고르는 방이면 `TakenEvent` 뒤 `Lock`). `RoomController.Clear`: 일반·마지막 방 = 바로 문, 엘리트·보상 = 제단 → 하나 고르면 문(`OnChosen`/`OpenGates`), 상점 = 제단 + 문 동시. 영혼석은 얻기만 하고 쓸 곳이 아직 없다(스킬 포인트 재화로 쓸지 미정 — 임의로 연결하지 말 것).
 - 테스트 `RunTests`(엽전·제단·잠금·상점 구매·판 종료 시 정리), 캡처 `런_방_종류별_제단_상점_보상_엘리트`(`run_shop/run_reward/run_elite_fight/run_elite_reward.png`).
+
+## 런 구조 3단계: 방마다 다른 맵 구조 (2026-10-17)
+- `RoomLayout`(Run/RoomLayout.cs): 발판 배치 = `PlatformSpec(x, y(가운데·두께 0.4), 폭)` 목록 6종(`RoomLayouts.All`: 기본 · 계단산 · 지그재그 · 탑 · 지붕 · 평지). `RoomLayouts.Pick(run, type, roomNumber, seed, previous)`: 연습 모드·첫 방 = 기본, 보상·상점 = 평지, 마지막 관문 = 탑, 그 밖의 싸움방 = 앞 방과 다르게 `RunState.Seed`로 뽑음(`RunState.LastLayout`). 테스트용 고정 `RoomLayouts.ForcedIndex`.
+- 적용: 빌더가 발판 오브젝트를 `RoomLayouts.MaxPlatforms`(6)개 만들어 두고(Platform_L/R/Top + Platform_4~6), `RoomController.Awake`가(연습 모드에서도) `FloorDecorator.SetPlatformLayout`으로 순서대로 옮기고 늘린다 — 남는 발판은 `_unusedPlatforms`로 판정째 끈다(`Build`가 다시 켜지 않게). 바닥 그림은 `_zone = -1`로 다시 깐다. 새 발판을 넣을 땐 점프 한계(이단 점프 약 3.1, 테스트 상수 2.9)와 문 앞 가림(`MaxReach` 16.4) 규칙을 `LayoutTests`가 검사한다.
+- 몬스터는 바닥에서만 움직인다(발판 AI 없음). 테스트 `LayoutTests`, 캡처 `런_방_지형_레이아웃_모음`(`layout_*.png`).

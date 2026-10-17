@@ -21,6 +21,11 @@ namespace ParryRL
 
         public static bool IsFinalRoom => Active && RoomNumber >= TotalRooms;
 
+        /// <summary>한 판마다 다른 값 (방 지형을 뽑을 때 쓴다).</summary>
+        public static int Seed { get; private set; }
+        /// <summary>바로 앞 방의 지형 번호 (같은 지형이 연달아 나오지 않게).</summary>
+        public static int LastLayout { get; set; }
+
         /// <summary>이번 판의 엽전 (판이 끝나면 사라진다). 상점에서 쓴다.</summary>
         public static int Gold { get; private set; }
         /// <summary>영혼석 — 판이 끝나도 남는다 (새 게임·시작 화면으로 나가면 비워진다). 쓰임은 아직 없다.</summary>
@@ -72,6 +77,8 @@ namespace ParryRL
             Active = true;
             RoomNumber = 1;
             Current = RoomType.Normal;
+            Seed = System.Environment.TickCount;
+            LastLayout = RoomLayouts.Basic;
             Gold = 0;
             _items.Clear();
             Changed?.Invoke();
