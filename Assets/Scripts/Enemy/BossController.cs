@@ -215,9 +215,19 @@ namespace ParryRL
         }
 
         /// <summary>보스 공격(일반·3연타 한 타·강공격·가시·충격파·돌진)을 패링할 때마다 +1. 다 차면 기절 (저항 무시).</summary>
+        private int _volleyCounter;     // 가시·충격파 한 번 = 묶음 번호 하나
+        private int _lastCountedVolley; // 연속 패링에 이미 센 묶음
+
         private void OnParried(DefenseSuccess success)
         {
             if (success.Attack == null || success.Attack.Source != _enemy || _enemy.IsDead) return;
+            // 가시 5개를 한꺼번에 막아도 한 번으로 센다 (안 그러면 가시 패턴 한 번에 5연속이 다 찬다 — 사용자 지적)
+            int volley = success.Attack.Volley;
+            if (volley != 0)
+            {
+                if (volley == _lastCountedVolley) return;
+                _lastCountedVolley = volley;
+            }
             ParryStreak++;
             if (ParryStreak < parryStreakToStun) return;
             ParryStreak = 0;
@@ -358,11 +368,13 @@ namespace ParryRL
             Vector2 aim = _player != null ? ((Vector2)_player.position - origin).normalized : new Vector2(dir, 0f);
             if (Mathf.Sign(aim.x) != Mathf.Sign(dir)) aim = new Vector2(dir, 0f); // 뒤로는 쏘지 않는다
             var fx = GameAssets.AttackFx;
+            int volley = ++_volleyCounter;
             for (int i = 0; i < spineCount; i++)
             {
                 float angle = (i - (spineCount - 1) * 0.5f) * spineSpread;
                 Vector2 d = Quaternion.Euler(0f, 0f, angle) * aim;
                 var spine = EnemyAttack.Spawn(_enemy, AttackType.Normal, origin, d, spineSize, spineSpeed, spineRange, PatternColor, spineDamage);
+                spine.Volley = volley;
                 if (fx != null) spine.AttachProjectileArt(fx.bossSpine, 0, 6, 1f, rotate: true); // 날아가는 가시 그림 (방향으로 돌림)
             }
             Sfx.Play(SfxId.SpineShot);
@@ -377,10 +389,12 @@ namespace ParryRL
             FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossSlam : null, hit + Vector2.up * (0.8f * FxScale), FxScale);
             if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.35f, 0.35f);
             Sfx.Play(SfxId.BossSlam);
+            int volley = ++_volleyCounter;
             foreach (float d in new[] { dir, -dir })
             {
                 var start = new Vector2(transform.position.x + d * (Half + 0.4f), _enemy.FeetY + waveSize.y * 0.5f);
                 var wave = EnemyAttack.Spawn(_enemy, d == dir ? AttackType.Heavy : AttackType.Normal, start, new Vector2(d, 0f), waveSize, waveSpeed, waveRange, PatternColor, slamDamage);
+                wave.Volley = volley;
                 // 바닥을 뚫고 솟는 쇠 가시 파도 (그림의 바닥선 = 판정 상자 아랫면) — 그림이 붙으면 판정 네모는 숨겨진다
                 if (GameAssets.AttackFx != null) wave.AttachProjectileArt(GameAssets.AttackFx.bossWave, 0, 6, 1f);
             }

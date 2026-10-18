@@ -64,6 +64,8 @@ namespace ParryRL
 
         /// <summary>근접 베기인가 (투사체가 아니라 몸에서 뻗는 박스).</summary>
         public bool IsSlash => _slash;
+        /// <summary>한 번에 여러 개 나가는 공격의 묶음 번호 (0 = 혼자). 보스 가시 한 번 발사 = 같은 번호 — 연속 패링은 묶음당 1번만 센다.</summary>
+        public int Volley { get; set; }
         /// <summary>근접 베기에서 몬스터 쪽 끝 (고정).</summary>
         public Vector2 SlashAnchor => _anchor;
 
