@@ -480,10 +480,12 @@ namespace ParryRL
             if (IsDead) return;
 
             if (Invulnerable) return; // 보스 변신 중: 피해 없음
+            // 피격음은 맞은 공격의 무게로 고른다 (보스가 경직을 무시해도 소리는 원래 공격 무게대로) + 쇠로 된 보스는 쇳소리를 겹친다
+            Sfx.Play(heavy ? SfxId.HitHeavy : stagger == HitStagger.Full ? SfxId.EnemyHit : SfxId.HitLight);
+            if (superArmor) Sfx.Play(SfxId.HitMetal, heavy ? 1f : 0.6f);
             if (superArmor && stagger == HitStagger.Full) stagger = HitStagger.Light; // 보스는 경직에 걸리지 않는다 (강공격 반격도 — 사용자 요청). 넉백 0이라 밀리지도 않는다
             if (!T.enemyInvincible) _hp = Mathf.Max(HpFloor, _hp - damage);
             _flash = 1f;
-            Sfx.Play(SfxId.EnemyHit);
             Fx.Sparks(transform.position, Color.white, heavy ? 12 : 7, heavy ? 9f : 6f);
             FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.hitSpark : null, transform.position, heavy ? 0.7f : 0.5f);
             string text = string.IsNullOrEmpty(note) ? damage.ToString() : $"{damage} <size=20><color=#8CF2FF>{note}</color></size>";

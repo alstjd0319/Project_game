@@ -68,6 +68,9 @@ namespace ParryRL
         /// <returns>실제로 받은 데미지</returns>
         /// <param name="ignoreInvulnerability">무적 중에도 받는다 (추락 같은 환경 피해)</param>
         /// <param name="ignoreReduction">받는 피해 감소 패시브를 적용하지 않는다 (환경 피해)</param>
+        /// <summary>이 피해 이상이면 큰 피격음.</summary>
+        public const int HeavyHurtDamage = 15;
+
         public int TakeDamage(int rawDamage, bool ignoreInvulnerability = false, bool ignoreReduction = false)
         {
             if (IsDead) return 0;
@@ -80,7 +83,7 @@ namespace ParryRL
             _hurtFlash = 1f;
             GrantInvulnerability(hurtInvulnerableTime);
 
-            Sfx.Play(SfxId.Hurt);
+            Sfx.Play(damage >= HeavyHurtDamage || ignoreReduction ? SfxId.HurtHeavy : SfxId.Hurt); // 큰 피해·추락은 더 낮고 길게
             if (HitFeel.Instance != null) HitFeel.Instance.PlayerHurt();
             Fx.Sparks(transform.position, new Color(1f, 0.25f, 0.25f), 8, 5f);
             Hud.ScreenFlash(new Color(1f, 0f, 0f, 0.25f));

@@ -177,10 +177,11 @@ namespace ParryRL
             FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossSlam : null, feet + Vector2.up * (0.8f * FxScale), FxScale * 1.3f);
             if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.55f, 0.5f);
             Hud.ScreenFlash(new Color(1f, 0.55f, 0.2f, 0.4f));
-            Sfx.Play(SfxId.HeavyCue);
+            Sfx.Play(SfxId.BossLand);
 
             // 4) 포효 + 이름·체력바
             if (_sprite != null && art != null) _sprite.PlayOnce(art.heavyWindup);
+            Sfx.Play(SfxId.BossRoar);
             ShowBar();
             yield return new WaitForSeconds(entranceRoar);
             if (_sprite != null) _sprite.StopOverride();
@@ -364,7 +365,7 @@ namespace ParryRL
                 var spine = EnemyAttack.Spawn(_enemy, AttackType.Normal, origin, d, spineSize, spineSpeed, spineRange, PatternColor, spineDamage);
                 if (fx != null) spine.AttachProjectileArt(fx.bossSpine, 0, 6, 1f, rotate: true); // 날아가는 가시 그림 (방향으로 돌림)
             }
-            Sfx.Play(SfxId.HeavyCue, 0.6f);
+            Sfx.Play(SfxId.SpineShot);
         }
 
         /// <summary>땅 찍기: 앞발로 내리쳐 바닥을 타고 앞뒤로 충격파가 퍼진다. 플레이어 쪽 파도는 강공격(패링하면 도력 +3).</summary>
@@ -375,6 +376,7 @@ namespace ParryRL
             // 찍은 자리 충격·균열·파편 (그림의 바닥선이 가운데에서 0.8유닛 아래 — 몸 크기에 맞춰 키운다)
             FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossSlam : null, hit + Vector2.up * (0.8f * FxScale), FxScale);
             if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.35f, 0.35f);
+            Sfx.Play(SfxId.BossSlam);
             foreach (float d in new[] { dir, -dir })
             {
                 var start = new Vector2(transform.position.x + d * (Half + 0.4f), _enemy.FeetY + waveSize.y * 0.5f);
@@ -397,6 +399,7 @@ namespace ParryRL
             var hitbox = EnemyAttack.Spawn(_enemy, AttackType.Heavy, front, new Vector2(dir, 0f), size, dashSpeed, reach, PatternColor, dashDamage);
             if (GameAssets.AttackFx != null) hitbox.AttachProjectileArt(GameAssets.AttackFx.bossDash, 0, 4, FxScale); // 박치기 판정에 앞 압력파 그림
             DashTrail(dir);
+            Sfx.Play(SfxId.BossDash);
             float streak = 0f;
             while (hitbox != null && !_enemy.IsDead)
             {
@@ -441,7 +444,7 @@ namespace ParryRL
             _enemy.Invulnerable = true;
             Hud.Popup($"{bossName}가 깨어난다 — 2페이즈", new Color(1f, 0.55f, 0.2f), true);
             Hud.ScreenFlash(new Color(1f, 0.5f, 0.15f, 0.45f));
-            Sfx.Play(SfxId.HeavyCue);
+            Sfx.Play(SfxId.BossRoar); // 깨어나며 포효
             if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.35f, 0.8f);
             Fx.Ring(transform.position, new Color(1f, 0.55f, 0.2f), 1f, 7f, 0.15f, 0.6f);
 

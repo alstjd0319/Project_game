@@ -331,7 +331,7 @@ namespace ParryRL
                 _comboExpire = Time.time + _attackCd + comboWindow;
             }
             ActionUsed?.Invoke(PlayerAction.Attack);
-            Sfx.Play(SfxId.Skill);
+            Sfx.Play(IsRanged ? SfxId.TalismanThrow : stage == 1 ? SfxId.StaffSwing1 : stage == 2 ? SfxId.StaffSwing2 : SfxId.StaffSwing3);
             int dir = _motor.Facing;
             Vector2 pos = transform.position;
             Color color = WeaponColor;
@@ -389,7 +389,8 @@ namespace ParryRL
 
             _skillCd[WeaponIndex, slot == 1 ? 0 : 1] = slot == 1 ? skill1Cooldown : skill2Cooldown;
             ActionUsed?.Invoke(action);
-            Sfx.Play(SfxId.Skill);
+            // 스킬마다 다른 소리 (내려찍기는 휘두름만 먼저, 땅을 치는 쿵은 충격파가 나가는 순간 SlamSkill에서)
+            Sfx.Play(slot == 1 ? (IsRanged ? SfxId.SkillFan : SfxId.SkillSweep) : (IsRanged ? SfxId.SkillSeal : SfxId.StaffSwing2));
             int dir = _motor.Facing;
             Vector2 pos = transform.position;
             if (slot == 1)
@@ -421,6 +422,7 @@ namespace ParryRL
             if (slamDelay > 0f) yield return new WaitForSeconds(slamDelay);
             if (_party.IsDead) yield break;
             pos = transform.position;
+            Sfx.Play(SfxId.SkillSlam);
             var center = new Vector2(pos.x + dir * (transform.localScale.x * 0.5f + slamBox.x * 0.5f), pos.y);
             var hit = NewHit(DamageSource.AttackSkill, true);
             int hits = MeleeStrike.Spawn(center, slamBox, new Color(0.6f, 1f, 0.95f, 0.45f), slamDamage, hit, e => e.Stun(slamStun));
