@@ -28,6 +28,7 @@ namespace ParryRL
         [SerializeField, Tooltip("강공격 확률 (0 이상이면 GameTuning 값 대신 이 값)")] private float heavyChanceOverride = -1f;
         [SerializeField, Tooltip("일반 공격 연속 타격 수 (1 = 한 번). 보스 1페이즈 3연타 — 타격마다 느낌표가 다시 노랑 → 빨강")] private int comboHits = 1;
         [SerializeField, Tooltip("연속 공격에서 다음 타격까지의 간격(초, Tempo 적용) — 이 간격이 다음 타격의 반응시간")] private float comboGap = 0.6f;
+        [SerializeField, Tooltip("근접 베기마다 할퀴기 궤적 이펙트(AttackFxArt.bossClaw)를 몸 앞에 그린다 (보스 — 판정 네모를 숨겨서, 허공을 쳐도 휘두른 게 보이게)")] private bool clawTrail;
         [SerializeField, Range(0f, 1f), Tooltip("일반 공격이 연속 공격으로 나올 확률 (comboHits > 1일 때, 나머지는 한 번만 친다)")] private float comboChance = 1f;
         [SerializeField, Tooltip("연속 공격 전 \"준비합니다\" 알림 뒤 기다리는 시간(초, Tempo 적용) — 이 동안 웅크린 채 서 있다")] private float comboAnnounceTime;
 
@@ -445,8 +446,10 @@ namespace ParryRL
                 float dir = _attackDir; // 시작할 때 정한 방향 (플레이어 위치를 다시 보지 않는다)
                 Facing = dir;
                 var anchor = new Vector2(transform.position.x + dir * HalfWidth, _feetY + meleeAttackHeight);
-                EnemyAttack.SpawnSlash(this, type, anchor, dir, heavy ? meleeHeavySlashHeight : meleeNormalSlashHeight,
-                    meleeSlashSpeed, Mathf.Max(0.1f, meleeReach - HalfWidth), color, damage);
+                float reach = Mathf.Max(0.1f, meleeReach - HalfWidth);
+                float slashH = heavy ? meleeHeavySlashHeight : meleeNormalSlashHeight;
+                EnemyAttack.SpawnSlash(this, type, anchor, dir, slashH, meleeSlashSpeed, reach, color, damage);
+                if (clawTrail) PlayClaw(anchor, dir, reach, slashH, heavy);
             }
             else
             {
@@ -458,6 +461,19 @@ namespace ParryRL
                 var fx = GameAssets.AttackFx;
                 if (fx != null) shot.AttachProjectileArt(fx.dokkaebiProjectile, heavy ? 4 : 0, 4, 2.2f);
             }
+        }
+
+        /// <summary>할퀴기 궤적: 베기 범위(몸 앞 reach × 높이) 안에 비율 유지로 맞춰 몸 앞에 그린다. 판정과 무관한 연출 (헛쳐도 나온다).</summary>
+        public int ClawCount { get; private set; }
+
+        private void PlayClaw(Vector2 anchor, float dir, float reach, float height, bool heavy)
+        {
+            var clip = GameAssets.AttackFx != null ? GameAssets.AttackFx.bossClaw : null;
+            if (clip == null || clip.IsEmpty) return;
+            float k = heavy ? 1.25f : 1f;
+            var center = anchor + new Vector2(dir * reach * 0.5f, height * 0.15f);
+            FxClip.PlayFit(clip, center, new Vector2(reach * 1.2f * k, height * 1.9f * k), dir < 0f, 46);
+            ClawCount++;
         }
 
         private void SetScaleFeetAnchored(Vector3 scale)

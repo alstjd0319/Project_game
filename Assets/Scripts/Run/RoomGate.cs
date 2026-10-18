@@ -16,8 +16,8 @@ namespace ParryRL
         public RoomType Type { get; private set; }
         public string Label { get; private set; }
 
-        /// <summary>문을 만든다. gateSprite는 아래 가운데 피벗(바닥에 선다), 없으면 색 네모로 대신 그린다.</summary>
-        public static RoomGate Create(Vector3 groundPos, RoomType type, bool isExit, Sprite gateSprite)
+        /// <summary>문을 만든다. 포탈 틀 그림(portalArt)이 있으면 방 종류별 틀, 없으면 gateSprite(아래 가운데 피벗), 그것도 없으면 색 네모.</summary>
+        public static RoomGate Create(Vector3 groundPos, RoomType type, bool isExit, Sprite gateSprite, PortalArt portalArt = null)
         {
             var go = new GameObject(isExit ? "Gate_Exit" : $"Gate_{type}");
             go.transform.position = groundPos + new Vector3(0f, Height * 0.5f, 0f);
@@ -27,11 +27,15 @@ namespace ParryRL
             var gate = go.AddComponent<RoomGate>();
             gate.IsExit = isExit;
             gate.Type = type;
-            gate.Build(gateSprite);
+            gate.Build(gateSprite, portalArt);
             return gate;
         }
 
-        private void Build(Sprite gateSprite)
+        /// <summary>이 문에 쓴 포탈 틀 번호 (<see cref="PortalArt"/>, 틀이 없으면 −1).</summary>
+        public int FrameIndex { get; private set; } = -1;
+        public SpriteRenderer FrameRenderer { get; private set; }
+
+        private void Build(Sprite gateSprite, PortalArt portalArt)
         {
             Color color = IsExit ? new Color(0.65f, 0.55f, 1f) : RoomInfo.Color(Type);
             Label = IsExit ? "사당으로" : RoomInfo.Label(Type);
@@ -42,8 +46,27 @@ namespace ParryRL
             var effects = gameObject.AddComponent<DoorEffects>();
             effects.Tint = color;
             effects.SwirlTintAmount = 0.5f;
+            float labelY = 4.05f; // 바닥에서 안내 글자까지 (틀 그림이 있으면 틀 꼭대기 위)
+            int index = PortalArt.IndexFor(Type, IsExit);
+            var frame = portalArt != null ? portalArt.Frame(index) : null;
+            if (frame != null)
+            {
+                // 방 종류별 포탈 틀 (1016 에셋): 틀 그대로의 색, 소용돌이는 틀 안쪽 뚫린 부분에 맞춘다
+                FrameIndex = index;
+                FrameRenderer = MakeSprite("Frame", frame, new Vector3(0f, -0.5f, 0f), new Vector2(1f / Width, 1f / Height), 9, Color.white);
+                if (portalArt.TryHole(index, out var holeCenter, out var holeSize))
+                {
+                    effects.OpeningCenterHeight = holeCenter.y;
+                    effects.OpeningSize = holeSize * 0.92f; // 틀 안쪽 가장자리에 살짝 덮이게
+                    effects.HaloScale = 0.9f;
+                }
+                effects.UseGatePortal = true; // 에셋의 귀문 소용돌이를 틀 구멍 모양대로 가려 그린다
+                effects.HoleMask = portalArt.HoleMask(index);
+                effects.SwirlTintAmount = 1f;  // 회색 소용돌이에 방 종류 색을 그대로 곱한다
+                labelY = frame.bounds.size.y + 0.4f;
+            }
             // 문 그림 (바닥에 선다: 판정 네모 아래 끝 = 문 아래 끝)
-            if (gateSprite != null)
+            else if (gateSprite != null)
             {
                 var art = MakeSprite("Door", gateSprite, new Vector3(0f, -0.5f, 0f), Vector2.one * 1.25f * new Vector2(1f / Width, 1f / Height), 9, Color.Lerp(Color.white, color, 0.45f));
             }
@@ -52,8 +75,9 @@ namespace ParryRL
                 MakeSprite("Door", GameAssets.Square, Vector3.zero, Vector2.one, 9, new Color(color.r, color.g, color.b, 0.35f));
             }
             // 위에 종류 글자
-            MakeLabel(Label, color, new Vector3(0f, 2.9f / Height, 0f), 0.085f, 24, true);
-            MakeLabel(hint, new Color(1f, 1f, 1f, 0.85f), new Vector3(0f, 2.45f / Height, 0f), 0.04f, 24, false);
+            // 위에 종류 글자 (틀 꼭대기 위). 위치는 문 가운데(판정 상자 가운데) 기준이라 바닥 기준 높이에서 Height/2를 뺀다
+            MakeLabel(Label, color, new Vector3(0f, (labelY + 0.45f - Height * 0.5f) / Height, 0f), 0.085f, 24, true);
+            MakeLabel(hint, new Color(1f, 1f, 1f, 0.85f), new Vector3(0f, (labelY - Height * 0.5f) / Height, 0f), 0.04f, 24, false);
         }
 
         private SpriteRenderer MakeSprite(string name, Sprite sprite, Vector3 localPos, Vector2 localScale, int order, Color color)
@@ -91,16 +115,22 @@ namespace ParryRL
         private void OnEnable() => GetComponent<Interactable>().Interacted += Enter;
         private void OnDisable() => GetComponent<Interactable>().Interacted -= Enter;
 
-        /// <summary>문으로 들어간다 (테스트도 이걸 부른다).</summary>
+        public bool IsEntering { get; private set; }
+
+        /// <summary>문으로 들어간다 (테스트도 이걸 부른다). 몸이 빛으로 흩어지는 연출 뒤 다음 방 (연출을 끄면 바로).</summary>
         public void Enter()
         {
-            Hud.ScreenFlash(new Color(0.65f, 0.45f, 1f, 0.8f));
-            if (IsExit) GameManager.LoadHub();
-            else
+            if (IsEntering) return;
+            IsEntering = true;
+            StartCoroutine(PortalTransition.Enter(() =>
             {
-                RunState.Enter(Type);
-                GameManager.LoadRun();
-            }
+                if (IsExit) GameManager.LoadHub();
+                else
+                {
+                    RunState.Enter(Type);
+                    GameManager.LoadRun();
+                }
+            }));
         }
     }
 }

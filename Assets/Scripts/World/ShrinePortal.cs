@@ -36,11 +36,18 @@ namespace ParryRL
         private void OnEnable() => GetComponent<Interactable>().Interacted += Enter;
         private void OnDisable() => GetComponent<Interactable>().Interacted -= Enter;
 
+        private bool _entering;
+
         private void Enter()
         {
-            Hud.ScreenFlash(new Color(0.65f, 0.45f, 1f, 0.8f));
-            RunState.Begin(); // 한 판 시작 (첫 방은 일반방)
-            GameManager.LoadRun();
+            if (_entering) return;
+            _entering = true;
+            // 방 문과 같은 포탈 연출: 몸이 빛으로 흩어진 뒤 한 판 시작 (첫 방은 일반방)
+            StartCoroutine(PortalTransition.Enter(() =>
+            {
+                RunState.Begin();
+                GameManager.LoadRun();
+            }));
         }
     }
 }

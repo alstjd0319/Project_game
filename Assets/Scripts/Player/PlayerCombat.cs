@@ -186,6 +186,8 @@ namespace ParryRL
             _defense = GetComponent<PlayerDefense>();
             _effects = GetComponent<SuccessEffects>();
             if (_effects == null) _effects = gameObject.AddComponent<SuccessEffects>();
+            // 대시 횟수는 여기서 채운다 — 첫 프레임부터 꺼져 있으면(포탈 도착 연출) Update가 못 채워 스킬바에 "-1/2"로 보였다
+            if (_moveCharges < 0) _moveCharges = MoveSkillMaxCharges;
         }
 
         private void Update()

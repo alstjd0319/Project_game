@@ -11,7 +11,8 @@ namespace ParryRL
     {
         public enum Phase { Intro, Fighting, BetweenWaves, Cleared }
 
-        [SerializeField, Tooltip("문 그림 (바닥 가운데 피벗). 없으면 색 네모")] private Sprite gateSprite;
+        [SerializeField, Tooltip("문 그림 (바닥 가운데 피벗). 포탈 틀(portalArt)이 없을 때만, 그것도 없으면 색 네모")] private Sprite gateSprite;
+        [SerializeField, Tooltip("방 종류별 포탈 틀 7종 (1016 에셋)")] private PortalArt portalArt;
         [SerializeField] private float introDelay = 1.2f;
         [SerializeField] private float betweenWaves = 1.6f;
         [SerializeField, Tooltip("다음 방 문은 오른쪽 끝에 나란히 선다: 가장 바깥 문이 바닥 오른쪽 끝에서 안쪽으로 떨어진 거리")] private float gateInset = 1.8f;
@@ -24,6 +25,7 @@ namespace ParryRL
         public int WaveIndex { get; private set; }
         public int WaveCount => _waves.Count;
         public IReadOnlyList<RoomGate> Gates => _gates;
+        public PortalArt PortalArt => portalArt;
         public IReadOnlyList<RoomAltar> Altars => _altars;
         public bool IsRunRoom { get; private set; }
 
@@ -88,6 +90,7 @@ namespace ParryRL
             if (RunState.Current == RoomType.Boss && CameraRig.Instance != null)
                 CameraRig.Instance.SetView(BossViewSize, BossViewSize - 2.5f); // 보스방은 넓게 — 큰 보스(2페이즈)가 화면에 다 들어오게. 바닥은 같은 높이(아래 끝 y=−2.5)
             PlacePlayerAtStart();
+            StartCoroutine(PortalTransition.Arrive()); // 포탈에서 나오는 연출 (빛이 감겨 몸이 된다)
             UpdateInfo();
             Hud.Popup($"방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}  ({Layout.Name})", RoomInfo.Color(RunState.Current), true);
         }
@@ -330,7 +333,7 @@ namespace ParryRL
             if (RunState.IsFinalRoom)
             {
                 Hud.Popup("귀문을 닫았다!", new Color(0.8f, 0.7f, 1f), true);
-                _gates.Add(RoomGate.Create(new Vector3((left + right) * 0.5f + 6f, 0f, 0f), RoomType.Normal, true, gateSprite));
+                _gates.Add(RoomGate.Create(new Vector3((left + right) * 0.5f + 6f, 0f, 0f), RoomType.Normal, true, gateSprite, portalArt));
             }
             else
             {
@@ -340,7 +343,7 @@ namespace ParryRL
                 for (int i = 0; i < options.Length; i++)
                 {
                     float x = right - gateInset - (options.Length == 1 ? gateSpacing * 0.5f : i * gateSpacing);
-                    _gates.Add(RoomGate.Create(new Vector3(x, 0f, 0f), options[i], false, gateSprite));
+                    _gates.Add(RoomGate.Create(new Vector3(x, 0f, 0f), options[i], false, gateSprite, portalArt));
                 }
             }
         }

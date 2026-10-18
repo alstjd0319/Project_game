@@ -167,6 +167,33 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 2815a4e5936b9426e8296dc80081697e, type: 3}
     - {fileID: 21300000, guid: aedea9946ee0f4c5285e4618fa028ec7, type: 3}
     fps: 10
+  gatePortalGray:
+    frames:
+    - {fileID: 21300000, guid: 78db54227935444b19b303e69fae811e, type: 3}
+    - {fileID: 21300000, guid: b37796dada2f44e94a38bf56bbb18e00, type: 3}
+    - {fileID: 21300000, guid: 5fd7d8b8eba094fa99d68907a803854c, type: 3}
+    - {fileID: 21300000, guid: a2eaae0cff14a40ffb7b238b875020f5, type: 3}
+    - {fileID: 21300000, guid: fd1a5af28192d4af5bcd463ef6627c47, type: 3}
+    - {fileID: 21300000, guid: 2c7a26436c93f4a4aa313aa6b6357f4a, type: 3}
+    fps: 10
+  portalEnter:
+    frames:
+    - {fileID: 21300000, guid: 4181e7790485840318c9151f5e46f598, type: 3}
+    - {fileID: 21300000, guid: 95cf00d2254b249a1911543d37eec1b3, type: 3}
+    - {fileID: 21300000, guid: 77dd9b0d0cfb64f3ca4bbdf241231c5a, type: 3}
+    - {fileID: 21300000, guid: abfc1f99f0b1241088d22ba84636f91f, type: 3}
+    - {fileID: 21300000, guid: 0ee5356dbb77644cb9bedda83916145c, type: 3}
+    - {fileID: 21300000, guid: ef75e4f0dbcbe4b2aa1615ae46016c9a, type: 3}
+    fps: 12
+  portalExit:
+    frames:
+    - {fileID: 21300000, guid: bb9b8bc55896346a6a1b63852daeb1ca, type: 3}
+    - {fileID: 21300000, guid: 2d239781723524c01b798eeae45b9ba4, type: 3}
+    - {fileID: 21300000, guid: d7e739c6ee33c45c59ec199e3b41535f, type: 3}
+    - {fileID: 21300000, guid: c71371438b1bc4da990ec3ecf3b6c0b0, type: 3}
+    - {fileID: 21300000, guid: bcfbde8b9e0494452b0d37daa2caa3f1, type: 3}
+    - {fileID: 21300000, guid: 5031028980cb441209eeaf9adad1de80, type: 3}
+    fps: 12
   portalSwirl:
     frames:
     - {fileID: 21300000, guid: d8abf60201e0c4e68a483a1ce63753cb, type: 3}
@@ -244,3 +271,10 @@ MonoBehaviour:
     - {fileID: 21300000, guid: be705b4ff1f564e34948bf11fa042a66, type: 3}
     - {fileID: 21300000, guid: 96a679d4591234559bbfd5fdda74b92d, type: 3}
     fps: 12
+  bossClaw:
+    frames:
+    - {fileID: 21300000, guid: 832baa191e5bd428ebec1db4fe9810ac, type: 3}
+    - {fileID: 21300000, guid: c431bf6038461441d88c39127e8a5848, type: 3}
+    - {fileID: 21300000, guid: 750385df667384492aa868b15917fac2, type: 3}
+    - {fileID: 21300000, guid: fbb4f6362de7f44cdb85166a326998e2, type: 3}
+    fps: 14

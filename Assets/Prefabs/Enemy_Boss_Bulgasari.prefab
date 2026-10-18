@@ -287,6 +287,7 @@ MonoBehaviour:
   heavyChanceOverride: 0.35
   comboHits: 3
   comboGap: 0.6
+  clawTrail: 1
   comboChance: 0.2
   comboAnnounceTime: 0.9
   recoverTime: 0.5

@@ -50,6 +50,72 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 문은_방_종류별_포탈_틀로_그려진다()
+        {
+            yield return TestScene.LoadRun();
+            var art = Room.PortalArt;
+            Assert.IsNotNull(art, "포탈 틀 7종");
+            Assert.AreEqual(7, art.frames.Length);
+            var cases = new (RoomType type, bool exit, int frame)[]
+            {
+                (RoomType.Normal, false, PortalArt.Normal), (RoomType.Elite, false, PortalArt.Elite), (RoomType.Shop, false, PortalArt.Shop),
+                (RoomType.Reward, false, PortalArt.Reward), (RoomType.Boss, false, PortalArt.Boss), (RoomType.Normal, true, PortalArt.Rest),
+            };
+            foreach (var (type, exit, frame) in cases)
+            {
+                var gate = RoomGate.Create(new Vector3(0f, 0f, 0f), type, exit, null, art);
+                Assert.AreEqual(frame, gate.FrameIndex, $"{type} {(exit ? "출구" : "")}");
+                Assert.AreEqual($"portal_frame_{frame}", gate.FrameRenderer.sprite.name);
+                Assert.IsTrue(art.TryHole(frame, out var c, out var size), "틀 안쪽 구멍");
+                Assert.Greater(size.y, 1.5f, "사람이 들어갈 만한 구멍");
+                Assert.Greater(c.y, size.y * 0.5f - 0.01f, "구멍은 바닥 위");
+                Assert.IsNotNull(art.HoleMask(frame), "구멍 모양 가림막");
+                yield return null; // DoorEffects.Start
+                var swirl = gate.transform.Find("PortalSwirl").GetComponent<SpriteRenderer>();
+                Assert.AreEqual(SpriteMaskInteraction.VisibleInsideMask, swirl.maskInteraction, "소용돌이는 구멍 모양대로만 보인다");
+                Assert.IsNotNull(gate.GetComponentInChildren<SpriteMask>());
+                Assert.IsTrue(swirl.sprite.name.StartsWith("fx_gate_portal_gray"), "회색 소용돌이에 방 색을 곱한다");
+                yield return null;
+                var want = exit ? new Color(0.65f, 0.55f, 1f) : RoomInfo.Color(type);
+                Assert.AreEqual(want.r, swirl.color.r, 0.01f, $"{type} 소용돌이 색 = 방 종류 색");
+                Assert.AreEqual(want.g, swirl.color.g, 0.01f);
+                Assert.AreEqual(want.b, swirl.color.b, 0.01f);
+                Object.Destroy(gate.gameObject);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator 포탈로_들어가면_몸이_흩어진_뒤_다음_방에서_빛으로_나타난다()
+        {
+            yield return TestScene.LoadRun();
+            PortalTransition.PlayEffects = true;
+            try
+            {
+                var party = Party;
+                var gate = RoomGate.Create(party.transform.position + Vector3.down * 0.7f, RoomType.Reward, false, null, Room.PortalArt);
+                gate.Enter();
+                yield return new WaitForSeconds(0.25f);
+                Assert.AreEqual(1, RunState.RoomNumber, "흩어지는 동안은 아직 이 방");
+                Assert.Less(party.Visibility, 0.5f, "몸이 사라지는 중");
+                Assert.IsFalse(party.GetComponent<PlayerMotor>().enabled, "연출 중엔 못 움직인다");
+                Assert.IsTrue(Object.FindObjectsByType<SpriteRenderer>().Any(r => r.sprite != null && r.sprite.name.StartsWith("fxstatus_portal_enter")), "들어가기 이펙트");
+                yield return WaitUntil(() => RunState.RoomNumber == 2 && Room != null && Room.IsRunRoom, 3f);
+                yield return null;
+                yield return null;
+                var arrived = Party;
+                Assert.Less(arrived.Visibility, 0.5f, "도착 직후엔 아직 빛");
+                Assert.IsTrue(Object.FindObjectsByType<SpriteRenderer>().Any(r => r.sprite != null && r.sprite.name.StartsWith("fxstatus_portal_exit")), "나오기 이펙트");
+                yield return new WaitForSeconds(0.7f);
+                Assert.AreEqual(1f, arrived.Visibility, 0.01f, "몸이 나타났다");
+                Assert.IsTrue(arrived.GetComponent<PlayerMotor>().enabled, "다시 움직인다");
+            }
+            finally
+            {
+                PortalTransition.PlayEffects = false;
+            }
+        }
+
+        [UnityTest]
         public IEnumerator 임시_보스방_바로_가기는_마지막_보스방을_연다()
         {
             yield return TestScene.LoadHub();

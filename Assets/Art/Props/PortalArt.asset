@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75a8c739d042943c09c5ff409e5c3c5d, type: 3}
+  m_Name: PortalArt
+  m_EditorClassIdentifier: ParryRL::ParryRL.PortalArt
+  frames:
+  - {fileID: 21300000, guid: 34a878827ccbd4edc9de7d56260c0674, type: 3}
+  - {fileID: 21300000, guid: f2f36ebd8269b40769f1760c55a795aa, type: 3}
+  - {fileID: 21300000, guid: 9993a055932884d688f0248f51f5eb5c, type: 3}
+  - {fileID: 21300000, guid: 955fa597d651d4eb38148de42668c685, type: 3}
+  - {fileID: 21300000, guid: 2d71181b4868c4a64b4a0121a8c4e758, type: 3}
+  - {fileID: 21300000, guid: 875f97b7e75a74903948b84d98f72d2f, type: 3}
+  - {fileID: 21300000, guid: b7b2010854b424f61833c1a70db38a8f, type: 3}
+  holes:
+  - {x: 54, y: 53, z: 157, w: 276}
+  - {x: 46, y: 74, z: 146, w: 281}
+  - {x: 51, y: 65, z: 150, w: 282}
+  - {x: 51, y: 62, z: 155, w: 280}
+  - {x: 46, y: 74, z: 151, w: 285}
+  - {x: 47, y: 67, z: 154, w: 281}
+  - {x: 58, y: 79, z: 155, w: 282}
+  holeMasks:
+  - {fileID: 21300000, guid: 484bf74464baa46e9b308f2a2266b2d8, type: 3}
+  - {fileID: 21300000, guid: 0cca1924ee42640ca849531c9cd01e5d, type: 3}
+  - {fileID: 21300000, guid: 5ba9e15a816e24c85b41746b7da588c2, type: 3}
+  - {fileID: 21300000, guid: c7e63667f5c07474ebc670b016f3cf44, type: 3}
+  - {fileID: 21300000, guid: 4e08fbe590793450f991c1c8041c0959, type: 3}
+  - {fileID: 21300000, guid: f5fab49403569444e9e5fca2562f598e, type: 3}
+  - {fileID: 21300000, guid: 7f5966e839e3245cda8c0efec8c856ac, type: 3}

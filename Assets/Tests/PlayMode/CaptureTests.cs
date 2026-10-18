@@ -53,6 +53,44 @@ namespace ParryRL.Tests
             Put(room.Gates[0].transform.position.x - 1.5f);
             yield return new WaitForSeconds(1.2f);
             yield return Capture("run_gate_left");            // 바깥 문 앞
+
+            // 포탈 연출: 들어가며 흩어짐 → 다음 방에서 빛으로 나타남
+            PortalTransition.PlayEffects = true;
+            try
+            {
+                Put(room.Gates[0].transform.position.x);
+                yield return new WaitForSeconds(0.1f);
+                room.Gates[0].Enter();
+                yield return new WaitForSeconds(0.17f);
+                yield return Capture("portal_enter");             // 몸이 보라 빛으로 흩어지는 중
+                float w = 0f;
+                while (RunState.RoomNumber < 2 && w < 3f) { w += Time.deltaTime; yield return null; }
+                yield return new WaitForSeconds(0.25f);
+                yield return Capture("portal_exit");              // 새 방 왼쪽 끝에서 빛이 감겨 몸이 되는 중
+            }
+            finally
+            {
+                PortalTransition.PlayEffects = false;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator 런_포탈_종류별_틀과_색()
+        {
+            yield return TestScene.LoadRun(RoomType.Reward); // 싸움 없는 평지 방
+            GameTuning.Current.godMode = true;
+            var room = Object.FindAnyObjectByType<RoomController>();
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            yield return new WaitForSeconds(0.3f);
+            float cx = Camera.main.transform.position.x;
+            var kinds = new (RoomType type, bool exit)[] { (RoomType.Normal, false), (RoomType.Elite, false), (RoomType.Shop, false), (RoomType.Reward, false), (RoomType.Boss, false), (RoomType.Normal, true) };
+            for (int i = 0; i < kinds.Length; i++)
+                RoomGate.Create(new Vector3(cx - 9f + i * 3.6f, 0f, 0f), kinds[i].type, kinds[i].exit, null, room.PortalArt);
+            var pos = new Vector3(cx - 11.5f, player.transform.position.y, 0f);
+            player.transform.position = pos;
+            player.GetComponent<Rigidbody2D>().position = pos;
+            yield return new WaitForSeconds(1.2f);
+            yield return Capture("portal_frames_all");     // 일반 · 엘리트 · 상점 · 보상 · 보스 · 사당 출구
         }
 
         [UnityTest]
@@ -175,6 +213,9 @@ namespace ParryRL.Tests
             for (float w = 0f; w < 5f && !announced; w += Time.deltaTime) yield return null;
             yield return new WaitForSeconds(0.3f);
             yield return Capture("boss_combo_announce");      // "불가살이가 연속 공격을 준비합니다!" + 웅크림
+            for (float w = 0f; w < 6f && boss.Enemy.ComboStrikeCount < 1; w += Time.deltaTime) yield return null;
+            yield return new WaitForSeconds(0.08f);
+            yield return Capture("boss_claw");               // 첫 타격의 할퀴기 궤적
             for (float w = 0f; w < 6f && boss.Enemy.ComboStrikeCount < 2; w += Time.deltaTime) yield return null;
             yield return new WaitForSeconds(0.05f);
             yield return Capture("boss_combo");               // 1페이즈 3연타 중 (둘째 타격 뒤 셋째 느낌표)

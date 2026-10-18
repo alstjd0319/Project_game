@@ -121,6 +121,8 @@ namespace ParryRL
 
         /// <summary>도트 애니메이션(PlayerSprite)에 곱할 색 (흰색 = 원본). 피격·쿨타임 표시는 네모와 같다.</summary>
         public Color ArtTint { get; private set; } = Color.white;
+        /// <summary>몸이 보이는 정도 (0 = 안 보임). 포탈로 사라지고 나타나는 연출이 쓴다 — 판정은 그대로.</summary>
+        public float Visibility { get; set; } = 1f;
 
         private void UpdateVisual()
         {
@@ -132,6 +134,11 @@ namespace ParryRL
                 float a = 0.4f + 0.6f * (0.5f + 0.5f * Mathf.Sin(Time.time * 28f));
                 var c = _sr.color; c.a = a; _sr.color = c;
                 var t = ArtTint; t.a = a; ArtTint = t;
+            }
+            if (Visibility < 1f)
+            {
+                var c = _sr.color; c.a *= Visibility; _sr.color = c;
+                var t = ArtTint; t.a *= Visibility; ArtTint = t;
             }
         }
 

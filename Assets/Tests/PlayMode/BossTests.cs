@@ -150,6 +150,45 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 휘두를_때마다_할퀴기_궤적이_나온다_등_뒤로_가서_헛쳐도()
+        {
+            yield return LoadBossRoom();
+            var enemy = BossController.Instance.Enemy;
+            enemy.HeavyChanceOverride = 0f;
+            enemy.ComboChance = 1f;
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            void Put(float x)
+            {
+                var p = new Vector3(x, player.transform.position.y, 0f);
+                player.transform.position = p;
+                player.GetComponent<Rigidbody2D>().position = p;
+                Physics2D.SyncTransforms();
+            }
+            Put(enemy.transform.position.x - 3f);
+            GameTuning.Current.enemyPassive = false;
+            float t = 0f;
+            while (!enemy.IsWindingUp && t < 6f) { t += Time.deltaTime; yield return null; }
+            float facing = enemy.Facing;
+            Put(enemy.transform.position.x + 4f); // 등 뒤로
+            bool sawClaw = false, flipOk = true;
+            while (enemy.ComboStrikeCount < 3 && t < 12f)
+            {
+                foreach (var r in Object.FindObjectsByType<SpriteRenderer>())
+                    if (r.sprite != null && r.sprite.name.StartsWith("bossfx_claw"))
+                    {
+                        sawClaw = true;
+                        flipOk &= r.flipX == facing < 0f;
+                    }
+                t += Time.deltaTime;
+                yield return null;
+            }
+            Assert.AreEqual(3, enemy.ComboStrikeCount, "3연타는 끝까지");
+            Assert.AreEqual(3, enemy.ClawCount, "타격마다 할퀴기 궤적 (헛쳐도)");
+            Assert.IsTrue(sawClaw, "궤적 그림 (bossfx_claw)");
+            Assert.IsTrue(flipOk, "공격 방향으로 긋는다");
+        }
+
+        [UnityTest]
         public IEnumerator 일페이즈_보통_일반_공격은_한_번만_친다()
         {
             yield return LoadBossRoom();

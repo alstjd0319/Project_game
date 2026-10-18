@@ -409,5 +409,25 @@ namespace ParryRL.Tests
             Assert.AreEqual("attack", _sprite.Clip);
             Assert.IsTrue(_sprite.ArtRenderer.sprite.name.StartsWith("hero_talisman_skill_fan"), _sprite.ArtRenderer.sprite.name);
         }
+
+        [Test]
+        public void 불가살이_그림은_칸_가장자리에서_잘리지_않는다()
+        {
+            // 칸 위·왼쪽·오른쪽 끝 줄에 불투명 픽셀이 있으면 그림이 잘린 것 (아래는 발끝이라 닿아도 된다)
+            var files = System.IO.Directory.GetFiles("Assets/Art/Enemies/Bulgasari", "bulgasari_*.png");
+            Assert.Greater(files.Length, 50);
+            foreach (string path in files)
+            {
+                var tex = new Texture2D(2, 2);
+                Assert.IsTrue(tex.LoadImage(System.IO.File.ReadAllBytes(path)));
+                int w = tex.width, h = tex.height;
+                var px = tex.GetPixels32();
+                bool top = false, left = false, right = false;
+                for (int x = 0; x < w; x++) top |= px[(h - 1) * w + x].a > 0;
+                for (int y = 0; y < h; y++) { left |= px[y * w].a > 0; right |= px[y * w + w - 1].a > 0; }
+                Assert.IsFalse(top || left || right, $"{System.IO.Path.GetFileName(path)} 잘림 (위 {top} 왼쪽 {left} 오른쪽 {right})");
+                Object.DestroyImmediate(tex);
+            }
+        }
     }
 }

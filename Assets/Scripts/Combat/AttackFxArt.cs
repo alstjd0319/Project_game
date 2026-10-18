@@ -32,6 +32,9 @@ namespace ParryRL
         public SpriteClip sealEnd = new();
         [Tooltip("퍼펙트 패링 때 플레이어 앞에 한 번 재생")] public SpriteClip perfectParry = new();
         [Tooltip("사당 포탈 (반복 재생)")] public SpriteClip gatePortal = new();
+        [Tooltip("귀문 소용돌이 회색판 — 방 포탈에서 방 종류 색을 곱해 쓴다")] public SpriteClip gatePortalGray = new();
+        [Tooltip("포탈 들어가기 — 몸이 보라 빛으로 흩어진다 (1017 추가분 fxstatus_portal_enter, 6장, 오른쪽을 봄, 그림 아래 끝 = 발끝)")] public SpriteClip portalEnter = new();
+        [Tooltip("포탈 나오기 — 빛이 감겨 몸이 된다 (fxstatus_portal_exit, 6장)")] public SpriteClip portalExit = new();
         [Tooltip("사당 문 안쪽에 겹치는 일렁이는 소용돌이 (16장 반복, 칸 192×224 · 내용 138×181 — 원본 8장을 줄마다 물결치게 밀어 만든 것)")] public SpriteClip portalSwirl = new();
         [Tooltip("도깨비불 불덩이 — 앞 4장 청록(일반) · 뒤 4장 빨강(강공격), 반복 재생")] public SpriteClip dokkaebiProjectile = new();
         [Header("보스 불가살이 특수 패턴 (Tools/gwimun_sprites/make_bossfx.py가 그림, 90px = 1유닛, 오른쪽을 봄)")]
@@ -40,6 +43,7 @@ namespace ParryRL
         [Tooltip("가시 발사 — 날아가는 쇠 가시 하나 (반복)")] public SpriteClip bossSpine = new();
         [Tooltip("땅 찍기 — 찍은 자리 충격·균열·파편 (한 번, 옆모습)")] public SpriteClip bossSlam = new();
         [Tooltip("땅 찍기 — 바닥을 타고 가는 가시 파도 (반복)")] public SpriteClip bossWave = new();
+        [Tooltip("일반 공격 할퀴기 궤적 — 1017 P9 창귀 할퀴기를 불가살이 색으로 (cut_bossclaw.py, 오른쪽 위로 긋는 발톱 세 줄)")] public SpriteClip bossClaw = new();
 
         public SpriteClip EnemySlash(AttackType type) => type == AttackType.Heavy ? enemyHeavySlash : enemySlash;
     }

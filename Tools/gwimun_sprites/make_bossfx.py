@@ -377,10 +377,10 @@ def make_dashtrail():
 
 
 def main():
-    for f in os.listdir(OUT):
-        if f.startswith('bossfx_'):
-            os.remove(os.path.join(OUT, f))
     clips = {'spine': make_spine(), 'wave': make_wave(), 'slam': make_slam(), 'dash': make_dash(), 'dashtrail': make_dashtrail()}
+    for f in os.listdir(OUT):  # 이 스크립트가 그리는 것만 지운다 (bossfx_claw_* 는 cut_bossclaw.py 몫)
+        if any(f.startswith(f'bossfx_{name}_') for name in clips) and not f.startswith('bossfx_claw_'):
+            os.remove(os.path.join(OUT, f))
     for name, frames in clips.items():
         for i, im in enumerate(frames):
             im.save(f'{OUT}/bossfx_{name}_{i}.png')

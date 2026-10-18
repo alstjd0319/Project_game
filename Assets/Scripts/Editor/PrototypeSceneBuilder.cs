@@ -22,6 +22,40 @@ namespace ParryRL.EditorTools
         // 사당 소품(포탈 문): 원본 시트(원본/bg/shrine/props.png)에서 오려 바깥 마젠타만 투명하게 한 그림. 90px/유닛, 피벗 = 아래 가운데(바닥)
         private const string PropsDir = "Assets/Art/Props";
         private const string GateSpritePath = PropsDir + "/shrine_gate.png";
+        private const string PortalArtPath = PropsDir + "/PortalArt.asset";
+
+        [System.Serializable]
+        private class PortalMeta
+        {
+            [System.Serializable] public class Frame { public int w, h; public int[] hole; }
+            public Frame[] frames;
+        }
+
+        /// <summary>방 포탈 틀 7종 + 안쪽 구멍 (Tools/gwimun_sprites/cut_portal.py가 만든 portal_frame_N.png · portal_meta.json).</summary>
+        private static void CreatePortalArt()
+        {
+            string metaPath = PropsDir + "/portal_meta.json";
+            if (!File.Exists(metaPath)) return;
+            var meta = JsonUtility.FromJson<PortalMeta>(File.ReadAllText(metaPath));
+            var art = AssetDatabase.LoadAssetAtPath<PortalArt>(PortalArtPath);
+            if (art == null)
+            {
+                art = ScriptableObject.CreateInstance<PortalArt>();
+                AssetDatabase.CreateAsset(art, PortalArtPath);
+            }
+            int n = meta.frames != null ? meta.frames.Length : 0;
+            art.frames = new Sprite[n];
+            art.holes = new Vector4[n];
+            art.holeMasks = new Sprite[n];
+            for (int i = 0; i < n; i++)
+            {
+                art.frames[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{PropsDir}/portal_frame_{i}.png");
+                art.holeMasks[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{PropsDir}/portal_hole_{i}.png");
+                var h = meta.frames[i].hole;
+                art.holes[i] = h != null && h.Length == 4 ? new Vector4(h[0], h[1], h[2], h[3]) : Vector4.zero;
+            }
+            EditorUtility.SetDirty(art);
+        }
         private static readonly Vector2 BottomPivot = new(0.5f, 0f);
         private const string SquarePath = "Assets/Art/Square.png";
         private const string NoFrictionPath = "Assets/Art/NoFriction.physicsMaterial2D";
@@ -93,6 +127,7 @@ namespace ParryRL.EditorTools
             CreateUiArt();
             CreateFloorSets();
             if (AssetDatabase.IsValidFolder(PropsDir)) ImportFrames(PropsDir, _ => BottomPivot);
+            CreatePortalArt();
             var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
 
@@ -177,6 +212,8 @@ namespace ParryRL.EditorTools
             var roomController = new GameObject("RoomController").AddComponent<RoomController>();
             var runGateSprite = AssetDatabase.LoadAssetAtPath<Sprite>(GateSpritePath);
             if (runGateSprite != null) Set(roomController, "gateSprite", runGateSprite);
+            var portalArt = AssetDatabase.LoadAssetAtPath<PortalArt>(PortalArtPath);
+            if (portalArt != null) Set(roomController, "portalArt", portalArt);
 
             // ── 카메라 ──
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
@@ -580,7 +617,8 @@ namespace ParryRL.EditorTools
         private static void CreateBossPrefab()
         {
             if (!AssetDatabase.IsValidFolder(BossArtDir)) return;
-            ImportFrames(BossArtDir, _ => BossPivot);
+            // 2페이즈 강공격 준비는 코끝이 안 잘리게 칸을 위로 늘렸다(832px, cut_boss.py) — 발끝(아래에서 20px)이 같은 자리에 오게 피벗을 맞춘다
+            ImportFrames(BossArtDir, file => file.Contains("p2_heavy_windup") ? new Vector2(0.5f, 20f / 832f) : BossPivot);
             EnemyArt Make(string path, string idle, string walk, string normal, string heavyWindup, string heavyAttack, int hurtStart)
             {
                 var art = AssetDatabase.LoadAssetAtPath<EnemyArt>(path);
@@ -626,6 +664,7 @@ namespace ParryRL.EditorTools
             so.FindProperty("recoverTime").floatValue = 0.5f;
             so.FindProperty("normalDamage").intValue = 10;      // 3연타가 섞여서 한 번당은 약하게 (2페이즈 코 휘두르기는 16)
             so.FindProperty("comboHits").intValue = 3;
+            so.FindProperty("clawTrail").boolValue = true;           // 휘두를 때마다 할퀴기 궤적 (허공을 쳐도 공격이 보이게)
             so.FindProperty("comboGap").floatValue = 0.6f;
             so.FindProperty("comboChance").floatValue = 0.2f;        // 일반 공격 5번에 1번꼴로 3연타, 나머지는 한 번 할퀴기 (가안)
             so.FindProperty("comboAnnounceTime").floatValue = 0.9f;  // "연속 공격을 준비합니다" 뒤 웅크린 채 기다림
@@ -831,13 +870,17 @@ namespace ParryRL.EditorTools
             fx.bossSpine = LoadClip(FxDir, "bossfx", "spine", 14f);
             fx.bossSlam = LoadClip(FxDir, "bossfx", "slam", 14f);
             fx.bossWave = LoadClip(FxDir, "bossfx", "wave", 12f);
+            fx.bossClaw = LoadClip(FxDir, "bossfx", "claw", 14f);
             fx.gatePortal = LoadClip(FxDir, "fx", "gate_portal", 10f);
+            fx.gatePortalGray = LoadClip(FxDir, "fx", "gate_portal_gray", 10f); // 방 종류 색을 곱해 쓰는 회색판 (cut_portal.py)
             fx.portalSwirl = LoadClip(FxDir, "fx", "portal_swirl", 14f); // 16장 (Tools/gwimun_sprites/make_portal_swirl.py), 한 바퀴 약 1.1초
             fx.staffSlam = LoadClip(FxDir, "fxhero", "quake_wave", 12f);
             fx.sealStart = LoadClip(FxDir, "fxhero", "seal_start", 12f);
             fx.sealLoop = LoadClip(FxDir, "fxhero", "seal_loop", 12f);
             fx.sealEnd = LoadClip(FxDir, "fxhero", "seal_end", 12f);
             fx.perfectParry = LoadClip(FxDir, "fxhero", "perfect_parry", 12f);
+            fx.portalEnter = LoadClip(FxDir, "fxstatus", "portal_enter", 12f); // 1017 추가분 (Tools/gwimun_sprites/cut_portal.py)
+            fx.portalExit = LoadClip(FxDir, "fxstatus", "portal_exit", 12f);
             fx.dokkaebiProjectile = LoadClip(DokkaebibulArtDir, "dokkaebibul", "projectile", 12f);
             EditorUtility.SetDirty(fx);
         }

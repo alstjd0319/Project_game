@@ -11,6 +11,7 @@ namespace ParryRL.Tests
             // 사용자가 F1 패널로 바꿔 저장한 값이 테스트 기대값을 흔들지 않도록
             GameTuning.UseDefaultsForTests();
             GameTuning.Current.startDamageScale = 1f; // 규칙 테스트의 데미지 기준은 성장 전 배율 1 — 초반 배율(0.7)은 따로 검증
+            ParryRL.PortalTransition.PlayEffects = false; // 문은 바로 넘어간다 — 포탈 연출은 따로 검증
             PlayerSession.Reset(); // 앞선 테스트가 이어받던 상태가 새 씬에 새지 않게
             UnityEngine.Time.timeScale = 1f; // 앞선 테스트(게임오버·히트스탑)가 시간을 멈춘 채 끝나도 영향이 없게
             SceneManager.LoadScene("Prototype");
@@ -31,6 +32,7 @@ namespace ParryRL.Tests
             ParryRL.BossController.PlayEntrance = bossEntrance;
             GameTuning.UseDefaultsForTests();
             GameTuning.Current.startDamageScale = 1f; // 규칙 테스트의 데미지 기준은 성장 전 배율 1 — 초반 배율(0.7)은 따로 검증
+            ParryRL.PortalTransition.PlayEffects = false; // 문은 바로 넘어간다 — 포탈 연출은 따로 검증
             PlayerSession.Reset();
             UnityEngine.Time.timeScale = 1f;
             ParryRL.RunState.Begin();
@@ -45,6 +47,7 @@ namespace ParryRL.Tests
         {
             GameTuning.UseDefaultsForTests();
             GameTuning.Current.startDamageScale = 1f; // 규칙 테스트의 데미지 기준은 성장 전 배율 1 — 초반 배율(0.7)은 따로 검증
+            ParryRL.PortalTransition.PlayEffects = false; // 문은 바로 넘어간다 — 포탈 연출은 따로 검증
             PlayerSession.Reset();
             UnityEngine.Time.timeScale = 1f;
             SceneManager.LoadScene("Hub");
