@@ -21,6 +21,26 @@ namespace ParryRL
             }
         }
 
+        private static Sprite _fadeUp;
+
+        /// <summary>아래가 진하고 위로 갈수록 투명해지는 세로 그라데이션 (화면 아래 UI 받침 — 네모 상자 대신 자연스럽게 어둡게).</summary>
+        public static Sprite FadeUp
+        {
+            get
+            {
+                if (_fadeUp != null) return _fadeUp;
+                const int n = 64;
+                var tex = new Texture2D(1, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+                for (int y = 0; y < n; y++)
+                {
+                    float k = 1f - y / (n - 1f);
+                    tex.SetPixel(0, y, new Color(1f, 1f, 1f, k * k * (3f - 2f * k))); // 부드러운 S자
+                }
+                tex.Apply();
+                return _fadeUp = Sprite.Create(tex, new Rect(0, 0, 1, n), new Vector2(0.5f, 0.5f), 1f);
+            }
+        }
+
         public static Image Image(string name, RectTransform parent, Color color)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));

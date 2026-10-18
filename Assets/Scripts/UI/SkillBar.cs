@@ -66,6 +66,15 @@ namespace ParryRL
 
         public SkillBar(RectTransform canvasRoot)
         {
+            // 네모 받침 대신 화면 아래를 위로 갈수록 옅어지게 어둡게 — 바닥 지형 위에서도 슬롯이 읽히고 경계선이 보이지 않는다
+            var fade = UiKit.Image("BottomFade", canvasRoot, new Color(0f, 0f, 0f, 0.7f));
+            fade.sprite = UiKit.FadeUp;
+            fade.rectTransform.anchorMin = new Vector2(0f, 0f);
+            fade.rectTransform.anchorMax = new Vector2(1f, 0f);
+            fade.rectTransform.pivot = new Vector2(0.5f, 0f);
+            fade.rectTransform.anchoredPosition = Vector2.zero;
+            fade.rectTransform.sizeDelta = new Vector2(0f, 250f);
+
             var bar = new GameObject("SkillBar", typeof(RectTransform)).GetComponent<RectTransform>();
             bar.SetParent(canvasRoot, false);
             float slotOuter = SlotSize + Border * 2f;
@@ -73,9 +82,6 @@ namespace ParryRL
             float width = slotOuter * slotCount + Spacing * (slotCount - 1);
             UiKit.Place(bar, new Vector2(0.5f, 0f), new Vector2(0f, 26f), new Vector2(width, slotOuter + 42f));
 
-            // 바닥 지형 위에 겹쳐도 슬롯이 묻히지 않도록 어두운 받침
-            var backing = UiKit.Image("Backing", bar, new Color(0.05f, 0.05f, 0.08f, 0.75f));
-            UiKit.Stretch(backing.rectTransform, -18f);
 
             (PlayerAction action, string key, string glyph)[] defs =
             {

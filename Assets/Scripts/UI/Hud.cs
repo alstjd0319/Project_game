@@ -264,8 +264,9 @@ namespace ParryRL
                 var cur = _party.Current;
                 _combat ??= FindAnyObjectByType<PlayerCombat>();
                 bool ranged = _combat != null && _combat.IsRanged;
-                _characterText.text = $"{cur.displayName}  <size=22>[{cur.defenseName}] {(ranged ? "원거리" : "근접")}{PassiveLabel(cur.kind, ranged)}</size>";
-                _characterText.color = _combat != null ? _combat.WeaponColor : cur.color;
+                _characterText.text = $"{(ranged ? "원거리" : "근접")} · {cur.defenseName}{PassiveLabel(cur.kind, ranged)}";
+                // 작은 글씨라 무기 색을 밝게 섞어 배경 위에서도 읽히게
+                _characterText.color = Color.Lerp(_combat != null ? _combat.WeaponColor : cur.color, Color.white, 0.55f);
             }
 
             if (_gauge != null)
@@ -419,12 +420,20 @@ namespace ParryRL
             _screenFlash = UiKit.Image("ScreenFlash", _root, Color.clear);
             UiKit.Stretch(_screenFlash.rectTransform);
 
-            // 좌상단 상태 패널: 캐릭터 / 체력 / 도력
-            var panel = UiKit.Image("StatusPanel", _root, new Color(0f, 0f, 0f, 0.45f)).rectTransform;
+            // 좌상단 상태: 네모 상자 대신 화면 모서리를 부드럽게 어둡게 해서(가장자리가 보이지 않는 그림자) 배경이 밝아도 읽히게
+            var shade = UiKit.Image("StatusShade", _root, new Color(0f, 0f, 0f, 0.62f));
+            shade.sprite = FxSprites.Glow;
+            shade.rectTransform.anchorMin = shade.rectTransform.anchorMax = new Vector2(0f, 1f);
+            shade.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            shade.rectTransform.anchoredPosition = new Vector2(250f, -110f);
+            shade.rectTransform.sizeDelta = new Vector2(1250f, 560f);
+
+            // 좌상단 상태 패널: 체력 / 도력 / 레벨 / 무기 정보 (판 위에 바로 그린다)
+            var panel = UiKit.Image("StatusPanel", _root, Color.clear).rectTransform;
             UiKit.Place(panel, new Vector2(0, 1), new Vector2(24, -24), new Vector2(620, 236));
 
-            _characterText = UiKit.Text("Character", panel, 36, TextAnchor.UpperLeft);
-            UiKit.Place(_characterText.rectTransform, new Vector2(0, 1), new Vector2(16, -10), new Vector2(590, 48));
+            _characterText = UiKit.Text("Character", panel, 20, TextAnchor.UpperLeft);
+            UiKit.Place(_characterText.rectTransform, new Vector2(0, 1), new Vector2(16, -200), new Vector2(590, 30));
 
             var ui = GameAssets.Ui;
             if (ui != null && ui.hpFrame != null && ui.hpFill != null && ui.orbEmpty != null && ui.orbFull != null)
@@ -541,16 +550,16 @@ namespace ParryRL
         private void BuildStatusWithArt(RectTransform panel, UiArt ui)
         {
             _orbSprites = true;
-            UiKit.Place(panel, new Vector2(0, 1), new Vector2(24, -24), new Vector2(620, 252));
+            UiKit.Place(panel, new Vector2(0, 1), new Vector2(30, -26), new Vector2(620, 236));
 
             // 체력: 하트 + 틀 (틀의 어두운 홈 위에 초록 바가 차오른다)
             var heart = UiKit.Image("HeartIcon", panel, Color.white);
             heart.sprite = ui.iconHeart;
             heart.preserveAspect = true;
-            UiKit.Place(heart.rectTransform, new Vector2(0, 1), new Vector2(12, -56), new Vector2(40, 64));
+            UiKit.Place(heart.rectTransform, new Vector2(0, 1), new Vector2(12, -6), new Vector2(40, 64));
             var frame = UiKit.Image("HpFrame", panel, Color.white);
             frame.sprite = ui.hpFrame;
-            UiKit.Place(frame.rectTransform, new Vector2(0, 1), new Vector2(62, -62), new Vector2(544, 63));
+            UiKit.Place(frame.rectTransform, new Vector2(0, 1), new Vector2(62, -12), new Vector2(544, 63));
             _hpFill = UiKit.Image("HpFill", frame.rectTransform, Color.white);
             _hpFill.sprite = ui.hpFill;
             _hpFill.type = Image.Type.Filled;
@@ -566,7 +575,7 @@ namespace ParryRL
             _hpText.rectTransform.offsetMin = _hpText.rectTransform.offsetMax = Vector2.zero;
 
             // 도력 구슬 20개 (빈 구슬을 먼저 모두 깔고, 그 위에 찬 구슬을 얹는다)
-            const float cell = 26f, gap = 3f, midGap = 10f, rowY = -132f;
+            const float cell = 26f, gap = 3f, midGap = 10f, rowY = -84f;
             var thread = UiKit.Image("GaugeThread", panel, new Color(0.55f, 0.36f, 0.22f, 0.9f)).rectTransform;
             UiKit.Place(thread, new Vector2(0, 1), new Vector2(10, rowY - cell * 0.5f + 1f), new Vector2(604, 3));
             for (int i = 0; i < 20; i++)
@@ -590,18 +599,18 @@ namespace ParryRL
             var lantern = UiKit.Image("LanternIcon", panel, Color.white);
             lantern.sprite = ui.iconLantern;
             lantern.preserveAspect = true;
-            UiKit.Place(lantern.rectTransform, new Vector2(0, 1), new Vector2(14, -160), new Vector2(22, 44));
+            UiKit.Place(lantern.rectTransform, new Vector2(0, 1), new Vector2(14, -112), new Vector2(22, 44));
             _gaugeText = UiKit.Text("GaugeText", panel, 22, TextAnchor.MiddleLeft);
-            UiKit.Place(_gaugeText.rectTransform, new Vector2(0, 1), new Vector2(42, -166), new Vector2(560, 32));
+            UiKit.Place(_gaugeText.rectTransform, new Vector2(0, 1), new Vector2(42, -118), new Vector2(560, 32));
 
             // 레벨 + 경험치: 구리 바 위에 보라 채움
             _levelText = UiKit.Text("Level", panel, 26, TextAnchor.MiddleLeft);
             _levelText.fontStyle = FontStyle.Bold;
             _levelText.color = new Color(0.8f, 0.7f, 1f);
-            UiKit.Place(_levelText.rectTransform, new Vector2(0, 1), new Vector2(16, -208), new Vector2(80, 28));
+            UiKit.Place(_levelText.rectTransform, new Vector2(0, 1), new Vector2(16, -158), new Vector2(80, 28));
             var xpBg = UiKit.Image("XpBg", panel, Color.white);
             xpBg.sprite = ui.barEmpty != null ? ui.barEmpty : null;
-            UiKit.Place(xpBg.rectTransform, new Vector2(0, 1), new Vector2(96, -210), new Vector2(508, 24));
+            UiKit.Place(xpBg.rectTransform, new Vector2(0, 1), new Vector2(96, -160), new Vector2(508, 24));
             _xpFill = UiKit.Image("XpFill", xpBg.rectTransform, Color.white);
             _xpFill.sprite = ui.purpleFill;
             _xpFill.type = Image.Type.Filled;
@@ -612,6 +621,7 @@ namespace ParryRL
             _xpFill.rectTransform.offsetMin = _xpFill.rectTransform.offsetMax = Vector2.zero;
             _xpText = UiKit.Text("XpText", xpBg.rectTransform, 16, TextAnchor.MiddleCenter);
             UiKit.Stretch(_xpText.rectTransform);
+            UiKit.Place(_characterText.rectTransform, new Vector2(0, 1), new Vector2(16, -194), new Vector2(590, 30));
         }
 
 
