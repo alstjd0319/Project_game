@@ -6,7 +6,7 @@ using UnityEngine.TestTools;
 
 namespace ParryRL.Tests
 {
-    /// <summary>불가살이 특수 패턴 (bulgasari-vfx 이펙트 + EnemyAttack 판정): 가시 발사 · 땅 찍기 · 돌진(2페이즈).</summary>
+    /// <summary>불가살이 특수 패턴 (make_bossfx 이펙트 + EnemyAttack 판정): 가시 발사 · 땅 찍기 · 돌진(2페이즈).</summary>
     public class BossPatternTests
     {
         private static BossController Boss => BossController.Instance;
@@ -54,7 +54,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(5, spines.Length, "가시 다섯 개");
             Assert.Greater(Boss.Enemy.PressCueCount, cues, "빨간 느낌표");
             Assert.IsTrue(spines.All(sp => sp.GetComponentsInChildren<SpriteRenderer>().Any(r => r.sprite != null && r.sprite.name.StartsWith("bossfx_spine"))),
-                "가시마다 날아가는 가시 그림 (bulgasari-vfx 시트)");
+                "가시마다 날아가는 가시 그림");
             yield return WaitPatternEnd();
             Assert.AreEqual(1, Boss.PatternCount);
             Assert.IsFalse(Boss.Enemy.Frozen, "패턴이 끝나면 다시 움직인다");
@@ -73,7 +73,13 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(0.3f);
             Assert.Greater(Mathf.Abs(waves[0].transform.position.x - waves[1].transform.position.x), Mathf.Abs(x0 - x1), "서로 멀어진다");
             foreach (var w in waves) Assert.Less(w.transform.position.y, 1.2f, "바닥을 탄다 (점프로 넘을 수 있는 높이)");
-            Assert.IsTrue(HasFx("bossfx_slam"), "땅 찍기 충격파 그림 (bulgasari-vfx 시트)");
+            Assert.IsTrue(HasFx("bossfx_slam"), "땅 찍기 충격파 그림");
+            foreach (var w in waves)
+            {
+                Assert.IsTrue(w.GetComponentsInChildren<SpriteRenderer>().Any(r => r != w.GetComponent<SpriteRenderer>() && r.sprite != null && r.sprite.name.StartsWith("bossfx_wave")),
+                    "충격파마다 가시 파도 그림이 붙는다");
+                Assert.IsFalse(w.GetComponent<SpriteRenderer>().enabled, "판정 네모(주황)는 숨겨진다");
+            }
         }
 
         [UnityTest]
@@ -85,10 +91,10 @@ namespace ParryRL.Tests
             bool trail = false;
             for (float w = 0f; Boss.IsUsingPattern && w < 6f; w += Time.deltaTime)
             {
-                trail |= HasFx("bossfx_dash");
+                trail |= HasFx("bossfx_dashtrail");
                 yield return null;
             }
-            Assert.IsTrue(trail, "돌진 잔상 그림 (bulgasari-vfx 시트)");
+            Assert.IsTrue(trail, "돌진 잔상 그림");
             Assert.Less(Boss.transform.position.x, x0 - 4f, "왼쪽(플레이어 쪽)으로 달려갔다");
 
             // 다시: 이번엔 플레이어가 패링 → 판정이 부서지고 그 자리에서 멈춘다

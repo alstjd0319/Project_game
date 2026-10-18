@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 1ddfc2264cc2b44a79250ff95e44c79f
+guid: b00f5401ff6ec45919bc5bcff9c4acf1
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1577625874992670453
-    second: bossfx_dash_6_0
+      213: 6520176143459337570
+    second: bossfx_wave_1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -115,13 +115,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bossfx_dash_6_0
+      name: bossfx_wave_1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 96
-        height: 96
+        width: 128
+        height: 144
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -130,8 +130,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5f6276bef5ad4e510800000000000000
-      internalID: 1577625874992670453
+      spriteID: 265ced738a15c7a50800000000000000
+      internalID: 6520176143459337570
       vertices: []
       indices: 
       edges: []

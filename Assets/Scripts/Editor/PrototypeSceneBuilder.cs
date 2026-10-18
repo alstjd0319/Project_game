@@ -824,9 +824,11 @@ namespace ParryRL.EditorTools
             fx.heavyWarning = LoadClip(FxDir, "fx", "heavy_warning", 12f);
             fx.dustLand = LoadClip(FxDir, "fx", "dust_land", 14f);
             fx.yogiAbsorb = LoadClip(FxDir, "fxhero", "yogi_gain", 12f);
-            fx.bossDash = LoadClip(FxDir, "bossfx", "dash", 16f);    // 불가살이 특수 패턴 (Tools/gwimun_sprites/cut_bossfx.py)
+            fx.bossDash = LoadClip(FxDir, "bossfx", "dash", 16f);    // 불가살이 특수 패턴 (Tools/gwimun_sprites/make_bossfx.py가 그림)
+            fx.bossDashTrail = LoadClip(FxDir, "bossfx", "dashtrail", 14f);
             fx.bossSpine = LoadClip(FxDir, "bossfx", "spine", 14f);
             fx.bossSlam = LoadClip(FxDir, "bossfx", "slam", 14f);
+            fx.bossWave = LoadClip(FxDir, "bossfx", "wave", 12f);
             fx.gatePortal = LoadClip(FxDir, "fx", "gate_portal", 10f);
             fx.portalSwirl = LoadClip(FxDir, "fx", "portal_swirl", 14f); // 16장 (Tools/gwimun_sprites/make_portal_swirl.py), 한 바퀴 약 1.1초
             fx.staffSlam = LoadClip(FxDir, "fxhero", "quake_wave", 12f);

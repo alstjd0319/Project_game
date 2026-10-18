@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
@@ -314,6 +315,13 @@ namespace ParryRL.Tests
             yield return null;
             Assert.AreEqual("slash", art.Clip, "베기 박스가 나가는 순간 베는 그림");
             Assert.LessOrEqual(art.Art.slashHitFrame, art.Frame, "칼을 뻗은 장면부터 (판정-시각 일치)");
+            var slash = Object.FindObjectsByType<EnemyAttack>().FirstOrDefault(a => a.IsSlash);
+            Assert.IsNotNull(slash, "베기 판정");
+            Assert.IsFalse(slash.GetComponent<SpriteRenderer>().enabled, "공격 범위 네모는 보여주지 않는다 (몸 그림이 베는 모습)");
+            GameTuning.Current.showHitboxes = true;
+            yield return null;
+            if (slash != null) Assert.IsTrue(slash.GetComponent<SpriteRenderer>().enabled, "판정 상자 보기에서만 보인다");
+            GameTuning.Current.showHitboxes = false;
 
             while (melee.IsRecovering) yield return null;
             yield return null;

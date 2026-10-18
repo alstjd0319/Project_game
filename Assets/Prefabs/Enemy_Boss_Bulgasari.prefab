@@ -351,6 +351,8 @@ MonoBehaviour:
   phase2NormalDamage: 16
   phase2RangeReach: {x: 4.6, y: 5.8}
   phase2Heights: {x: 1.4, y: 2.8, z: 3.6}
+  parryStreakToStun: 5
+  parryStunTime: 2.5
   firstPatternDelay: 5
   patternCooldown: {x: 7, y: 10}
   patternWindup: 1

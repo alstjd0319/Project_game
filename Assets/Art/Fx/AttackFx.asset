@@ -203,11 +203,16 @@ MonoBehaviour:
     - {fileID: 21300000, guid: faf6510cdff314c218558c405c9b1217, type: 3}
     - {fileID: 21300000, guid: fd1f2fd8dd2ff47d4b64fed8e666fd0e, type: 3}
     - {fileID: 21300000, guid: e0a37ad33e22044819359a85cb8f4b4e, type: 3}
-    - {fileID: 21300000, guid: 48070574aca294cffbcf4980c32cacb4, type: 3}
-    - {fileID: 21300000, guid: a992f09c3af9f400fbf81616dcd1a6ec, type: 3}
-    - {fileID: 21300000, guid: 1ddfc2264cc2b44a79250ff95e44c79f, type: 3}
-    - {fileID: 21300000, guid: 417adb78add30458a9c91f588472b65b, type: 3}
     fps: 16
+  bossDashTrail:
+    frames:
+    - {fileID: 21300000, guid: 2d81977ac61ab4701940c585bce7545f, type: 3}
+    - {fileID: 21300000, guid: 61fb7529ef2134800ac8a7a01ce4046f, type: 3}
+    - {fileID: 21300000, guid: 08a67816178294ce5a955dfd2600a610, type: 3}
+    - {fileID: 21300000, guid: 022a1db2776344d76ae1306230ef00fc, type: 3}
+    - {fileID: 21300000, guid: eb275ffc987cb43348652f9d2ef4a249, type: 3}
+    - {fileID: 21300000, guid: 352977ba3e1934191a68c645027c0e5d, type: 3}
+    fps: 14
   bossSpine:
     frames:
     - {fileID: 21300000, guid: 240dfc4c11d274be0a13afe9d78e4bf8, type: 3}
@@ -216,8 +221,6 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 676b1291e4dee41029beced0db2c4968, type: 3}
     - {fileID: 21300000, guid: e0d4ad20998d04d59a6cfd0a0e849c77, type: 3}
     - {fileID: 21300000, guid: 41e5b6c4096a34e0f9b63e3f087a3583, type: 3}
-    - {fileID: 21300000, guid: b6fc517c7d4234d9b91649b2ec3a494a, type: 3}
-    - {fileID: 21300000, guid: 406f84527ee71454ca41ff3aa030dce4, type: 3}
     fps: 14
   bossSlam:
     frames:
@@ -229,4 +232,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 31d4d97a126ef4f4ca1ba96912880ad7, type: 3}
     - {fileID: 21300000, guid: 2d26a79169ce740928de0b5e478993ba, type: 3}
     - {fileID: 21300000, guid: 5540e25fb9ff24e1f9c38cabb63423dc, type: 3}
+    - {fileID: 21300000, guid: ba3ee5437d5164e579aa68ea048c3257, type: 3}
+    - {fileID: 21300000, guid: cb7c736eeaadf4a36a8ba13f59049b1b, type: 3}
     fps: 14
+  bossWave:
+    frames:
+    - {fileID: 21300000, guid: d4033843af63047f4aa7683f457a093e, type: 3}
+    - {fileID: 21300000, guid: b00f5401ff6ec45919bc5bcff9c4acf1, type: 3}
+    - {fileID: 21300000, guid: 1f7520bb62fd74481ba81e1e47dfed83, type: 3}
+    - {fileID: 21300000, guid: 642e2ebc822774de49fddb0fcef1d9c3, type: 3}
+    - {fileID: 21300000, guid: be705b4ff1f564e34948bf11fa042a66, type: 3}
+    - {fileID: 21300000, guid: 96a679d4591234559bbfd5fdda74b92d, type: 3}
+    fps: 12

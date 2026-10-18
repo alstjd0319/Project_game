@@ -8,7 +8,7 @@ namespace ParryRL
     /// 화면 상단 보스 체력바(퍼센트) · 체력 50% 아래에서 변신(무적·멈춤 + 변신 동작) → 2페이즈(더 큰 모습·판정, 더 빠른 공격 박자, 강공격 조금 더 자주).
     /// 1페이즈에서는 체력이 1 아래로 내려가지 않아(<see cref="EnemyController.HpFloor"/>) 한 방에 2페이즈를 건너뛰고 죽지 않는다.
     /// </summary>
-    /// <summary>보스 특수 패턴 (이펙트: bulgasari-vfx 시트 → <see cref="AttackFxArt"/>.bossDash/bossSpine/bossSlam, 판정: <see cref="EnemyAttack"/>).</summary>
+    /// <summary>보스 특수 패턴 (이펙트: make_bossfx.py 그림 → <see cref="AttackFxArt"/>.bossSpine/bossSlam/bossWave/bossDash/bossDashTrail, 판정: <see cref="EnemyAttack"/>).</summary>
     public enum BossPattern { SpineVolley, GroundSlam, Dash }
 
     [RequireComponent(typeof(EnemyController))]
@@ -207,7 +207,6 @@ namespace ParryRL
             if (_sprite != null && art != null) _sprite.PlayOnce(art.heavyWindup);
             var cue = PressCueIcon.Spawn(_enemy, manual: true);
             Sfx.Play(SfxId.HeavyCue);
-            Fx.Ring(transform.position, PatternColor, 1f, 4f, 0.12f, 0.4f);
             float redAt = windup - GameTuning.Current.defenseActiveTime * 0.8f;
             bool red = false;
             for (float t = 0f; t < windup; t += Time.deltaTime)
@@ -236,6 +235,8 @@ namespace ParryRL
 
         private float Half => transform.localScale.x * 0.5f;
         private float BodyHeight => transform.localScale.y;
+        /// <summary>이펙트 그림 배율: 그림은 1페이즈 몸 높이(3유닛) 기준으로 그렸다 — 2페이즈(4)에선 그만큼 크게.</summary>
+        private float FxScale => BodyHeight / 3f;
 
         /// <summary>가시 발사: 입 앞에서 플레이어 쪽으로 부채꼴 (고정 속도 투사체 — 하나하나 패링할 수 있다).</summary>
         private void FireSpines(float dir, EnemyArt art)
@@ -250,9 +251,8 @@ namespace ParryRL
                 float angle = (i - (spineCount - 1) * 0.5f) * spineSpread;
                 Vector2 d = Quaternion.Euler(0f, 0f, angle) * aim;
                 var spine = EnemyAttack.Spawn(_enemy, AttackType.Normal, origin, d, spineSize, spineSpeed, spineRange, PatternColor, spineDamage);
-                if (fx != null) spine.AttachProjectileArt(fx.bossSpine, 0, 8, 1.4f, rotate: true); // 날아가는 가시 그림 (방향으로 돌림)
+                if (fx != null) spine.AttachProjectileArt(fx.bossSpine, 0, 6, 1f, rotate: true); // 날아가는 가시 그림 (방향으로 돌림)
             }
-            Fx.Ring(origin, PatternColor, 0.3f, 2f, 0.1f, 0.25f);
             Sfx.Play(SfxId.HeavyCue, 0.6f);
         }
 
@@ -261,13 +261,15 @@ namespace ParryRL
         {
             if (_sprite != null && art != null) _sprite.PlayOnce(art.heavySlash);
             var hit = new Vector2(transform.position.x + dir * Half, _enemy.FeetY);
-            FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossSlam : null, hit + Vector2.up * 0.25f, 4.2f); // 바닥에 퍼지는 원형 충격파·균열
+            // 찍은 자리 충격·균열·파편 (그림의 바닥선이 가운데에서 0.8유닛 아래 — 몸 크기에 맞춰 키운다)
+            FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossSlam : null, hit + Vector2.up * (0.8f * FxScale), FxScale);
             if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.35f, 0.35f);
-            Fx.Ring(hit, PatternColor, 0.5f, 5f, 0.12f, 0.35f);
             foreach (float d in new[] { dir, -dir })
             {
                 var start = new Vector2(transform.position.x + d * (Half + 0.4f), _enemy.FeetY + waveSize.y * 0.5f);
-                EnemyAttack.Spawn(_enemy, d == dir ? AttackType.Heavy : AttackType.Normal, start, new Vector2(d, 0f), waveSize, waveSpeed, waveRange, PatternColor, slamDamage);
+                var wave = EnemyAttack.Spawn(_enemy, d == dir ? AttackType.Heavy : AttackType.Normal, start, new Vector2(d, 0f), waveSize, waveSpeed, waveRange, PatternColor, slamDamage);
+                // 바닥을 뚫고 솟는 쇠 가시 파도 (그림의 바닥선 = 판정 상자 아랫면) — 그림이 붙으면 판정 네모는 숨겨진다
+                if (GameAssets.AttackFx != null) wave.AttachProjectileArt(GameAssets.AttackFx.bossWave, 0, 6, 1f);
             }
         }
 
@@ -279,7 +281,7 @@ namespace ParryRL
             var size = new Vector2(1.2f, BodyHeight * 0.8f);
             var front = new Vector2(transform.position.x + dir * (Half + size.x * 0.5f), _enemy.FeetY + size.y * 0.5f);
             var hitbox = EnemyAttack.Spawn(_enemy, AttackType.Heavy, front, new Vector2(dir, 0f), size, dashSpeed, dashDistance, PatternColor, dashDamage);
-            if (GameAssets.AttackFx != null) hitbox.AttachProjectileArt(GameAssets.AttackFx.bossDash, 0, 8, 3.2f); // 박치기 판정에 돌진 속도선 그림
+            if (GameAssets.AttackFx != null) hitbox.AttachProjectileArt(GameAssets.AttackFx.bossDash, 0, 4, FxScale); // 박치기 판정에 앞 압력파 그림
             DashTrail(dir);
             float streak = 0f;
             while (hitbox != null && !_enemy.IsDead)
@@ -307,7 +309,7 @@ namespace ParryRL
         private void DashTrail(float dir)
         {
             var at = new Vector2(transform.position.x - dir * Half * 0.4f, _enemy.FeetY + BodyHeight * 0.45f);
-            FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossDash : null, at, 3.2f, dir < 0f, 6); // 보스 그림(7) 뒤 — 지나간 자리에 남는 잔상
+            FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossDashTrail : null, at, FxScale, dir < 0f, 6); // 보스 그림(7) 뒤 — 지나간 자리에 남는 잔상
         }
 
         /// <summary>2페이즈로 변신 (테스트도 부른다 — 체력과 상관없이).</summary>

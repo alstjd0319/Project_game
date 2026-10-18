@@ -112,6 +112,7 @@ namespace ParryRL
             attack._maxDistance = maxDistance;
             attack._sr = go.GetComponent<SpriteRenderer>();
             attack._color = color;
+            attack.ApplyVisual();
             return attack;
         }
 
@@ -176,13 +177,17 @@ namespace ParryRL
 
         private void ApplyVisual()
         {
+            // 판정 네모: 평소 숨김, 연습 스위치 "판정 상자 보기"로만 반투명하게 본다.
+            // 그림이 없는 공격(창귀·보스 베기 — 베는 모습은 몸 그림이 맡는다)도 범위 네모를 보여주지 않는다 (사용자 요청, 2026-10-19).
+            bool overlay = GameTuning.Current.showHitboxes;
             if (_art == null)
             {
-                _sr.color = _color;
+                _sr.enabled = overlay;
+                var plain = _color;
+                if (overlay) plain.a *= 0.45f;
+                _sr.color = plain;
                 return;
             }
-            // 판정 네모: 평소 숨김, 연습 스위치 "판정 상자 보기"로 그림 위에 반투명하게 겹쳐 본다
-            bool overlay = GameTuning.Current.showHitboxes;
             _sr.enabled = overlay;
             var box = _color;
             if (overlay) box.a *= 0.45f;
@@ -194,7 +199,11 @@ namespace ParryRL
 
         private void LateUpdate()
         {
-            if (_art == null) return;
+            if (_art == null)
+            {
+                ApplyVisual(); // "판정 상자 보기"를 켜고 끄면 바로 반영
+                return;
+            }
             if (_loopArt)
             {
                 _loopTime += Time.deltaTime;
@@ -315,8 +324,7 @@ namespace ParryRL
             _resolved = true;
             _collider.enabled = false;
             if (_art != null) PlayArtBreakup();
-            else if (_slash) Fx.Flash(Tip, 0.5f, 0.2f, _color, 0.08f);
-            else Fx.Flash(transform.position, transform.localScale.x, transform.localScale.x * 0.5f, _color, 0.1f);
+            else if (!_slash) Fx.Flash(transform.position, transform.localScale.x, transform.localScale.x * 0.5f, _color, 0.1f);
             Destroy(gameObject);
         }
     }

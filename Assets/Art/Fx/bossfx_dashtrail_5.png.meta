@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: b6fc517c7d4234d9b91649b2ec3a494a
+guid: 352977ba3e1934191a68c645027c0e5d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8625447487262329287
-    second: bossfx_spine_6_0
+      213: 6952541456171148857
+    second: bossfx_dashtrail_5_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -115,13 +115,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bossfx_spine_6_0
+      name: bossfx_dashtrail_5_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 96
-        height: 96
+        width: 320
+        height: 256
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -130,8 +130,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7c98e034aceb3b770800000000000000
-      internalID: 8625447487262329287
+      spriteID: 93622454e936c7060800000000000000
+      internalID: 6952541456171148857
       vertices: []
       indices: 
       edges: []
