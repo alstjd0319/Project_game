@@ -354,7 +354,8 @@ namespace ParryRL
                 var art = fx == null ? null : stage == 1 ? fx.meleeAttack : stage == 2 ? fx.meleeAttack2 : fx.meleeAttack3;
                 // 1·2단은 앞쪽 박스, 3단 마무리는 플레이어를 가운데로 양옆을 휩쓴다 (그림도 몸을 감싸는 회오리)
                 var center = stage == 3 ? new Vector2(pos.x, pos.y) : new Vector2(pos.x + dir * box.x * 0.5f, pos.y);
-                System.Action<EnemyController> onHit = stage == 3 ? e => e.Stun(comboStun3) : null;
+                // 3단 기절은 일반 몬스터만 — 보스(슈퍼 아머)에겐 하던 공격이 끊겨 경직처럼 되므로 걸지 않는다 (너무 쉬워진다는 사용자 피드백)
+                System.Action<EnemyController> onHit = stage == 3 ? e => { if (!e.SuperArmor) e.Stun(comboStun3); } : null;
                 int hits = MeleeStrike.Spawn(center, box, new Color(color.r, color.g, color.b, 0.45f), damage, hit, onHit, art, dir, follow: transform);
                 if (hits > 0 && HitFeel.Instance != null)
                 {

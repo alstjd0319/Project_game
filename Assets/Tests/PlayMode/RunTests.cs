@@ -50,6 +50,21 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 임시_보스방_바로_가기는_마지막_보스방을_연다()
+        {
+            yield return TestScene.LoadHub();
+            GameManager.GoToBossRoom();
+            yield return null;
+            yield return null;
+            Assert.IsTrue(RunState.Active);
+            Assert.AreEqual(RoomType.Boss, RunState.Current);
+            Assert.IsTrue(RunState.IsFinalRoom);
+            float t = 0f;
+            while (BossController.Instance == null && t < 5f) { t += Time.deltaTime; yield return null; }
+            Assert.IsNotNull(BossController.Instance, "불가살이가 나온다");
+        }
+
+        [UnityTest]
         public IEnumerator 테스트로_플레이_씬을_바로_열면_방_흐름_없이_몬스터가_계속_나온다()
         {
             yield return TestScene.LoadPrototype();
@@ -246,7 +261,7 @@ namespace ParryRL.Tests
             var red = RunItemCatalog.All.First(i => i.Id == "bell_red");
             Assert.AreEqual(1f, SkillTreeState.MeleeAttackMultiplier, 0.001f);
             RunState.AddItem(red);
-            Assert.AreEqual(1.1f, SkillTreeState.MeleeAttackMultiplier, 0.001f);
+            Assert.AreEqual(1.15f, SkillTreeState.MeleeAttackMultiplier, 0.001f);
             Assert.AreEqual(1f, SkillTreeState.RangedAttackMultiplier, 0.001f, "근접 아이템은 원거리에 영향 없음");
         }
 

@@ -19,8 +19,8 @@ namespace ParryRL
     {
         public static readonly RunItem[] All =
         {
-            new() { Id = "bell_red", Name = "붉은 방울", Stat = SkillStat.MeleeAttackPercent, Amount = 10, Unit = "%", StatName = "근접 공격력" },
-            new() { Id = "bell_ink", Name = "먹 방울", Stat = SkillStat.RangedAttackPercent, Amount = 10, Unit = "%", StatName = "원거리 공격력" },
+            new() { Id = "bell_red", Name = "붉은 방울", Stat = SkillStat.MeleeAttackPercent, Amount = 15, Unit = "%", StatName = "근접 공격력" },
+            new() { Id = "bell_ink", Name = "먹 방울", Stat = SkillStat.RangedAttackPercent, Amount = 15, Unit = "%", StatName = "원거리 공격력" },
             new() { Id = "amber", Name = "호박 구슬", Stat = SkillStat.MaxHp, Amount = 20, Unit = "", StatName = "최대 체력" },
             new() { Id = "rosary", Name = "도력 염주", Stat = SkillStat.GaugeGain, Amount = 1, Unit = "", StatName = "패링 성공 도력" },
             new() { Id = "scroll", Name = "배움 두루마리", Stat = SkillStat.XpPercent, Amount = 20, Unit = "%", StatName = "경험치 획득" },

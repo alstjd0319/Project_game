@@ -114,6 +114,9 @@ namespace ParryRL
 
         // ───────────── 정적 API ─────────────
 
+        /// <summary>마지막으로 띄운 팝업 글자 (테스트용).</summary>
+        public static string PopupMessage => _instance != null ? _instance._popupText.text : null;
+
         /// <summary>화면 상단 중앙의 판정 문구 (패링!/강공격 패링! 등).</summary>
         public static void Popup(string message, Color color, bool big)
         {
@@ -340,7 +343,8 @@ namespace ParryRL
         private static string PassiveLabel(CharacterKind kind, bool ranged)
         {
             var t = GameTuning.Current;
-            float atk = ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(kind);
+            // 실제로 곱해지는 배율 (초반 배율 × 무기 × 스킬 트리·아이템) — 성장하는 게 숫자로 보이게
+            float atk = t.startDamageScale * (ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(kind)) * SkillTreeState.AttackMultiplier(ranged);
             float red = t.DamageReduction(kind);
             var parts = new List<string>();
             if (!Mathf.Approximately(atk, 1f)) parts.Add($"공격 ×{atk:0.##}");

@@ -54,21 +54,36 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 초반엔_약하게_시작하고_스킬_트리로_강해진다()
+        {
+            yield return TestScene.LoadHub();
+            Assert.AreEqual(0.7f, new GameTuning().startDamageScale, 0.001f, "기본 초반 배율 0.7");
+            GameTuning.Current.startDamageScale = 0.7f;
+            Level.Restore(30, 0);
+            var hit = HitInfo.Create(DamageSource.AttackSkill, CharacterKind.Player, Vector2.zero);
+            float weapon = GameTuning.Current.playerAttackMultiplier;
+            Assert.AreEqual(Mathf.RoundToInt(100 * 0.7f * weapon), DamageCalc.Compute(100, hit, null), 1, "처음엔 30% 약하다");
+            foreach (var id in new[] { "mel1", "mel1", "mel1", "mel2", "mel2", "mel3" }) SkillTreeState.TryBuy(Idx(id), 30);
+            Assert.AreEqual(2.1f, SkillTreeState.MeleeAttackMultiplier, 0.001f, "근접 줄을 다 익히면 +110%");
+            Assert.Greater(DamageCalc.Compute(100, hit, null), Mathf.RoundToInt(100 * weapon * 1.4f), "다 키우면 예전(배율 1) 기준보다 강하다");
+        }
+
+        [UnityTest]
         public IEnumerator 공격력_경험치_도력_보너스가_계산에_반영된다()
         {
             yield return TestScene.LoadHub();
             Level.Restore(30, 0);
             var hit = HitInfo.Create(DamageSource.AttackSkill, CharacterKind.Player, Vector2.zero);
             int before = DamageCalc.Compute(100, hit, null);
-            SkillTreeState.TryBuy(Idx("mel1"), 30); SkillTreeState.TryBuy(Idx("mel1"), 30); // +10%
-            Assert.AreEqual(Mathf.RoundToInt(before * 1.10f), DamageCalc.Compute(100, hit, null), 1);
+            SkillTreeState.TryBuy(Idx("mel1"), 30); SkillTreeState.TryBuy(Idx("mel1"), 30); // +20%
+            Assert.AreEqual(Mathf.RoundToInt(before * 1.20f), DamageCalc.Compute(100, hit, null), 1);
             var ranged = HitInfo.Create(DamageSource.AttackSkill, CharacterKind.Player, Vector2.zero);
             ranged.Ranged = true;
             Assert.AreEqual(1f, SkillTreeState.RangedAttackMultiplier, 0.001f, "근접 트리는 원거리에 영향이 없다");
             int rangedBefore = DamageCalc.Compute(100, ranged, null);
-            SkillTreeState.TryBuy(Idx("rng1"), 30); // 원거리 +5%
-            Assert.AreEqual(Mathf.RoundToInt(rangedBefore * 1.05f), DamageCalc.Compute(100, ranged, null), 1);
-            Assert.AreEqual(Mathf.RoundToInt(before * 1.10f), DamageCalc.Compute(100, hit, null), 1, "원거리 트리는 근접에 영향이 없다");
+            SkillTreeState.TryBuy(Idx("rng1"), 30); // 원거리 +10%
+            Assert.AreEqual(Mathf.RoundToInt(rangedBefore * 1.10f), DamageCalc.Compute(100, ranged, null), 1);
+            Assert.AreEqual(Mathf.RoundToInt(before * 1.20f), DamageCalc.Compute(100, hit, null), 1, "원거리 트리는 근접에 영향이 없다");
             SkillTreeState.TryBuy(Idx("res1"), 30);
             Assert.AreEqual(1.1f, SkillTreeState.XpMultiplier, 0.001f);
             SkillTreeState.TryBuy(Idx("res2"), 30);

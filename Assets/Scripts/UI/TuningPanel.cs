@@ -338,6 +338,7 @@ namespace ParryRL
             AddSlider("받는 피해 감소", 0f, 0.8f, 0.05f, "0%", () => T.playerDamageReduction, v => T.playerDamageReduction = v);
             AddSlider("이동 속도", 2f, 10f, 0.25f, "0.00", () => T.playerMoveSpeed, v => T.playerMoveSpeed = v);
             AddSlider("원거리 공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.rangedAttackMultiplier, v => T.rangedAttackMultiplier = v);
+            AddSlider("초반 데미지 배율 (모든 딜, 성장 전)", 0.3f, 1.5f, 0.05f, "0.00", () => T.startDamageScale, v => T.startDamageScale = v);
             AddSlider("무기 전환 쿨타임 (초)", 0f, 2f, 0.05f, "0.00", () => T.weaponSwitchCooldown, v => T.weaponSwitchCooldown = v);
             Space(10f);
             var note = UiKit.Text("Note", Page, 17, TextAnchor.UpperLeft, outline: false);
@@ -393,6 +394,7 @@ namespace ParryRL
                 T.backgroundZone = (T.backgroundZone + 1) % Mathf.Max(1, count);
                 GameTuning.Save();
             });
+            AddButton("보스방으로 바로 가기 (임시 테스트 — F2)", GameManager.GoToBossRoom);
             AddButton("도력 가득 채우기", () => { if (_gauge != null) _gauge.Add(_gauge.Max); });
             AddButton("체력 회복", () => { if (_party != null) _party.RestoreFullHp(); });
             AddButton("스킬 트리 초기화 (익힌 노드 전부 되돌리기)", () =>

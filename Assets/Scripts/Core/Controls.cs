@@ -30,6 +30,8 @@ namespace ParryRL
 
         // 보조 창 (평소엔 접혀 있음)
         public const KeyCode TuningPanel = KeyCode.F1;
+        /// <summary>(임시 테스트용) F2 = 보스방으로 바로.</summary>
+        public const KeyCode DebugBossRoom = KeyCode.F2;
 
         public static float Horizontal
         {

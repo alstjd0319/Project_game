@@ -45,6 +45,7 @@ namespace ParryRL
             if (Input.GetKeyDown(Controls.Restart) && (IsPaused || IsGameOver)) Restart();
             if (Input.GetKeyDown(Controls.MainMenu) && (IsPaused || IsGameOver)) GoToStartMenu();
             if (Input.GetKeyDown(Controls.Hub) && (IsPaused || IsGameOver) && !InHub) LoadHub();
+            if (Input.GetKeyDown(Controls.DebugBossRoom)) GoToBossRoom();
         }
 
         public void SetPaused(bool paused)
@@ -90,6 +91,13 @@ namespace ParryRL
             PlayerSession.Capture(); // 체력·레벨·도력·무기를 가져간다
             Time.timeScale = 1f;
             SceneManager.LoadScene(RunSceneName);
+        }
+
+        /// <summary>(임시 테스트용) 보스방으로 바로 간다 — 새 판의 마지막 방(불가살이). 체력·레벨·도력은 지금 것 그대로, 체력이 0이면 가득.</summary>
+        public static void GoToBossRoom()
+        {
+            RunState.BeginAtBoss();
+            LoadRun();
         }
 
         /// <summary>사당(대기 씬)으로 간다.</summary>

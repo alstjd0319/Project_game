@@ -50,10 +50,14 @@ namespace ParryRL
         [SerializeField] private float waveSpeed = 8f;
         [SerializeField] private float waveRange = 12f;
         [SerializeField] private Vector2 waveSize = new(0.8f, 1.0f);
-        [Header("돌진 (2페이즈) — 플레이어 쪽으로 몸통 박치기 (패링하면 멈춘다)")]
+        [Header("돌진 — 플레이어가 멀리 있으면 몸통 박치기로 달려온다 (패링하면 멈춘다)")]
         [SerializeField] private int dashDamage = 22;
         [SerializeField] private float dashSpeed = 14f;
-        [SerializeField] private float dashDistance = 16f;
+        [SerializeField, Tooltip("최대 돌진 거리")] private float dashDistance = 16f;
+        [SerializeField, Tooltip("플레이어가 있던 자리에서 이만큼 더 달린 뒤 멈춘다")] private float dashOvershoot = 2.5f;
+        [SerializeField, Tooltip("이 거리(유닛) 이상 떨어져 있으면 '멀다'")] private float dashTriggerDistance = 8f;
+        [SerializeField, Tooltip("이만큼(초) 계속 멀리 있으면 특수 패턴 간격과 상관없이 돌진")] private float dashFarTime = 1.2f;
+        [SerializeField, Tooltip("멀어서 하는 돌진 사이 최소 간격(초, Tempo 적용)")] private float dashCooldown = 5f;
 
         private static readonly Color PatternColor = new(1f, 0.5f, 0.15f, 0.9f); // 용암빛 주황 (빨강은 강공격 경고색)
 
@@ -68,6 +72,8 @@ namespace ParryRL
         public int PatternCount { get; private set; }
         public BossPattern LastPattern { get; private set; }
         private float _patternTimer;
+        private float _farTime;      // 플레이어가 계속 멀리 있었던 시간
+        private float _dashTimer;    // 멀어서 하는 돌진 쿨타임
         private Coroutine _patternRoutine;
         private Transform _player;
         public int Phase { get; private set; } = 1;
@@ -88,16 +94,109 @@ namespace ParryRL
 
         private void Start()
         {
-            Hud.ShowBossBar(bossName, () => _enemy != null ? _enemy.HpRatio : 0f, () => Phase, ParryStreakText);
             _combat = FindAnyObjectByType<PlayerCombat>();
             _party = FindAnyObjectByType<PlayerParty>();
             if (_combat != null) _combat.DefenseSucceeded += OnParried;
             if (_party != null) _party.Damaged += OnPlayerHurt;
             _patternTimer = firstPatternDelay;
+            _dashTimer = dashFarTime; // 방에 들어오자마자 달려들지는 않게
             var defense = FindAnyObjectByType<PlayerDefense>();
             if (defense != null) _player = defense.transform;
-            Hud.Popup(bossName, new Color(1f, 0.6f, 0.25f), true);
             _enemy.Died += OnDied;
+            _enemy.ComboPreparing += OnComboPreparing;
+            if (PlayEntrance) StartCoroutine(EntranceRoutine());
+            else ShowBar();
+        }
+
+        private void ShowBar()
+        {
+            Hud.ShowBossBar(bossName, () => _enemy != null ? _enemy.HpRatio : 0f, () => Phase, ParryStreakText);
+            Hud.Popup(bossName, new Color(1f, 0.6f, 0.25f), true);
+        }
+
+        /// <summary>등장 연출을 할지 (테스트는 끄고 바로 싸운다 — 등장 테스트만 켠다).</summary>
+        public static bool PlayEntrance = true;
+        public bool IsEntering { get; private set; }
+
+        [Header("등장 — 하늘에서 떨어져 땅을 찍고 포효")]
+        [SerializeField, Tooltip("떨어지기 전 땅이 달아오르는 경고(초)")] private float entranceWarn = 0.7f;
+        [SerializeField, Tooltip("떨어지는 높이(유닛)")] private float entranceHeight = 10f;
+        [SerializeField, Tooltip("떨어지는 시간(초)")] private float entranceFall = 0.35f;
+        [SerializeField, Tooltip("착지 뒤 포효(초) — 이 동안 무적·멈춤")] private float entranceRoar = 1.3f;
+
+        /// <summary>
+        /// 등장: 내려앉을 자리의 땅이 달아오르며 흔들림 → 그림이 하늘에서 떨어져 → 착지 충격(땅 찍기 이펙트·흔들림·섬광) → 포효(강공격 준비 동작) + 이름·체력바.
+        /// 판정 몸은 처음부터 땅에 있고(무적·멈춤) 그림만 위에서 내려온다 — 몸을 옮기면 발 높이 계산이 어긋난다.
+        /// </summary>
+        private IEnumerator EntranceRoutine()
+        {
+            IsEntering = true;
+            _enemy.Frozen = true;
+            _enemy.Invulnerable = true;
+            var art = _sprite != null ? _sprite.Art : null;
+            var artTf = _sprite != null && _sprite.ArtRenderer != null ? _sprite.ArtRenderer.transform : null;
+            Vector3 artBase = artTf != null ? artTf.localPosition : Vector3.zero;
+            void Lift(float h)
+            {
+                if (artTf == null) return;
+                artTf.position = transform.TransformPoint(artBase) + Vector3.up * h;
+            }
+            Lift(entranceHeight + 6f); // 경고 동안은 화면 위 밖에서 기다린다
+            var feet = new Vector2(transform.position.x, _enemy.FeetY);
+
+            // 1) 경고: 착지할 땅이 달아오르고 땅이 울린다
+            var glow = new GameObject("BossEntranceGlow").AddComponent<SpriteRenderer>();
+            glow.sprite = FxSprites.Glow;
+            glow.sortingOrder = 3;
+            glow.transform.position = feet;
+            if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.15f, entranceWarn);
+            Sfx.Play(SfxId.HeavyCue, 0.7f);
+            for (float t = 0f; t < entranceWarn; t += Time.deltaTime)
+            {
+                Lift(entranceHeight + 6f);
+                float k = t / entranceWarn;
+                glow.color = new Color(1f, 0.5f, 0.12f, 0.45f + 0.45f * k + 0.1f * Mathf.Sin(t * 30f));
+                glow.transform.localScale = new Vector3(Half * 4f * (0.6f + 0.4f * k), 1.4f, 1f);
+                if (Random.value < 0.35f) // 달아오른 땅에서 튀는 불티
+                    Fx.Flash(feet + new Vector2(Random.Range(-Half * 1.6f, Half * 1.6f), Random.Range(0.05f, 0.5f)), 0.18f, 0.02f, new Color(1f, 0.7f, 0.25f), 0.3f);
+                yield return null;
+            }
+
+            // 2) 하늘에서 떨어진다 (가속)
+            if (_sprite != null && art != null) _sprite.PlayLoop(new SpriteClip { frames = art.idle.frames, fps = 1f });
+            for (float t = 0f; t < entranceFall; t += Time.deltaTime)
+            {
+                float k = t / entranceFall;
+                Lift(entranceHeight * (1f - k * k));
+                yield return null;
+            }
+            Lift(0f);
+            Destroy(glow.gameObject);
+
+            // 3) 착지 충격
+            FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.bossSlam : null, feet + Vector2.up * (0.8f * FxScale), FxScale * 1.3f);
+            if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.55f, 0.5f);
+            Hud.ScreenFlash(new Color(1f, 0.55f, 0.2f, 0.4f));
+            Sfx.Play(SfxId.HeavyCue);
+
+            // 4) 포효 + 이름·체력바
+            if (_sprite != null && art != null) _sprite.PlayOnce(art.heavyWindup);
+            ShowBar();
+            yield return new WaitForSeconds(entranceRoar);
+            if (_sprite != null) _sprite.StopOverride();
+
+            _enemy.Frozen = false;
+            _enemy.Invulnerable = false;
+            IsEntering = false;
+            _patternTimer = firstPatternDelay;
+            _dashTimer = dashFarTime;
+        }
+
+        /// <summary>3연타는 드물게 나오고, 나오기 전에 알린다 (그 뒤 웅크림 → 느낌표마다 패링).</summary>
+        private void OnComboPreparing()
+        {
+            Hud.Popup($"{bossName}가 연속 공격을 준비합니다!", new Color(1f, 0.75f, 0.3f), true);
+            Sfx.Play(SfxId.HeavyCue, 0.5f);
         }
 
         private void OnDestroy()
@@ -157,16 +256,26 @@ namespace ParryRL
                 StartCoroutine(TransformRoutine());
             }
 
+            if (IsEntering) return;
             // 특수 패턴: 쿨타임이 차고 보스가 한가하면(공격·경직·기절 중이 아님) 거리에 맞는 패턴을 고른다
             if (IsTransforming || IsUsingPattern || _enemy.IsDead || _player == null || GameManager.InputBlocked || GameTuning.Current.enemyPassive) return;
             _patternTimer -= Time.deltaTime;
+            _dashTimer -= Time.deltaTime;
+            float dist = Mathf.Abs(_player.position.x - transform.position.x);
+            _farTime = dist >= dashTriggerDistance ? _farTime + Time.deltaTime : 0f;
+            // 멀리서 버티면(원거리 견제·도망) 패턴 간격과 상관없이 돌진해 거리를 좁힌다
+            if (_farTime >= dashFarTime && _dashTimer <= 0f && !_enemy.IsBusy)
+            {
+                StartPattern(BossPattern.Dash);
+                return;
+            }
             if (_patternTimer <= 0f && !_enemy.IsBusy) StartPattern(ChoosePattern());
         }
 
         private BossPattern ChoosePattern()
         {
             float dist = Mathf.Abs(_player.position.x - transform.position.x);
-            if (Phase >= 2 && dist >= 6f && Random.value < 0.5f) return BossPattern.Dash; // 돌진은 2페이즈부터
+            if (dist >= 6f && Random.value < 0.5f) return BossPattern.Dash;
             if (dist >= 6f) return BossPattern.SpineVolley;
             return Random.value < 0.7f ? BossPattern.GroundSlam : BossPattern.SpineVolley;
         }
@@ -230,6 +339,8 @@ namespace ParryRL
             IsUsingPattern = false;
             PatternCount++;
             _patternTimer = Random.Range(patternCooldown.x, Mathf.Max(patternCooldown.x, patternCooldown.y)) * tempo;
+            _farTime = 0f;
+            if (pattern == BossPattern.Dash) _dashTimer = dashCooldown * tempo;
             _patternRoutine = null;
         }
 
@@ -280,7 +391,10 @@ namespace ParryRL
                 _sprite.PlayLoop(new SpriteClip { frames = art.walk.frames, fps = 16f });
             var size = new Vector2(1.2f, BodyHeight * 0.8f);
             var front = new Vector2(transform.position.x + dir * (Half + size.x * 0.5f), _enemy.FeetY + size.y * 0.5f);
-            var hitbox = EnemyAttack.Spawn(_enemy, AttackType.Heavy, front, new Vector2(dir, 0f), size, dashSpeed, dashDistance, PatternColor, dashDamage);
+            // 플레이어가 서 있던 자리를 조금 지나서 멈춘다 (피하면 방 끝까지 미끄러지지 않게)
+            float reach = dashDistance;
+            if (_player != null) reach = Mathf.Clamp(Mathf.Abs(_player.position.x - front.x) + dashOvershoot, 2f, dashDistance);
+            var hitbox = EnemyAttack.Spawn(_enemy, AttackType.Heavy, front, new Vector2(dir, 0f), size, dashSpeed, reach, PatternColor, dashDamage);
             if (GameAssets.AttackFx != null) hitbox.AttachProjectileArt(GameAssets.AttackFx.bossDash, 0, 4, FxScale); // 박치기 판정에 앞 압력파 그림
             DashTrail(dir);
             float streak = 0f;

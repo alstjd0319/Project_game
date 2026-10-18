@@ -27,6 +27,45 @@ namespace ParryRL.Tests
             boss.TakeDamage(damage, 1f, heavy, null, stagger);
 
         [UnityTest]
+        public IEnumerator 보스는_플레이어가_앞으로_나오면_화면_안에_떨어지며_등장한다()
+        {
+            var rooms = Enumerable.Repeat(RoomType.Normal, RunState.TotalRooms - 2).Append(RoomType.Boss).ToArray();
+            yield return TestScene.LoadRun(true, rooms);
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            yield return new WaitForSeconds(2f);
+            Assert.IsNull(BossController.Instance, "입구에 서 있으면 아직 안 나온다");
+            Assert.IsFalse(Hud.BossBarVisible);
+
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            var pos = player.transform.position + Vector3.right * (RoomController.BossTriggerAdvance + 1f);
+            player.transform.position = pos;
+            player.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            float t = 0f;
+            while (BossController.Instance == null && t < 2f) { t += Time.deltaTime; yield return null; }
+            var boss = BossController.Instance;
+            Assert.IsNotNull(boss, "앞으로 나오면 등장");
+            Assert.IsTrue(boss.IsEntering);
+            Assert.IsTrue(boss.Enemy.Invulnerable && boss.Enemy.Frozen, "등장 중엔 무적·멈춤");
+            Assert.AreEqual(pos.x + RoomController.BossAppearAhead, boss.transform.position.x, 0.6f, "플레이어 앞에 내려앉는다");
+            if (CameraRig.Instance != null) CameraRig.Instance.SnapToTarget();
+            yield return null;
+            var cam = Camera.main;
+            float halfW = cam.orthographicSize * cam.aspect;
+            float bossRight = boss.transform.position.x + boss.transform.localScale.x * 0.5f;
+            Assert.Less(bossRight, cam.transform.position.x + halfW, "몸 전체가 화면 안");
+
+            while (boss.IsEntering && t < 6f) { t += Time.deltaTime; yield return null; }
+            Assert.IsFalse(boss.IsEntering, "등장이 끝난다");
+            Assert.IsTrue(Hud.BossBarVisible, "착지하면 체력바");
+            Assert.IsFalse(boss.Enemy.Frozen);
+            Assert.IsFalse(boss.Enemy.Invulnerable);
+            var art = boss.GetComponent<EnemySprite>().ArtRenderer.transform;
+            Assert.AreEqual(boss.Enemy.FeetY, art.position.y, 0.3f, "그림이 땅에 내려앉았다");
+        }
+
+        [UnityTest]
         public IEnumerator 마지막_방은_평지의_보스방이고_불가살이와_상단_체력바가_뜬다()
         {
             yield return LoadBossRoom();
@@ -78,12 +117,17 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 일페이즈_일반_공격은_3연타이고_타격마다_느낌표가_뜬다()
+        public IEnumerator 일페이즈_3연타는_알림_뒤에_나오고_타격마다_느낌표가_뜬다()
         {
             yield return LoadBossRoom();
             var enemy = BossController.Instance.Enemy;
             enemy.HeavyChanceOverride = 0f; // 일반 공격만
             Assert.AreEqual(3, enemy.ComboHits);
+            Assert.Less(enemy.ComboChance, 0.5f, "3연타는 드물게");
+            enemy.ComboChance = 1f;         // 이번엔 반드시 3연타
+            bool announced = false;
+            float announcedAt = -1f;
+            enemy.ComboPreparing += () => { announced = true; announcedAt = Time.time; };
             // 플레이어를 보스 바로 앞에 두고 공격하게 한다
             var player = Object.FindAnyObjectByType<PlayerDefense>();
             var pos = new Vector3(enemy.transform.position.x - 3f, player.transform.position.y, 0f);
@@ -93,10 +137,46 @@ namespace ParryRL.Tests
             GameTuning.Current.enemyPassive = false;
             int cues0 = enemy.PressCueCount;
             float t = 0f;
-            while (enemy.ComboStrikeCount < 3 && t < 6f) { t += Time.deltaTime; yield return null; }
+            while (!announced && t < 6f) { t += Time.deltaTime; yield return null; }
+            Assert.IsTrue(announced, "연속 공격 알림");
+            yield return null;
+            StringAssert.Contains("연속 공격을 준비합니다", Hud.PopupMessage);
+            while (enemy.ComboStrikeCount < 1 && t < 8f) { t += Time.deltaTime; yield return null; }
+            Assert.GreaterOrEqual(Time.time - announcedAt, 0.9f + 0.9f, "알림 뒤 기다림(0.9) + 예비 모션 뒤에 첫 타격");
+            while (enemy.ComboStrikeCount < 3 && t < 10f) { t += Time.deltaTime; yield return null; }
             Assert.AreEqual(3, enemy.ComboStrikeCount, "한 번 공격에 세 번 친다");
             Assert.GreaterOrEqual(enemy.PressCueCount - cues0, 3, "타격마다 빨간 느낌표");
             Assert.IsTrue(enemy.IsComboAttack);
+        }
+
+        [UnityTest]
+        public IEnumerator 일페이즈_보통_일반_공격은_한_번만_친다()
+        {
+            yield return LoadBossRoom();
+            var enemy = BossController.Instance.Enemy;
+            enemy.HeavyChanceOverride = 0f;
+            enemy.ComboChance = 0f;
+            bool announced = false;
+            enemy.ComboPreparing += () => announced = true;
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            var pos = new Vector3(enemy.transform.position.x - 3f, player.transform.position.y, 0f);
+            player.transform.position = pos;
+            player.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            GameTuning.Current.enemyPassive = false;
+            var seen = new System.Collections.Generic.HashSet<EnemyAttack>();
+            float t = 0f, after = 0f;
+            while (after < 0.4f && t < 8f) // 한 번 공격하고 회복에 들어간 뒤 조금 더 지켜본다
+            {
+                foreach (var a in Object.FindObjectsByType<EnemyAttack>()) if (a.Source == enemy && a.IsSlash) seen.Add(a);
+                if (enemy.IsRecovering || seen.Count > 0 && !enemy.IsWindingUp) after += Time.deltaTime;
+                t += Time.deltaTime;
+                yield return null;
+            }
+            Assert.AreEqual(1, seen.Count, "할퀴기 한 번");
+            Assert.IsFalse(enemy.IsComboAttack);
+            Assert.AreEqual(0, enemy.ComboStrikeCount);
+            Assert.IsFalse(announced, "한 번 치는 공격엔 알림이 없다");
         }
 
         [UnityTest]
@@ -210,6 +290,38 @@ namespace ParryRL.Tests
             Hit(enemy, 5, heavy: true, stagger: HitStagger.Full);
             yield return null;
             Assert.IsTrue(enemy.IsWindingUp || enemy.IsRecovering, "예비 모션 중 맞아도 공격이 그대로 나간다");
+        }
+
+        [UnityTest]
+        public IEnumerator 봉_3단_마무리는_보스를_기절시키지_않는다()
+        {
+            yield return LoadBossRoom();
+            var enemy = BossController.Instance.Enemy;
+            var combat = Object.FindAnyObjectByType<PlayerCombat>();
+            var pos = new Vector3(enemy.transform.position.x - enemy.transform.localScale.x * 0.5f - 0.6f, combat.transform.position.y, 0f);
+            combat.transform.position = pos;
+            combat.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            yield return null;
+            float t = 0f;
+            float hp0 = enemy.HpRatio;
+            while (combat.NextComboStage != 3 && t < 3f)
+            {
+                combat.TryAttackSkill();
+                t += Time.deltaTime;
+                yield return null;
+            }
+            Assert.AreEqual(3, combat.NextComboStage);
+            float hpBefore3 = enemy.HpRatio;
+            while (Mathf.Approximately(enemy.HpRatio, hpBefore3) && t < 5f)
+            {
+                combat.TryAttackSkill();
+                t += Time.deltaTime;
+                yield return null;
+            }
+            Assert.Less(enemy.HpRatio, hpBefore3, "3단이 맞았다");
+            Assert.Less(enemy.HpRatio, hp0);
+            Assert.IsFalse(enemy.IsStunned, "보스는 3단 마무리에 기절(공격 끊김)하지 않는다");
         }
 
         [UnityTest]

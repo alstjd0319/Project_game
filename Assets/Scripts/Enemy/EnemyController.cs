@@ -28,6 +28,8 @@ namespace ParryRL
         [SerializeField, Tooltip("강공격 확률 (0 이상이면 GameTuning 값 대신 이 값)")] private float heavyChanceOverride = -1f;
         [SerializeField, Tooltip("일반 공격 연속 타격 수 (1 = 한 번). 보스 1페이즈 3연타 — 타격마다 느낌표가 다시 노랑 → 빨강")] private int comboHits = 1;
         [SerializeField, Tooltip("연속 공격에서 다음 타격까지의 간격(초, Tempo 적용) — 이 간격이 다음 타격의 반응시간")] private float comboGap = 0.6f;
+        [SerializeField, Range(0f, 1f), Tooltip("일반 공격이 연속 공격으로 나올 확률 (comboHits > 1일 때, 나머지는 한 번만 친다)")] private float comboChance = 1f;
+        [SerializeField, Tooltip("연속 공격 전 \"준비합니다\" 알림 뒤 기다리는 시간(초, Tempo 적용) — 이 동안 웅크린 채 서 있다")] private float comboAnnounceTime;
 
         [Header("공격 공통 — 강공격 확률·공격 간격·예비 모션 길이·반응시간·원거리 속도는 GameTuning (F1 패널)")]
         [SerializeField] private float recoverTime = 0.35f;
@@ -132,6 +134,10 @@ namespace ParryRL
         public int HpFloor { get; set; }
         public bool SuperArmor => superArmor;
         public int ComboHits { get => comboHits; set => comboHits = Mathf.Max(1, value); }
+        /// <summary>일반 공격이 연속 공격으로 나올 확률 (0~1).</summary>
+        public float ComboChance { get => comboChance; set => comboChance = Mathf.Clamp01(value); }
+        /// <summary>연속 공격을 고른 순간 (예비 모션 전, 알림 시간 전) — 보스가 "연속 공격을 준비합니다"를 띄운다.</summary>
+        public event Action ComboPreparing;
         public int NormalDamage { get => normalDamage; set => normalDamage = value; }
         /// <summary>지금 공격이 연속 공격(일반 공격 · 타격 2번 이상)인가 — 그림이 연속 공격 시트를 쓴다.</summary>
         public bool IsComboAttack { get; private set; }
@@ -322,8 +328,15 @@ namespace ParryRL
             Color windupColor = new(attackColor.r, attackColor.g, attackColor.b, 1f);
             IsHeavyAttack = heavy;
             WindupProgress = 0f;
-            IsComboAttack = !heavy && comboHits > 1 && kind == EnemyKind.Melee;
+            IsComboAttack = !heavy && comboHits > 1 && kind == EnemyKind.Melee && UnityEngine.Random.value < comboChance;
             ComboStep = 0;
+            if (IsComboAttack)
+            {
+                // 연속 공격은 드물게 나오고, 나오기 전에 알림 + 웅크린 채 잠깐 멈춘다 (이 동안 예비 모션 진행도 0 = 첫 장면)
+                ComboPreparing?.Invoke();
+                float wait = comboAnnounceTime * Mathf.Max(0.1f, Tempo);
+                for (float t = 0f; t < wait; t += Time.deltaTime) yield return null;
+            }
 
             Sfx.Play(heavy ? SfxId.HeavyCue : SfxId.NormalCue);
             // 예비 모션 시작 때의 경고는 원거리 강공격에만 있다. 근접(창귀)은 일반·강공격 모두 베기 직전의 "지금 눌러" 느낌표 하나뿐.

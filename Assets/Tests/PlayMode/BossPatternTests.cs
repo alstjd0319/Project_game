@@ -120,6 +120,24 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 일페이즈에도_멀리_있으면_곧바로_돌진해_온다()
+        {
+            yield return LoadBossRoom(-13f);
+            GameTuning.Current.enemyPassive = false;
+            Assert.AreEqual(1, Boss.Phase);
+            var player = Object.FindAnyObjectByType<PlayerDefense>().transform;
+            float t = 0f;
+            while (!(Boss.IsUsingPattern && Boss.LastPattern == BossPattern.Dash) && t < 4f) { t += Time.deltaTime; yield return null; }
+            Assert.AreEqual(BossPattern.Dash, Boss.LastPattern, "멀리 있으면 특수 패턴 간격(첫 5초)을 기다리지 않고 돌진");
+            Assert.Less(t, 4f);
+            float px = player.position.x;
+            while (Boss.IsUsingPattern && t < 10f) { t += Time.deltaTime; yield return null; }
+            float frontX = Boss.transform.position.x - Boss.transform.localScale.x * 0.5f;
+            Assert.Less(frontX, px + 4f, "플레이어 가까이까지 달려왔다");
+            Assert.Greater(frontX, px - 4f, "피해도 방 끝까지 미끄러지지 않는다");
+        }
+
+        [UnityTest]
         public IEnumerator 자동으로_특수_패턴을_섞어_쓰고_변신하면_하던_패턴을_멈춘다()
         {
             yield return LoadBossRoom(-9f);

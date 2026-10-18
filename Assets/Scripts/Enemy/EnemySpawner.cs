@@ -98,18 +98,17 @@ namespace ParryRL
         }
 
         /// <summary>보스를 세운다: 방 가운데에서 오른쪽(플레이어는 왼쪽 끝에서 시작). 머리 위 체력바 대신 화면 상단 보스 체력바(BossController).</summary>
-        public EnemyController SpawnBoss()
+        /// <param name="atX">보스 몸 가운데 x (없으면 방 가운데 +6)</param>
+        public EnemyController SpawnBoss(float? atX = null)
         {
             if (bossPrefab == null) return null;
             float half = bossPrefab.transform.localScale.x * 0.5f;
-            float x = Mathf.Clamp((arenaMinX + arenaMaxX) * 0.5f + 6f, arenaMinX + half, arenaMaxX - half);
+            float x = Mathf.Clamp(atX ?? (arenaMinX + arenaMaxX) * 0.5f + 6f, arenaMinX + half, arenaMaxX - half);
             var pos = new Vector3(x, groundY + bossPrefab.transform.localScale.y * 0.5f, 0f);
             var boss = Instantiate(bossPrefab, pos, Quaternion.identity);
             boss.name = bossPrefab.name;
             boss.SetArena(arenaMinX, arenaMaxX);
-            Fx.Ring(pos, new Color(1f, 0.55f, 0.2f), 3f, 6f, 0.15f, 0.6f);
-            if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.3f, 0.5f);
-            return boss;
+            return boss; // 등장 연출(떨어져 착지)은 BossController가 한다
         }
 
         private EnemyController SpawnAt(EnemyController prefab, float side, int count, Color barColor)

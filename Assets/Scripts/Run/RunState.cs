@@ -84,6 +84,14 @@ namespace ParryRL
             Changed?.Invoke();
         }
 
+        /// <summary>(임시 테스트용) 새 판을 마지막 보스방부터 시작한다 — 보스 수정을 바로 확인하려고.</summary>
+        public static void BeginAtBoss()
+        {
+            Begin();
+            RoomNumber = TotalRooms;
+            Current = RoomType.Boss;
+        }
+
         /// <summary>문을 골라 다음 방으로 (씬을 다시 불러오기 직전에 부른다).</summary>
         public static void Enter(RoomType type)
         {

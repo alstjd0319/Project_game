@@ -287,6 +287,8 @@ MonoBehaviour:
   heavyChanceOverride: 0.35
   comboHits: 3
   comboGap: 0.6
+  comboChance: 0.2
+  comboAnnounceTime: 0.9
   recoverTime: 0.5
   normalDamage: 10
   heavyDamage: 24
@@ -370,3 +372,11 @@ MonoBehaviour:
   dashDamage: 22
   dashSpeed: 14
   dashDistance: 16
+  dashOvershoot: 2.5
+  dashTriggerDistance: 8
+  dashFarTime: 1.2
+  dashCooldown: 5
+  entranceWarn: 0.7
+  entranceHeight: 10
+  entranceFall: 0.35
+  entranceRoar: 1.3

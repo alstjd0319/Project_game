@@ -59,7 +59,8 @@ namespace ParryRL
             var t = GameTuning.Current;
             Notes.Clear();
 
-            float passive = (hit.Ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(hit.Kind)) * SkillTreeState.AttackMultiplier(hit.Ranged);
+            // 초반 배율(약하게 시작) × 무기 배율 × 스킬 트리·아이템 성장
+            float passive = t.startDamageScale * (hit.Ranged ? t.rangedAttackMultiplier : t.AttackMultiplier(hit.Kind)) * SkillTreeState.AttackMultiplier(hit.Ranged);
 
             note = Notes.Count > 0 ? string.Join(" · ", Notes) : null;
             return Mathf.Max(1, Mathf.RoundToInt(baseDamage * passive));

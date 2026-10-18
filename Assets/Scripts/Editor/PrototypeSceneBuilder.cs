@@ -624,9 +624,11 @@ namespace ParryRL.EditorTools
             so.FindProperty("knockback").floatValue = 0f;      // 크고 무거워서 밀리지 않는다
             so.FindProperty("xpReward").intValue = 0;          // 경험치는 방을 깼을 때 (마지막 관문 50)
             so.FindProperty("recoverTime").floatValue = 0.5f;
-            so.FindProperty("normalDamage").intValue = 10;      // 3연타라 한 번당은 약하게 (2페이즈 코 휘두르기는 16)
+            so.FindProperty("normalDamage").intValue = 10;      // 3연타가 섞여서 한 번당은 약하게 (2페이즈 코 휘두르기는 16)
             so.FindProperty("comboHits").intValue = 3;
             so.FindProperty("comboGap").floatValue = 0.6f;
+            so.FindProperty("comboChance").floatValue = 0.2f;        // 일반 공격 5번에 1번꼴로 3연타, 나머지는 한 번 할퀴기 (가안)
+            so.FindProperty("comboAnnounceTime").floatValue = 0.9f;  // "연속 공격을 준비합니다" 뒤 웅크린 채 기다림
             so.FindProperty("heavyDamage").intValue = 24;
             so.FindProperty("normalWindupScale").floatValue = 1.02f; // 몸이 커서 예비 모션 부풀기는 아주 조금만
             so.FindProperty("heavyWindupScale").floatValue = 1.06f;

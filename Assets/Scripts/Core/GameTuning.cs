@@ -54,6 +54,8 @@ namespace ParryRL
 
         [Tooltip("원거리 무기: 반격·일반공격 데미지 배율 (근접은 playerAttackMultiplier)")]
         public float rangedAttackMultiplier = 1f;
+        [Tooltip("초반 데미지 배율 — 모든 플레이어 딜에 곱한다. 로그라이크라 약하게 시작해 스킬 트리·아이템으로 강해지게 (0.7 = 30% 약하게)")]
+        public float startDamageScale = 0.7f;
         [Tooltip("무기 전환 쿨타임 (초, 도력 소모 없음)")]
         public float weaponSwitchCooldown = 0.5f;
 

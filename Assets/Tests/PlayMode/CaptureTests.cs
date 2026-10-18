@@ -169,7 +169,13 @@ namespace ParryRL.Tests
             if (CameraRig.Instance != null) CameraRig.Instance.SnapToTarget();
             GameTuning.Current.enemyPassive = false;
             boss.Enemy.HeavyChanceOverride = 0f;
-            for (float w = 0f; w < 5f && boss.Enemy.ComboStrikeCount < 2; w += Time.deltaTime) yield return null;
+            boss.Enemy.ComboChance = 1f;
+            bool announced = false;
+            boss.Enemy.ComboPreparing += () => announced = true;
+            for (float w = 0f; w < 5f && !announced; w += Time.deltaTime) yield return null;
+            yield return new WaitForSeconds(0.3f);
+            yield return Capture("boss_combo_announce");      // "불가살이가 연속 공격을 준비합니다!" + 웅크림
+            for (float w = 0f; w < 6f && boss.Enemy.ComboStrikeCount < 2; w += Time.deltaTime) yield return null;
             yield return new WaitForSeconds(0.05f);
             yield return Capture("boss_combo");               // 1페이즈 3연타 중 (둘째 타격 뒤 셋째 느낌표)
             boss.Enemy.HeavyChanceOverride = 0.35f;
@@ -190,6 +196,28 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(0.45f);
             yield return Capture("boss_phase2_heavy");        // 2페이즈 강공격 예비 모션
             GameTuning.Current.heavyOnly = false;
+        }
+
+        [UnityTest]
+        public IEnumerator 보스_등장_연출()
+        {
+            var rooms = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Append(System.Linq.Enumerable.Repeat(RoomType.Normal, RunState.TotalRooms - 2), RoomType.Boss));
+            yield return TestScene.LoadRun(true, rooms);
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            yield return new WaitForSeconds(1.5f);
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            var pos = player.transform.position + Vector3.right * (RoomController.BossTriggerAdvance + 1f);
+            player.transform.position = pos;
+            player.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            while (BossController.Instance == null) yield return null;
+            yield return new WaitForSeconds(0.45f);
+            yield return Capture("boss_entrance_warn");       // 내려앉을 땅이 달아오름
+            yield return new WaitForSeconds(0.45f);
+            yield return Capture("boss_entrance_fall");       // 떨어지는 중
+            yield return new WaitForSeconds(0.25f);
+            yield return Capture("boss_entrance_land");       // 착지 충격 + 이름·체력바
         }
 
         [UnityTest]
@@ -222,6 +250,11 @@ namespace ParryRL.Tests
             BossController.Instance.StartPattern(BossPattern.GroundSlam);
             yield return new WaitForSeconds(1.15f);
             yield return Capture("boss_pattern_slam");        // 땅 찍기 충격파
+
+            yield return Setup(-12f);
+            BossController.Instance.StartPattern(BossPattern.Dash);
+            yield return new WaitForSeconds(1.15f);
+            yield return Capture("boss_pattern_dash_p1");     // 1페이즈 돌진 (멀리 있으면)
 
             yield return Setup(-11f);
             BossController.Instance.ForcePhase2();

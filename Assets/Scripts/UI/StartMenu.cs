@@ -142,6 +142,13 @@ namespace ParryRL
             if (Input.GetKeyDown(KeyCode.DownArrow)) MoveSelection(1);
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(Controls.Jump))
                 Activate(_selected);
+            // (임시 테스트용) F2 = 새 게임으로 보스방 바로 가기 — 메뉴 항목은 늘리지 않는다
+            if (Input.GetKeyDown(Controls.DebugBossRoom) && !_starting)
+            {
+                _starting = true;
+                PlayerSession.Reset();
+                GameManager.GoToBossRoom();
+            }
         }
 
         /// <summary>from부터 dir 방향으로 처음 만나는 활성 항목 (끝에서 멈춘다 — 돌아가지 않음).</summary>
