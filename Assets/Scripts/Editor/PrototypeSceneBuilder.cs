@@ -31,6 +31,22 @@ namespace ParryRL.EditorTools
             public Frame[] frames;
         }
 
+        /// <summary>
+        /// 게임 글꼴(온글잎 재건사, <c>Assets/Resources/Fonts/GameFont.ttf</c> — 라이선스상 저장소엔 없음, 각자 넣는다) 임포트 설정:
+        /// 동적 글꼴 + 글꼴 데이터 포함(빌드에 임베딩), 이 글꼴에 없는 기호(⇄ ▶ ∞ 등)는 시스템 글꼴로 대신 그린다.
+        /// </summary>
+        private static void ImportGameFont()
+        {
+            const string path = "Assets/Resources/Fonts/GameFont.ttf";
+            if (!File.Exists(path)) return;
+            var importer = AssetImporter.GetAtPath(path) as TrueTypeFontImporter;
+            if (importer == null) return;
+            importer.fontTextureCase = FontTextureCase.Dynamic;
+            importer.includeFontData = true;
+            importer.fontNames = new[] { "Apple SD Gothic Neo", "Malgun Gothic", "Arial Unicode MS", "Arial" };
+            importer.SaveAndReimport();
+        }
+
         /// <summary>방 포탈 틀 7종 + 안쪽 구멍 (Tools/gwimun_sprites/cut_portal.py가 만든 portal_frame_N.png · portal_meta.json).</summary>
         private static void CreatePortalArt()
         {
@@ -128,6 +144,7 @@ namespace ParryRL.EditorTools
             CreateFloorSets();
             if (AssetDatabase.IsValidFolder(PropsDir)) ImportFrames(PropsDir, _ => BottomPivot);
             CreatePortalArt();
+            ImportGameFont();
             var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
 

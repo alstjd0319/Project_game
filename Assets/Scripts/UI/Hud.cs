@@ -123,7 +123,7 @@ namespace ParryRL
             if (_instance == null) return;
             _instance._popupText.text = message;
             _instance._popupText.color = color;
-            _instance._popupText.fontSize = big ? 64 : 46;
+            _instance._popupText.fontSize = Mathf.RoundToInt((big ? 64 : 46) * (UiKit.HasGameFont ? UiKit.GameFontScale : 1f));
             _instance._popupTimer = big ? 1.0f : 0.7f;
             // 보스 체력바(화면 위쪽)가 떠 있으면 그 아래로 내려 가리지 않게
             _instance._popupText.rectTransform.anchoredPosition = new Vector2(0f, BossBarVisible ? -330f : -170f);
@@ -535,7 +535,7 @@ namespace ParryRL
 
             // 레벨 + 경험치 바
             _levelText = UiKit.Text("Level", panel, 26, TextAnchor.MiddleLeft);
-            _levelText.fontStyle = FontStyle.Bold;
+            _levelText.fontStyle = UiKit.BoldStyle;
             _levelText.color = new Color(0.45f, 0.9f, 1f);
             UiKit.Place(_levelText.rectTransform, new Vector2(0, 1), new Vector2(16, -166), new Vector2(80, 26));
             var xpBg = UiKit.Image("XpBg", panel, new Color(1f, 1f, 1f, 0.12f)).rectTransform;
@@ -605,7 +605,7 @@ namespace ParryRL
 
             // 레벨 + 경험치: 구리 바 위에 보라 채움
             _levelText = UiKit.Text("Level", panel, 26, TextAnchor.MiddleLeft);
-            _levelText.fontStyle = FontStyle.Bold;
+            _levelText.fontStyle = UiKit.BoldStyle;
             _levelText.color = new Color(0.8f, 0.7f, 1f);
             UiKit.Place(_levelText.rectTransform, new Vector2(0, 1), new Vector2(16, -158), new Vector2(80, 28));
             var xpBg = UiKit.Image("XpBg", panel, Color.white);

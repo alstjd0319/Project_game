@@ -312,7 +312,7 @@ namespace ParryRL
             UiKit.Stretch(slot.dim.rectTransform);
 
             slot.cooldownText = UiKit.Text("Cooldown", slot.bg.rectTransform, 36, TextAnchor.MiddleCenter);
-            slot.cooldownText.fontStyle = FontStyle.Bold;
+            slot.cooldownText.fontStyle = UiKit.BoldStyle;
             UiKit.Stretch(slot.cooldownText.rectTransform);
 
             // 키 라벨 (좌상단)
@@ -320,7 +320,7 @@ namespace ParryRL
             float keyWidth = key.Length > 1 ? 58f : 30f;
             UiKit.Place(keyBg.rectTransform, new Vector2(0f, 1f), new Vector2(-6f, 8f), new Vector2(keyWidth, 28f));
             var keyText = UiKit.Text("Key", keyBg.rectTransform, 19, TextAnchor.MiddleCenter, outline: false);
-            keyText.fontStyle = FontStyle.Bold;
+            keyText.fontStyle = UiKit.BoldStyle;
             UiKit.Stretch(keyText.rectTransform);
             keyText.text = key;
 
@@ -328,7 +328,7 @@ namespace ParryRL
             slot.costBadge = UiKit.Image("CostBadge", slot.root, GaugeColor);
             UiKit.Place(slot.costBadge.rectTransform, new Vector2(1f, 0f), new Vector2(8f, -8f), new Vector2(40f, 32f));
             slot.costText = UiKit.Text("Cost", slot.costBadge.rectTransform, 22, TextAnchor.MiddleCenter, outline: false);
-            slot.costText.fontStyle = FontStyle.Bold;
+            slot.costText.fontStyle = UiKit.BoldStyle;
             UiKit.Stretch(slot.costText.rectTransform);
 
             // 스킬 이름 (아래)

@@ -81,7 +81,7 @@ namespace ParryRL
             tm.alignment = TextAlignment.Center;
             tm.fontSize = 64;
             tm.characterSize = worldSize;
-            tm.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
+            tm.fontStyle = bold ? UiKit.BoldStyle : FontStyle.Normal;
             return tm;
         }
 

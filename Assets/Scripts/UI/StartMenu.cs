@@ -207,7 +207,7 @@ namespace ParryRL
             var title = UiKit.Text("Title", _root, 150, TextAnchor.UpperLeft);
             title.text = "귀문";
             title.color = Color.Lerp(Purple, Color.white, 0.35f);
-            title.fontStyle = FontStyle.Bold;
+            title.fontStyle = UiKit.BoldStyle;
             UiKit.Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(120f, -110f), new Vector2(700f, 190f));
 
             var subtitle = UiKit.Text("Subtitle", _root, 36, TextAnchor.UpperLeft);

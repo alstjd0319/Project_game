@@ -135,7 +135,7 @@ namespace ParryRL
             root.pivot = new Vector2(0.5f, 0.5f);
 
             var title = UiKit.Text("Title", root, 30, TextAnchor.MiddleLeft);
-            title.fontStyle = FontStyle.Bold;
+            title.fontStyle = UiKit.BoldStyle;
             title.color = Accent;
             title.text = "설정  <size=20><color=#999999>ESC · F1로 닫기</color></size>";
             UiKit.Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(20f, -14f), new Vector2(Width - 40f, 40f));
@@ -444,7 +444,7 @@ namespace ParryRL
             var rt = NewRowRect(36f);
             var t = UiKit.Text("Header", rt, 20, TextAnchor.LowerLeft, outline: false);
             t.color = Accent;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = UiKit.BoldStyle;
             UiKit.Stretch(t.rectTransform);
             t.text = text;
         }
@@ -461,7 +461,7 @@ namespace ParryRL
             slider.maxValue = max;
 
             var value = UiKit.Text("Value", rt, 20, TextAnchor.MiddleRight, outline: false);
-            value.fontStyle = FontStyle.Bold;
+            value.fontStyle = UiKit.BoldStyle;
             UiKit.Place(value.rectTransform, new Vector2(1f, 0.5f), new Vector2(-4f, 0f), new Vector2(80f, RowHeight));
             l.text = label;
 
@@ -486,7 +486,7 @@ namespace ParryRL
             UiKit.Place(box.rectTransform, new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(28f, 28f));
             var check = UiKit.Text("Check", box.rectTransform, 22, TextAnchor.MiddleCenter, outline: false);
             check.color = new Color(0.1f, 0.08f, 0f);
-            check.fontStyle = FontStyle.Bold;
+            check.fontStyle = UiKit.BoldStyle;
             UiKit.Stretch(check.rectTransform);
 
             var l = UiKit.Text("Label", rt, 20, TextAnchor.MiddleLeft, outline: false);

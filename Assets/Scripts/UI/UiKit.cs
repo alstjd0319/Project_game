@@ -8,13 +8,42 @@ namespace ParryRL
     {
         private static Font _font;
 
+        /// <summary>
+        /// 게임 글꼴 (온글잎 재건사): <c>Assets/Resources/Fonts/GameFont.ttf</c>. 라이선스상 글꼴 파일은 재배포할 수 없어 저장소에는 올리지 않는다(.gitignore) —
+        /// 파일이 없으면(다른 PC·새로 받은 저장소) 예전처럼 시스템 글꼴로 그린다. 빌드에 넣어 쓰는 것(임베딩)은 허용된다.
+        /// </summary>
+        public const string GameFontResource = "Fonts/GameFont";
+
+        private static bool _isGameFont;
+
+        /// <summary>게임 글꼴(손글씨)을 쓰는 중인가.</summary>
+        public static bool HasGameFont
+        {
+            get
+            {
+                _ = Font;
+                return _isGameFont;
+            }
+        }
+
+        /// <summary>
+        /// 굵은 글씨 스타일: 손글씨 게임 글꼴은 Regular 한 종뿐이라 굵게 하면 획이 뭉개지거나(합성 굵기) 시스템 글꼴로 바뀌어서
+        /// 그 글꼴일 땐 보통 굵기로 그린다. 강조는 크기·색으로.
+        /// </summary>
+        public static FontStyle BoldStyle => HasGameFont ? FontStyle.Normal : FontStyle.Bold;
+
+        /// <summary>손글씨 게임 글꼴은 같은 크기에서 글자가 작게 그려져 조금 키운다.</summary>
+        public const float GameFontScale = 1.15f;
+
         public static Font Font
         {
             get
             {
                 if (_font == null)
                 {
-                    _font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "맑은 고딕", "Arial" }, 32);
+                    _font = Resources.Load<Font>(GameFontResource);
+                    _isGameFont = _font != null;
+                    if (_font == null) _font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Arial" }, 32);
                     if (_font == null) _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                 }
                 return _font;
@@ -70,7 +99,7 @@ namespace ParryRL
             go.transform.SetParent(parent, false);
             var text = go.GetComponent<Text>();
             text.font = Font;
-            text.fontSize = size;
+            text.fontSize = HasGameFont ? Mathf.RoundToInt(size * GameFontScale) : size;
             text.alignment = anchor;
             text.color = Color.white;
             text.supportRichText = true;

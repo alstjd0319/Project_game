@@ -213,7 +213,7 @@ namespace ParryRL
             Color ink = plain ? Color.white : Ink;
 
             _title = UiKit.Text("Title", panel, 40, TextAnchor.MiddleLeft, outline: plain);
-            _title.fontStyle = FontStyle.Bold; _title.color = ink;
+            _title.fontStyle = UiKit.BoldStyle; _title.color = ink;
             At(_title.rectTransform, 530f, 112f, 560f, 56f);
             _speech = UiKit.Text("Speech", panel, 22, TextAnchor.MiddleLeft, outline: plain);
             _speech.color = plain ? new Color(0.85f, 0.82f, 0.95f) : InkSoft;
@@ -227,7 +227,7 @@ namespace ParryRL
             {
                 float cy = 210f + r * 96f;
                 var label = UiKit.Text($"Branch{r}", panel, 34, TextAnchor.MiddleCenter, outline: plain);
-                label.fontStyle = FontStyle.Bold; label.color = ink;
+                label.fontStyle = UiKit.BoldStyle; label.color = ink;
                 label.text = SkillTreeState.BranchNames[r];
                 At(label.rectTransform, 200f, cy, 130f, 44f);
                 for (int c = 0; c < Cols; c++)
@@ -262,14 +262,14 @@ namespace ParryRL
                     At(v.Cursor.rectTransform, cx, cy, 92f, 82f);
 
                     v.Rank = UiKit.Text("Rank", panel, 20, TextAnchor.MiddleCenter, outline: plain);
-                    v.Rank.fontStyle = FontStyle.Bold;
+                    v.Rank.fontStyle = UiKit.BoldStyle;
                     At(v.Rank.rectTransform, cx, cy + 47f, 100f, 24f);
                 }
             }
 
             // 선택한 노드 설명 + 익히기 / 닫기
             _infoName = UiKit.Text("InfoName", panel, 28, TextAnchor.MiddleLeft, outline: plain);
-            _infoName.fontStyle = FontStyle.Bold; _infoName.color = ink;
+            _infoName.fontStyle = UiKit.BoldStyle; _infoName.color = ink;
             At(_infoName.rectTransform, 585f, 578f, 690f, 34f);
             _infoDesc = UiKit.Text("InfoDesc", panel, 20, TextAnchor.UpperLeft, outline: plain);
             _infoDesc.horizontalOverflow = HorizontalWrapMode.Wrap;
