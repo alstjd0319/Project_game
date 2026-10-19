@@ -122,6 +122,14 @@ namespace ParryRL.Tests
             Put(0f);
             yield return new WaitForSeconds(0.6f);
             yield return Capture("run_reward");
+            var altars = Object.FindObjectsByType<RoomAltar>();
+            var soulAltar = System.Linq.Enumerable.FirstOrDefault(altars, a => a.Offer.Kind == OfferKind.Soul) ?? altars[0];
+            Put(soulAltar.transform.position.x - 1.2f);
+            soulAltar.TryTake();
+            yield return new WaitForSeconds(0.3f);
+            yield return Capture("run_reward_open");          // 상자가 열리며 영혼석이 튀어 오른다
+            yield return new WaitForSeconds(0.6f);
+            yield return Capture("run_reward_opened");
 
             // 엘리트방: 깬 뒤 영혼석/아이템 제단
             yield return TestScene.LoadRun(RoomType.Elite);

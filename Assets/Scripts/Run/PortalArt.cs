@@ -17,6 +17,10 @@ namespace ParryRL
 
         public Sprite HoleMask(int index) => index >= 0 && index < holeMasks.Length ? holeMasks[index] : null;
 
+        [Tooltip("방 표식 7종 (1016 원본/ui/room_marks.png, 틀과 같은 순서) — 문 안쪽 위에 매달아 글자 없이도 방 종류를 알게 한다")] public Sprite[] marks = new Sprite[0];
+
+        public Sprite Mark(int index) => index >= 0 && index < marks.Length ? marks[index] : null;
+
         /// <summary>방 종류 → 틀 번호. 마지막 방을 깬 뒤 사당으로 나가는 문은 휴식(서낭나무) 틀.</summary>
         public static int IndexFor(RoomType type, bool isExit)
         {

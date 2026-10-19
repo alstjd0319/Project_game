@@ -1,0 +1,115 @@
+{
+    "character":  "items",
+    "pixelsPerUnit":  90,
+    "note":  "가로 한 줄 스트립. 칸(cellW×cellH)을 왼쪽부터 frames개로 자르면 프레임. 그림은 오른쪽을 봄(왼쪽은 좌우 반전). pivotPx는 칸 왼쪽 위 기준 px, unityPivot은 Unity 스프라이트 피벗(0~1, 아래가 0).",
+    "sheets":  [
+                   {
+                       "sheet":  "coin_spin",
+                       "label":  "엽전 · 회전",
+                       "file":  "items_coin_spin_strip.png",
+                       "frames":  6,
+                       "fps":  10,
+                       "cellW":  128,
+                       "cellH":  128,
+                       "pivotPx":  [
+                                       64,
+                                       64
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "soulstone_float",
+                       "label":  "영혼석 · 둥실",
+                       "file":  "items_soulstone_float_strip.png",
+                       "frames":  6,
+                       "fps":  8,
+                       "cellW":  128,
+                       "cellH":  128,
+                       "pivotPx":  [
+                                       64,
+                                       112
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.125
+                                      ]
+                   },
+                   {
+                       "sheet":  "exp_orb",
+                       "label":  "경험치 혼불",
+                       "file":  "items_exp_orb_strip.png",
+                       "frames":  6,
+                       "fps":  10,
+                       "cellW":  128,
+                       "cellH":  128,
+                       "pivotPx":  [
+                                       64,
+                                       64
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "pickup_coin",
+                       "label":  "줍기 · 엽전",
+                       "file":  "items_pickup_coin_strip.png",
+                       "frames":  5,
+                       "fps":  14,
+                       "cellW":  160,
+                       "cellH":  160,
+                       "pivotPx":  [
+                                       80,
+                                       80
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "pickup_soul",
+                       "label":  "줍기 · 영혼석",
+                       "file":  "items_pickup_soul_strip.png",
+                       "frames":  5,
+                       "fps":  14,
+                       "cellW":  160,
+                       "cellH":  160,
+                       "pivotPx":  [
+                                       80,
+                                       80
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   },
+                   {
+                       "sheet":  "pickup_exp",
+                       "label":  "줍기 · 경험치",
+                       "file":  "items_pickup_exp_strip.png",
+                       "frames":  5,
+                       "fps":  14,
+                       "cellW":  160,
+                       "cellH":  160,
+                       "pivotPx":  [
+                                       80,
+                                       80
+                                   ],
+                       "pivotKind":  "center",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.5
+                                      ]
+                   }
+               ]
+}

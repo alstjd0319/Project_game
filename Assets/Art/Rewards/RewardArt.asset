@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abd01d2ddfaf84cc18e795c96ecb766b, type: 3}
+  m_Name: RewardArt
+  m_EditorClassIdentifier: ParryRL::ParryRL.RewardArt
+  chest:
+    frames:
+    - {fileID: 21300000, guid: 2be75e7180bd14555bce0e34f89783f7, type: 3}
+    - {fileID: 21300000, guid: f22ed60946e6c498c84798c988199d83, type: 3}
+    - {fileID: 21300000, guid: 07ffb447e8f21429d8f68c1a727bb7f6, type: 3}
+    - {fileID: 21300000, guid: 9a9156f1b64174462afe60a606522852, type: 3}
+    - {fileID: 21300000, guid: bc309d433acfa46ee90c27288cd68b96, type: 3}
+    - {fileID: 21300000, guid: d81cf632e00df4dbbb4b18d97019465c, type: 3}
+    fps: 8
+  coinSpin:
+    frames:
+    - {fileID: 21300000, guid: a31e66e51f792498ab6bde2a9b0a55fe, type: 3}
+    - {fileID: 21300000, guid: 97b2557f7599a4c59892334122ece594, type: 3}
+    - {fileID: 21300000, guid: ccf49fbb4829d406fb089e5e4f92937e, type: 3}
+    - {fileID: 21300000, guid: 01f548c121f004766927c8276c3d91f1, type: 3}
+    - {fileID: 21300000, guid: 10ec6ef7a6f3a42a5adddc198081ab42, type: 3}
+    - {fileID: 21300000, guid: 98cc753c5f8cc437b8b5070510efa651, type: 3}
+    fps: 10
+  soulFloat:
+    frames:
+    - {fileID: 21300000, guid: 5d17564a774584c0f9f352e74766cc5a, type: 3}
+    - {fileID: 21300000, guid: 66ca7eec600b444d196b0dfaed32e734, type: 3}
+    - {fileID: 21300000, guid: d7d664802727a44228a83b840b2f305e, type: 3}
+    - {fileID: 21300000, guid: 6b9dacad4b5a1472b902859c79442061, type: 3}
+    - {fileID: 21300000, guid: fb8fc082f5162421bb8d9663e8473c3a, type: 3}
+    - {fileID: 21300000, guid: c471ed89a4b3041199934fb1cfcba941, type: 3}
+    fps: 8
+  expOrb:
+    frames:
+    - {fileID: 21300000, guid: c5f3b4bd158c84bdd86e0755cd3e2858, type: 3}
+    - {fileID: 21300000, guid: 20aae5d98bc4048bd908c4f2584be7fb, type: 3}
+    - {fileID: 21300000, guid: c6549f50665494e64a93f814543c1e10, type: 3}
+    - {fileID: 21300000, guid: 3c1ae92390f6940a98222b562c13fff6, type: 3}
+    - {fileID: 21300000, guid: efcccb00e2f5e43a7b6c1a829ae1af95, type: 3}
+    - {fileID: 21300000, guid: 76ca4775b6c3c40ba88d4d5de1ac6d91, type: 3}
+    fps: 10
+  pickupCoin:
+    frames:
+    - {fileID: 21300000, guid: 8d1514e2ea2c148ad86f113daa917304, type: 3}
+    - {fileID: 21300000, guid: 9d43fd09b199d447f9d3b9122e8bd861, type: 3}
+    - {fileID: 21300000, guid: 0cd6157b8cff945c7b8ebec61f7fd4e0, type: 3}
+    - {fileID: 21300000, guid: c81b9f609717a4827b02fa0b36f597ed, type: 3}
+    - {fileID: 21300000, guid: ae3dcf8c593154649b12768bdf92e771, type: 3}
+    fps: 14
+  pickupSoul:
+    frames:
+    - {fileID: 21300000, guid: 7e0d7d741757f4e37b51159ba5a5f57d, type: 3}
+    - {fileID: 21300000, guid: afe6b9e1e85c849b2823f50b69d4e654, type: 3}
+    - {fileID: 21300000, guid: cd13a4b67dc424dddab7f8a975f9b078, type: 3}
+    - {fileID: 21300000, guid: 2c9bc4b6fc0d74ae4b3908e7ce41e1da, type: 3}
+    - {fileID: 21300000, guid: 7654b4dd379684029af7fafef55caf9d, type: 3}
+    fps: 14
+  pickupExp:
+    frames:
+    - {fileID: 21300000, guid: dafe6cd2756be4ed3b9a8fb9bb6a9555, type: 3}
+    - {fileID: 21300000, guid: 442f646a953664dc89323a7714c538bf, type: 3}
+    - {fileID: 21300000, guid: 3f9c0351a23284a898a01f9eb1b3fbc6, type: 3}
+    - {fileID: 21300000, guid: 20ff123c035a64dca9d4798cafc7eabc, type: 3}
+    - {fileID: 21300000, guid: d2ba287313cfd46f1bab4903c26639c3, type: 3}
+    fps: 14
+  iconCoin: {fileID: 21300000, guid: 1ee6ccd3dc4be4e25a179b1d3e711cd9, type: 3}
+  iconSoul: {fileID: 21300000, guid: 899a47da2a6d04563828d16ed23d852e, type: 3}
+  iconExp: {fileID: 21300000, guid: 247ae4916a3384b77bb732c1226bd969, type: 3}
+  offerIds:
+  - bell_red
+  - bell_ink
+  - amber
+  - rosary
+  - heal
+  - gauge
+  offerIcons:
+  - {fileID: 21300000, guid: 74a73a1638f784ccf8914cc971e26eb2, type: 3}
+  - {fileID: 21300000, guid: 8d86824f26677459a890d2aca5566ce8, type: 3}
+  - {fileID: 21300000, guid: 77c4114da47fa4ae4ac24435f5de5855, type: 3}
+  - {fileID: 21300000, guid: 89f24353c612b488ba4d2bec268cbceb, type: 3}
+  - {fileID: 21300000, guid: ffd2f6d83548c4029bad5309721c5ad1, type: 3}
+  - {fileID: 21300000, guid: f3ff74e444d454b738013ce5aea1a7c7, type: 3}
+  shopTable: {fileID: 21300000, guid: 48ae13dea4c6d45ffbc64051d577ea7a, type: 3}

@@ -34,6 +34,22 @@ namespace ParryRL
         /// <summary>이 문에 쓴 포탈 틀 번호 (<see cref="PortalArt"/>, 틀이 없으면 −1).</summary>
         public int FrameIndex { get; private set; } = -1;
         public SpriteRenderer FrameRenderer { get; private set; }
+        /// <summary>문에 매단 방 표식 (없으면 null).</summary>
+        public SpriteRenderer MarkRenderer { get; private set; }
+        private const float MarkScale = 0.95f;
+        private float _markBaseY, _markTime;
+
+        private void Update()
+        {
+            if (MarkRenderer == null) return;
+            // 매달린 표식이 살짝 흔들린다 (매듭을 축으로 좌우 기울기 + 아주 작은 오르내림)
+            _markTime += Time.deltaTime;
+            float phase = _markTime * 1.6f + transform.position.x;
+            MarkRenderer.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(phase) * 4f);
+            var p = MarkRenderer.transform.localPosition;
+            p.y = _markBaseY + Mathf.Sin(phase * 2f) * 0.012f;
+            MarkRenderer.transform.localPosition = p;
+        }
 
         private void Build(Sprite gateSprite, PortalArt portalArt)
         {
@@ -61,6 +77,16 @@ namespace ParryRL
                     effects.HaloScale = 0.9f;
                 }
                 effects.UseGatePortal = true; // 에셋의 귀문 소용돌이를 틀 구멍 모양대로 가려 그린다
+                var mark = portalArt.Mark(index);
+                if (mark != null && portalArt.TryHole(index, out var hc, out var hs))
+                {
+                    // 방 표식: 문 안쪽 위에 매단 부적 장식 (글자를 읽지 않아도 무슨 방인지 보이게). 매듭 꼭대기가 구멍 위 끝에 닿게
+                    float h = mark.bounds.size.y * MarkScale;
+                    float topY = hc.y + hs.y * 0.5f;
+                    MarkRenderer = MakeSprite("RoomMark", mark, new Vector3(0f, (topY - h * 0.5f - 0.3f - Height * 0.5f) / Height, 0f),
+                        new Vector2(MarkScale / Width, MarkScale / Height), 12, Color.white);
+                    _markBaseY = MarkRenderer.transform.localPosition.y;
+                }
                 effects.HoleMask = portalArt.HoleMask(index);
                 effects.SwirlTintAmount = 1f;  // 회색 소용돌이에 방 종류 색을 그대로 곱한다
                 labelY = frame.bounds.size.y + 0.4f;

@@ -23,6 +23,54 @@ namespace ParryRL.EditorTools
         private const string PropsDir = "Assets/Art/Props";
         private const string GateSpritePath = PropsDir + "/shrine_gate.png";
         private const string PortalArtPath = PropsDir + "/PortalArt.asset";
+        private const string RewardDir = "Assets/Art/Rewards";
+        private const string RewardArtPath = RewardDir + "/RewardArt.asset";
+
+        [System.Serializable]
+        private class RewardPivots { public float[] chest, coin_spin, soulstone_float, exp_orb, pickup_coin, pickup_soul, pickup_exp; }
+
+        /// <summary>보상 그림 (Tools/gwimun_sprites/cut_reward.py): 상자 · 재화 · 줍기 · HUD 아이콘 → RewardArt.</summary>
+        private static void CreateRewardArt()
+        {
+            if (!AssetDatabase.IsValidFolder(RewardDir)) return;
+            string pivotPath = RewardDir + "/reward_pivots.json";
+            var piv = File.Exists(pivotPath) ? JsonUtility.FromJson<RewardPivots>(File.ReadAllText(pivotPath)) : new RewardPivots();
+            Vector2 P(float[] p) => p != null && p.Length == 2 ? new Vector2(p[0], p[1]) : CenterPivot;
+            ImportFrames(RewardDir, file =>
+                file.StartsWith("shop_table") ? BottomPivot :
+                file.StartsWith("reward_chest") ? P(piv.chest) :
+                file.StartsWith("reward_soulstone_float") ? P(piv.soulstone_float) :
+                CenterPivot);
+            var art = AssetDatabase.LoadAssetAtPath<RewardArt>(RewardArtPath);
+            if (art == null)
+            {
+                art = ScriptableObject.CreateInstance<RewardArt>();
+                AssetDatabase.CreateAsset(art, RewardArtPath);
+            }
+            art.chest = LoadClip(RewardDir, "reward", "chest", 8f);
+            art.coinSpin = LoadClip(RewardDir, "reward", "coin_spin", 10f);
+            art.soulFloat = LoadClip(RewardDir, "reward", "soulstone_float", 8f);
+            art.expOrb = LoadClip(RewardDir, "reward", "exp_orb", 10f);
+            art.pickupCoin = LoadClip(RewardDir, "reward", "pickup_coin", 14f);
+            art.pickupSoul = LoadClip(RewardDir, "reward", "pickup_soul", 14f);
+            art.pickupExp = LoadClip(RewardDir, "reward", "pickup_exp", 14f);
+            art.iconCoin = AssetDatabase.LoadAssetAtPath<Sprite>(RewardDir + "/reward_icon_coin.png");
+            art.iconSoul = AssetDatabase.LoadAssetAtPath<Sprite>(RewardDir + "/reward_icon_soul.png");
+            art.iconExp = AssetDatabase.LoadAssetAtPath<Sprite>(RewardDir + "/reward_icon_exp.png");
+            var ids = new System.Collections.Generic.List<string>();
+            var icons = new System.Collections.Generic.List<Sprite>();
+            foreach (string id in new[] { "bell_red", "bell_ink", "amber", "rosary", "heal", "gauge" })
+            {
+                var sp = AssetDatabase.LoadAssetAtPath<Sprite>($"{RewardDir}/offer_{id}.png");
+                if (sp == null) continue;
+                ids.Add(id);
+                icons.Add(sp);
+            }
+            art.offerIds = ids.ToArray();
+            art.offerIcons = icons.ToArray();
+            art.shopTable = AssetDatabase.LoadAssetAtPath<Sprite>(RewardDir + "/shop_table.png");
+            EditorUtility.SetDirty(art);
+        }
 
         [System.Serializable]
         private class PortalMeta
@@ -63,10 +111,12 @@ namespace ParryRL.EditorTools
             art.frames = new Sprite[n];
             art.holes = new Vector4[n];
             art.holeMasks = new Sprite[n];
+            art.marks = new Sprite[n];
             for (int i = 0; i < n; i++)
             {
                 art.frames[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{PropsDir}/portal_frame_{i}.png");
                 art.holeMasks[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{PropsDir}/portal_hole_{i}.png");
+                art.marks[i] = AssetDatabase.LoadAssetAtPath<Sprite>($"{PropsDir}/portal_mark_{i}.png");
                 var h = meta.frames[i].hole;
                 art.holes[i] = h != null && h.Length == 4 ? new Vector4(h[0], h[1], h[2], h[3]) : Vector4.zero;
             }
@@ -144,6 +194,7 @@ namespace ParryRL.EditorTools
             CreateFloorSets();
             if (AssetDatabase.IsValidFolder(PropsDir)) ImportFrames(PropsDir, _ => BottomPivot);
             CreatePortalArt();
+            CreateRewardArt();
             ImportGameFont();
             var bgSets = CreateBackgroundSets();
             AssetDatabase.SaveAssets();
@@ -170,6 +221,8 @@ namespace ParryRL.EditorTools
             Set(gameAssets, "square", _square);
             if (attackFx != null) Set(gameAssets, "attackFx", attackFx);
             if (uiArt != null) Set(gameAssets, "uiArt", uiArt);
+            var rewardArt = AssetDatabase.LoadAssetAtPath<RewardArt>(RewardArtPath);
+            if (rewardArt != null) Set(gameAssets, "rewardArt", rewardArt);
             systems.AddComponent<HitFeel>();
             systems.AddComponent<AudioSource>();
             var sfx = systems.AddComponent<Sfx>();
@@ -211,6 +264,10 @@ namespace ParryRL.EditorTools
             for (int b = 0; b < bgSets.Length; b++) bgList.GetArrayElementAtIndex(b).objectReferenceValue = bgSets[b];
             var bossBg = CreateBossBackgroundSet();
             if (bossBg != null) bgSerialized.FindProperty("bossSet").objectReferenceValue = bossBg;
+            var rewardBg = CreateRoomBackgroundSet("reward", "보상방");
+            if (rewardBg != null) bgSerialized.FindProperty("rewardSet").objectReferenceValue = rewardBg;
+            var shopBg = CreateRoomBackgroundSet("shop", "상점방");
+            if (shopBg != null) bgSerialized.FindProperty("shopSet").objectReferenceValue = shopBg;
             bgSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             // ── 플레이어 ──
@@ -381,6 +438,8 @@ namespace ParryRL.EditorTools
             Set(gameAssets, "square", _square);
             if (attackFx != null) Set(gameAssets, "attackFx", attackFx);
             if (uiArt != null) Set(gameAssets, "uiArt", uiArt);
+            var rewardArt = AssetDatabase.LoadAssetAtPath<RewardArt>(RewardArtPath);
+            if (rewardArt != null) Set(gameAssets, "rewardArt", rewardArt);
             systems.AddComponent<HitFeel>();
             systems.AddComponent<AudioSource>();
             var sfx = systems.AddComponent<Sfx>();
@@ -471,9 +530,12 @@ namespace ParryRL.EditorTools
         }
 
         /// <summary>보스방 배경(Assets/Art/Backgrounds/boss/far·mid.png — 에셋 미리보기/bg/boss 사본). 구간 순환과 따로 둔다.</summary>
-        private static BackgroundSet CreateBossBackgroundSet()
+        private static BackgroundSet CreateBossBackgroundSet() => CreateRoomBackgroundSet("boss", "불가살이 보스방", "bossSet");
+
+        /// <summary>특정 방 전용 배경 (보스방·보상방): Assets/Art/Backgrounds/&lt;folder&gt;/far·mid.png → &lt;asset&gt;.asset.</summary>
+        private static BackgroundSet CreateRoomBackgroundSet(string folder, string label, string asset = null)
         {
-            string dir = $"{BgDir}/boss";
+            string dir = $"{BgDir}/{folder}";
             if (!AssetDatabase.IsValidFolder(dir)) return null;
             foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
             {
@@ -492,14 +554,14 @@ namespace ParryRL.EditorTools
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
                 importer.SaveAndReimport();
             }
-            string assetPath = $"{dir}/bossSet.asset";
+            string assetPath = $"{dir}/{asset ?? folder + "Set"}.asset";
             var set = AssetDatabase.LoadAssetAtPath<BackgroundSet>(assetPath);
             if (set == null)
             {
                 set = ScriptableObject.CreateInstance<BackgroundSet>();
                 AssetDatabase.CreateAsset(set, assetPath);
             }
-            set.zoneName = "불가살이 보스방";
+            set.zoneName = label;
             set.far = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/far.png");
             set.mid = AssetDatabase.LoadAssetAtPath<Sprite>($"{dir}/mid.png");
             set.near = null;

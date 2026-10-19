@@ -66,6 +66,8 @@ namespace ParryRL.Tests
                 var gate = RoomGate.Create(new Vector3(0f, 0f, 0f), type, exit, null, art);
                 Assert.AreEqual(frame, gate.FrameIndex, $"{type} {(exit ? "출구" : "")}");
                 Assert.AreEqual($"portal_frame_{frame}", gate.FrameRenderer.sprite.name);
+                Assert.IsNotNull(gate.MarkRenderer, "방 표식");
+                Assert.AreEqual($"portal_mark_{frame}", gate.MarkRenderer.sprite.name, "틀과 같은 순서의 표식");
                 Assert.IsTrue(art.TryHole(frame, out var c, out var size), "틀 안쪽 구멍");
                 Assert.Greater(size.y, 1.5f, "사람이 들어갈 만한 구멍");
                 Assert.Greater(c.y, size.y * 0.5f - 0.01f, "구멍은 바닥 위");
@@ -329,6 +331,60 @@ namespace ParryRL.Tests
             RunState.AddItem(red);
             Assert.AreEqual(1.15f, SkillTreeState.MeleeAttackMultiplier, 0.001f);
             Assert.AreEqual(1f, SkillTreeState.RangedAttackMultiplier, 0.001f, "근접 아이템은 원거리에 영향 없음");
+        }
+
+        [UnityTest]
+        public IEnumerator 보상방은_전용_배경에_보물_상자이고_고르면_열리며_재화가_튄다()
+        {
+            yield return TestScene.LoadRun(RoomType.Reward);
+            yield return null;
+            var bg = Object.FindAnyObjectByType<ParallaxBackground>();
+            Assert.IsTrue(bg.IsRewardBackground, "보상방 전용 배경");
+            yield return WaitUntil(() => Object.FindObjectsByType<RoomAltar>().Length > 0, 5f);
+            var altars = Object.FindObjectsByType<RoomAltar>();
+            Assert.IsTrue(altars.All(a => a.HasChest), "공짜 보상은 보물 상자");
+            Assert.IsTrue(altars.Where(a => a.Offer.Kind != OfferKind.Soul).All(a => a.IconRenderer != null), "상품마다 그림");
+            var soul = altars.FirstOrDefault(a => a.Offer.Kind == OfferKind.Soul);
+            Assume.That(soul, Is.Not.Null);
+            int before = RewardFx.SpawnCount;
+            Assert.IsTrue(soul.TryTake());
+            Assert.Greater(RewardFx.SpawnCount, before, "영혼석이 튀어 오른다");
+            yield return new WaitForSeconds(1f);
+            Assert.IsTrue(soul.ChestOpened);
+            var chest = soul.transform.Find("Chest").GetComponent<SpriteRenderer>();
+            Assert.AreEqual("reward_chest_5", chest.sprite.name, "열린 상자 장면에 머문다");
+            StringAssert.Contains(RunState.SoulStones.ToString(), Hud.CurrencyText, "상단 재화 줄");
+        }
+
+        [UnityTest]
+        public IEnumerator 상점_상품은_진열대_위에_상품_그림으로_놓인다()
+        {
+            yield return TestScene.LoadRun(RoomType.Shop);
+            yield return null;
+            Assert.IsTrue(Object.FindAnyObjectByType<ParallaxBackground>().IsShopBackground, "상점방 전용 배경");
+            yield return WaitUntil(() => Object.FindObjectsByType<RoomAltar>().Length > 0, 5f);
+            var altars = Object.FindObjectsByType<RoomAltar>();
+            Assert.AreEqual(4, altars.Length);
+            foreach (var a in altars)
+            {
+                Assert.IsFalse(a.HasChest, "상점은 상자가 아니다");
+                Assert.IsNotNull(a.transform.Find("Table"), "진열대");
+                Assert.IsNotNull(a.IconRenderer, $"{a.Offer.Title} 그림");
+                StringAssert.StartsWith(a.Offer.Kind == OfferKind.Item && a.Offer.Item.Id == "scroll" ? "reward_icon_exp" : "offer_", a.IconRenderer.sprite.name);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator 일반방은_보상방_배경이_아니고_몬스터를_잡으면_엽전이_튄다()
+        {
+            yield return TestScene.LoadRun();
+            yield return null;
+            Assert.IsFalse(Object.FindAnyObjectByType<ParallaxBackground>().IsRewardBackground);
+            yield return WaitUntil(() => Object.FindObjectsByType<EnemyController>().Length > 0, 5f);
+            int before = RewardFx.SpawnCount;
+            Object.FindObjectsByType<EnemyController>()[0].TakeDamage(99999, 1f, false);
+            yield return null;
+            Assert.Greater(RewardFx.SpawnCount, before, "엽전 연출");
         }
 
         [UnityTest]

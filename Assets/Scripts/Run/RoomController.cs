@@ -73,6 +73,7 @@ namespace ParryRL
             int gold = enemy.GetComponent<BossController>() != null ? GoldBoss : enemy.IsElite ? GoldElite : enemy.Kind == EnemyKind.Ranged ? GoldRanged : GoldMelee;
             RunState.AddGold(gold);
             Hud.WorldText(enemy.transform.position + Vector3.up * 0.8f, $"+{gold} 엽전", new Color(1f, 0.85f, 0.35f), 1f);
+            RewardFx.Burst(RewardFx.Kind.Coin, enemy.transform.position, gold >= GoldElite ? 4 : gold >= GoldRanged ? 2 : 1); // 엽전이 톡 튀어 반짝 사라진다
         }
 
         private void Start()
@@ -86,6 +87,16 @@ namespace ParryRL
             {
                 var bg = FindAnyObjectByType<ParallaxBackground>();
                 if (bg != null) bg.UseBossBackground(); // 쇠사슬 감긴 거대한 문 — 불가살이 보스방 전용 배경
+            }
+            else if (RunState.Current == RoomType.Reward)
+            {
+                var bg = FindAnyObjectByType<ParallaxBackground>();
+                if (bg != null) bg.UseRewardBackground(); // 달빛 드는 낡은 사당 기둥 — 보상방 전용 배경 (1016 에셋)
+            }
+            else if (RunState.Current == RoomType.Shop)
+            {
+                var bg = FindAnyObjectByType<ParallaxBackground>();
+                if (bg != null) bg.UseShopBackground(); // 소라 껍데기 동굴 장터 — 상점방 전용 배경 (1016 에셋)
             }
             if (RunState.Current == RoomType.Boss && CameraRig.Instance != null)
                 CameraRig.Instance.SetView(BossViewSize, BossViewSize - 2.5f); // 보스방은 넓게 — 큰 보스(2페이즈)가 화면에 다 들어오게. 바닥은 같은 높이(아래 끝 y=−2.5)
@@ -115,8 +126,8 @@ namespace ParryRL
 
         private void UpdateInfo()
         {
-            string text = $"방 {RunState.RoomNumber} / {RunState.TotalRooms}  ·  {RoomInfo.Label(RunState.Current)}" +
-                          $"      <color=#FFD95A>엽전 {RunState.Gold}</color>   <color=#C9A6FF>영혼석 {RunState.SoulStones}</color>";
+            string text = $"방 {RunState.RoomNumber} / {RunState.TotalRooms}  ·  {RoomInfo.Label(RunState.Current)}";
+            Hud.SetCurrency(RunState.Gold, RunState.SoulStones);
             if (RunState.Items.Count > 0)
             {
                 var counts = new List<string>();
@@ -312,6 +323,7 @@ namespace ParryRL
             Hud.WorldText(level.transform.position + Vector3.up * 1.6f, $"방 클리어 +{xp} EXP", new Color(0.45f, 0.9f, 1f), 1.2f);
             level.AddXp(xp);
             LastRoomXp = xp;
+            RewardFx.Burst(RewardFx.Kind.Exp, level.transform.position + Vector3.up * 0.5f, 3); // 청록 혼불
         }
 
         /// <summary>마지막으로 방을 깨서 얻은 경험치 (테스트·디버그).</summary>

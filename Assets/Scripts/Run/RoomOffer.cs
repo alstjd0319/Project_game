@@ -11,6 +11,15 @@ namespace ParryRL
         public OfferKind Kind;
         public RunItem Item;
         public int Amount;
+
+        /// <summary>상품 그림 이름 (<see cref="RewardArt.OfferIcon"/>).</summary>
+        public string IconId => Kind switch
+        {
+            OfferKind.Item => Item != null ? Item.Id : "",
+            OfferKind.Soul => "soul",
+            OfferKind.Heal => "heal",
+            _ => "gauge",
+        };
         public int Price;
 
         public string Title => Kind switch

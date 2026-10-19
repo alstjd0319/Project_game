@@ -26,6 +26,8 @@ namespace ParryRL
         private SkillBar _skillBar;
         private TuningPanel _tuningPanel;
         private Text _runInfo;
+        private RectTransform _currency;
+        private Text _goldText, _soulText;
         // 보스 체력바 (화면 상단, 퍼센트)
         private GameObject _bossRoot;
         private Image _bossFill;
@@ -154,11 +156,25 @@ namespace ParryRL
         public static string BossBarText => _instance != null && _instance._bossText != null ? _instance._bossText.text : "";
 
         /// <summary>화면 상단 중앙에 붙어 있는 한 줄 (방 번호·종류 등). null이면 숨긴다.</summary>
+        /// <summary>상단 중앙 방 정보 오른쪽의 재화 줄: 엽전·영혼석 그림 + 개수 (그림이 없으면 글자).</summary>
+        public static void SetCurrency(int gold, int soul)
+        {
+            if (_instance == null || _instance._currency == null) return;
+            _instance._currency.gameObject.SetActive(true);
+            _instance._goldText.text = _instance._goldIcon ? gold.ToString() : $"엽전 {gold}";
+            _instance._soulText.text = _instance._soulIcon ? soul.ToString() : $"영혼석 {soul}";
+        }
+
+        public static string CurrencyText => _instance != null && _instance._goldText != null ? $"{_instance._goldText.text} {_instance._soulText.text}" : "";
+
+        private bool _goldIcon, _soulIcon;
+
         public static void SetRunInfo(string message)
         {
             if (_instance == null || _instance._runInfo == null) return;
             _instance._runInfo.text = message;
             _instance._runInfo.enabled = !string.IsNullOrEmpty(message);
+            if (_instance._currency != null && string.IsNullOrEmpty(message)) _instance._currency.gameObject.SetActive(false);
             if (_instance._help != null) _instance._help.enabled = string.IsNullOrEmpty(message); // 런 중엔 상단 중앙을 방 정보가 쓰므로 조작 안내는 숨긴다
         }
 
@@ -464,9 +480,10 @@ namespace ParryRL
             // 상단 중앙: 방 번호·종류 (런 중에만 채워진다)
             _runInfo = UiKit.Text("RunInfo", _root, 32, TextAnchor.UpperCenter);
             _runInfo.color = new Color(0.95f, 0.9f, 1f);
-            UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(900f, 80f));
+            UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(-160f, -24f), new Vector2(600f, 80f));
             _runInfo.rectTransform.pivot = new Vector2(0.5f, 1f);
             _runInfo.enabled = false;
+            BuildCurrencyRow();
 
             BuildBossBar();
 
@@ -544,6 +561,38 @@ namespace ParryRL
             UiKit.Stretch(_xpFill.rectTransform);
             _xpText = UiKit.Text("XpText", xpBg, 16, TextAnchor.MiddleCenter);
             UiKit.Stretch(_xpText.rectTransform);
+        }
+
+        /// <summary>재화 줄 (방 정보 오른쪽): [엽전 그림] 34   [영혼석 그림] 2. 1016 재화 아이콘(RewardArt), 없으면 글자.</summary>
+        private void BuildCurrencyRow()
+        {
+            var reward = GameAssets.Reward;
+            _currency = new GameObject("Currency", typeof(RectTransform)).GetComponent<RectTransform>();
+            _currency.SetParent(_root, false);
+            UiKit.Place(_currency, new Vector2(0.5f, 1f), new Vector2(190f, -22f), new Vector2(360f, 48f));
+            float x = 0f;
+            (Image icon, Text text) Item(string name, Sprite sprite, Color color)
+            {
+                Image img = null;
+                if (sprite != null)
+                {
+                    img = UiKit.Image(name + "Icon", _currency, Color.white);
+                    img.sprite = sprite;
+                    img.preserveAspect = true;
+                    UiKit.Place(img.rectTransform, new Vector2(0f, 1f), new Vector2(x, 0f), new Vector2(44f, 44f));
+                    x += 50f;
+                }
+                var t = UiKit.Text(name, _currency, 32, TextAnchor.MiddleLeft);
+                t.color = color;
+                UiKit.Place(t.rectTransform, new Vector2(0f, 1f), new Vector2(x, 0f), new Vector2(120f, 44f));
+                x += sprite != null ? 90f : 170f;
+                return (img, t);
+            }
+            _goldIcon = reward != null && reward.iconCoin != null;
+            _soulIcon = reward != null && reward.iconSoul != null;
+            (_, _goldText) = Item("Gold", reward != null ? reward.iconCoin : null, new Color(1f, 0.85f, 0.35f));
+            (_, _soulText) = Item("Soul", reward != null ? reward.iconSoul : null, new Color(0.79f, 0.65f, 1f));
+            _currency.gameObject.SetActive(false);
         }
 
         /// <summary>귀문 UI 그림: 옥 장식 체력 틀 + 초록 채움, 구슬 도력, 구리 바 + 보라 채움 경험치.</summary>

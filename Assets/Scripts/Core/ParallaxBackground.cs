@@ -23,18 +23,32 @@ namespace ParryRL
         [SerializeField, Tooltip("0 이상이면 GameTuning 대신 이 구간을 고정으로 쓴다 (시작 화면: 사당)")] private int forcedZone = -1;
         [SerializeField, Tooltip("보스방(불가살이) 배경 — 구간 순환(F1 배경 바꾸기)에는 들어가지 않고, 보스방에서만 UseBossBackground로 켠다")] private BackgroundSet bossSet;
 
-        private bool _useBoss;
+        [SerializeField, Tooltip("보상방 배경 — 보상방에서만 UseRewardBackground로 켠다")] private BackgroundSet rewardSet;
+        [SerializeField, Tooltip("상점방 배경 — 상점방에서만 UseShopBackground로 켠다")] private BackgroundSet shopSet;
+
+        private BackgroundSet _special; // 방 전용 배경 (보스방·보상방) — 있으면 구간 배경 대신
+        private bool _useBoss => _special != null;
         private const int BossZone = -2;
 
         /// <summary>보스방 배경으로 바꾼다 (런의 마지막 방).</summary>
-        public void UseBossBackground()
+        public void UseBossBackground() => UseSpecial(bossSet);
+
+        /// <summary>보상방 배경(달빛 드는 낡은 사당 기둥)으로 바꾼다.</summary>
+        public void UseRewardBackground() => UseSpecial(rewardSet);
+
+        /// <summary>상점방 배경(소라 껍데기 동굴 장터)으로 바꾼다.</summary>
+        public void UseShopBackground() => UseSpecial(shopSet);
+
+        private void UseSpecial(BackgroundSet set)
         {
-            if (bossSet == null) return;
-            _useBoss = true;
+            if (set == null) return;
+            _special = set;
             _zone = -1; // 다시 깔기
         }
 
-        public bool IsBossBackground => _useBoss && _zone == BossZone;
+        public bool IsBossBackground => _special != null && _special == bossSet && _zone == BossZone;
+        public bool IsRewardBackground => _special != null && _special == rewardSet && _zone == BossZone;
+        public bool IsShopBackground => _special != null && _special == shopSet && _zone == BossZone;
 
         private sealed class Layer
         {
@@ -82,7 +96,7 @@ namespace ParryRL
             _layers.Clear();
             _zone = zone;
             _builtOrtho = _cam.orthographicSize;
-            var set = zone == BossZone ? bossSet : sets[zone];
+            var set = zone == BossZone ? _special : sets[zone];
             float halfW = _cam.orthographicSize * Mathf.Max(_cam.aspect, MaxAspect);
 
             AddLayer("Far", set.far, FarScroll, FarOrder, halfW);

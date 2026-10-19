@@ -1,0 +1,43 @@
+{
+    "character":  "roomobj",
+    "pixelsPerUnit":  90,
+    "note":  "가로 한 줄 스트립. 칸(cellW×cellH)을 왼쪽부터 frames개로 자르면 프레임. 그림은 오른쪽을 봄(왼쪽은 좌우 반전). pivotPx는 칸 왼쪽 위 기준 px, unityPivot은 Unity 스프라이트 피벗(0~1, 아래가 0).",
+    "sheets":  [
+                   {
+                       "sheet":  "chest_open",
+                       "label":  "보상 상자 · 열기",
+                       "file":  "roomobj_chest_open_strip.png",
+                       "frames":  6,
+                       "fps":  8,
+                       "cellW":  256,
+                       "cellH":  192,
+                       "pivotPx":  [
+                                       128,
+                                       176
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0833
+                                      ]
+                   },
+                   {
+                       "sheet":  "hearth_fire",
+                       "label":  "휴식방 화롯불",
+                       "file":  "roomobj_hearth_fire_strip.png",
+                       "frames":  6,
+                       "fps":  10,
+                       "cellW":  256,
+                       "cellH":  192,
+                       "pivotPx":  [
+                                       128,
+                                       176
+                                   ],
+                       "pivotKind":  "ground",
+                       "unityPivot":  [
+                                          0.5,
+                                          0.0833
+                                      ]
+                   }
+               ]
+}

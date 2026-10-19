@@ -157,8 +157,42 @@ def gray_vortex():
         Image.fromarray(out, 'RGBA').save(f'{FX}/fx_gate_portal_gray_{i}.png')
 
 
+MARK_H = 130  # 방 표식 높이(px) = 약 1.45유닛 (문 틀 위에 매다는 장식)
+
+
+def cut_marks():
+    """방 표식 7개 (1016 원본/ui/room_marks.png, 마젠타 배경, 문 틀과 같은 순서) → Assets/Art/Props/portal_mark_<n>.png."""
+    for f in os.listdir(PROPS):
+        if f.startswith('portal_mark_'):
+            os.remove(os.path.join(PROPS, f))
+    sheet = remove_magenta(Image.open(f'{SRC}/room_marks.png'))
+    a = np.asarray(sheet.getchannel('A')) > 0
+    col = a.sum(0)
+    runs, start = [], None
+    for x, v in enumerate(col):
+        if v > 2 and start is None:
+            start = x
+        if v <= 2 and start is not None:
+            runs.append((start, x))
+            start = None
+    if start is not None:
+        runs.append((start, len(col)))
+    runs = [r for r in runs if r[1] - r[0] > 40]
+    assert len(runs) == 7, f'방 표식 7개를 찾지 못했다: {runs}'
+    for i, (x0, x1) in enumerate(runs):
+        ys = np.nonzero(a[:, x0:x1].any(axis=1))[0]
+        im = sheet.crop((x0, int(ys.min()), x1, int(ys.max()) + 1))
+        k = MARK_H / im.height
+        im = im.resize((max(1, round(im.width * k)), MARK_H), Image.LANCZOS)
+        al = np.asarray(im.getchannel('A'))
+        im.putalpha(Image.fromarray(np.where(al > 110, 255, 0).astype(np.uint8)))
+        im.save(f'{PROPS}/portal_mark_{i}.png')
+    print('marks', len(runs))
+
+
 def main():
     meta = {}
+    cut_marks()
     gray_vortex()
     cut_frames(meta)
     cut_fx(meta, 'enter')
