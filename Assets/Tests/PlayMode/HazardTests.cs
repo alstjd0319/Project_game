@@ -23,7 +23,11 @@ namespace ParryRL.Tests
         }
 
         [TearDown]
-        public void TearDown() => RoomLayouts.ForcedIndex = -1;
+        public void TearDown()
+        {
+            RoomLayouts.ForcedIndex = -1;
+            EncounterCatalog.ForcedId = null;
+        }
 
         // ───────────── 구멍 배치 ─────────────
 
@@ -131,6 +135,7 @@ namespace ParryRL.Tests
         public IEnumerator 도깨비불은_구멍_위를_떠서_건너온다()
         {
             RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
+            EncounterCatalog.ForcedId = "embers"; // 첫 웨이브에 도깨비불이 있는 장면 (1구간 장면은 창귀만)
             yield return TestScene.LoadRun(RoomType.Normal);
             GameTuning.Current.godMode = true;
             GameTuning.Current.enemyPassive = true;

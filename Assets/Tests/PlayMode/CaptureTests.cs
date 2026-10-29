@@ -170,6 +170,32 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 레벨디자인_구간별_전투_장면()
+        {
+            // 방 번호 → 구간(배경·바닥) + 구간에 맞는 장면: 1구간 시간차(창귀만) · 2구간 엄호 사격(높이 뜬 도깨비불) · 3구간 포위
+            var shots = new[] { ("stagger", RoomLayouts.Stairs, 1, "encounter_zone1_stagger"), ("cover", RoomLayouts.Tower, 3, "encounter_zone2_cover"), ("siege", RoomLayouts.Roof, 4, "encounter_zone3_siege") };
+            foreach (var (id, layout, entered, name) in shots)
+            {
+                EncounterCatalog.ForcedId = id;
+                RoomLayouts.ForcedIndex = layout;
+                var rooms = new RoomType[entered];
+                for (int i = 0; i < entered; i++) rooms[i] = RoomType.Normal;
+                yield return TestScene.LoadRun(rooms);
+                GameTuning.Current.godMode = true;
+                GameTuning.Current.enemyPassive = true;
+                var player = Object.FindAnyObjectByType<PlayerDefense>();
+                var pos = new Vector3(-6f, 0.8f, 0f); // 뒤에서 들어올 자리가 있게 방 가운데 쪽으로
+                player.transform.position = pos;
+                player.GetComponent<Rigidbody2D>().position = pos;
+                yield return new WaitUntil(() => RoomController.Instance.CurrentPhase == RoomController.Phase.Fighting);
+                yield return new WaitForSeconds(2.8f); // 늦게 들어오는 몬스터까지
+                yield return Capture(name);
+            }
+            EncounterCatalog.ForcedId = null;
+            RoomLayouts.ForcedIndex = -1;
+        }
+
+        [UnityTest]
         public IEnumerator 런_바닥_구멍과_추락_복귀()
         {
             RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;

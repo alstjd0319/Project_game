@@ -87,6 +87,11 @@ namespace ParryRL
         public float heavyWindup = 0.45f;
         public float rangedNormalSpeed = 8f;
         public float rangedHeavySpeed = 5f;
+        // 다수전: 공격이 같은 순간에 겹쳐 막을 수 없게 되는 걸 막는다 (AttackTokens)
+        [Tooltip("동시에 공격(예비 모션 ~ 베기·발사)하는 몬스터 수 상한 (0 = 제한 없음) — F1 몬스터 탭")]
+        public int maxAttackers = 2;
+        [Tooltip("한 몬스터가 공격을 시작한 뒤 다른 몬스터가 공격을 시작할 수 있기까지의 최소 간격(초) — 베기 순간이 패링 판정 창(0.3초)보다 넓게 벌어지게")]
+        public float attackStagger = 0.6f;
 
         // ── 연습 스위치 (저장하지 않음 — 켜둔 채 잊어버리면 헷갈리므로) ──
         [NonSerialized] public bool godMode;

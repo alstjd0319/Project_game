@@ -27,6 +27,24 @@ namespace ParryRL
             _ => 0,
         };
 
+        /// <summary>
+        /// 전투 장면(<see cref="EncounterCatalog"/>)이 없는 방의 웨이브 (보스방 — 그리고 장면이 없을 때의 예비). 마릿수 공식을 등장 자리로 바꾼다:
+        /// 근접은 플레이어 앞 8부터, 원거리는 그 너머에 2.2 간격으로.
+        /// </summary>
+        public static List<SpawnSpec[]> Specs(RoomType type, int roomNumber)
+        {
+            var result = new List<SpawnSpec[]>();
+            foreach (var w in For(type, roomNumber))
+            {
+                var list = new List<SpawnSpec>();
+                if (w.Boss > 0) list.Add(SpawnSpec.BossSpec());
+                for (int m = 0; m < w.Melee; m++) list.Add(SpawnSpec.Melee(8f + m * 2.2f, SpawnAnchor.AheadOfPlayer, 0f, m < w.EliteMelee));
+                for (int r = 0; r < w.Ranged; r++) list.Add(SpawnSpec.Ranged(11f + r * 2.2f, 0f, SpawnAnchor.AheadOfPlayer, 0f, r < w.EliteRanged));
+                result.Add(list.ToArray());
+            }
+            return result;
+        }
+
         public static List<Wave> For(RoomType type, int roomNumber)
         {
             int n = System.Math.Max(1, roomNumber);

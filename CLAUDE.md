@@ -34,7 +34,7 @@
     - 9: 외부 테스트
     - 10: 버그·빌드·발표
   - 밀리면 보스 페이즈·몬스터 수부터 줄인다.
-- **미결정 사항** (임의로 확정하지 말 것): 3장 회피 판정 규칙 차별화(B안, 보류) · 다수전 공격 겹침 대책(보류 — 사용자가 "나중에 차차") · 스토리 세부(오누이·결말 톤) · 9장 TODO. 증강 수치는 전부 가안 (사용자가 플레이해 보고 조정 예정)
+- **미결정 사항** (임의로 확정하지 말 것): 3장 회피 판정 규칙 차별화(B안, 보류) · 다수전 공격 겹침 대책(→ 2026-10-29 공격권 방식으로 구현, 아래 "레벨 디자인" 참고) · 스토리 세부(오누이·결말 톤) · 9장 TODO. 증강 수치는 전부 가안 (사용자가 플레이해 보고 조정 예정)
 
 ## ⚠️ 궁수·스왑 시스템 폐기 (2026-10-08)
 
@@ -357,3 +357,13 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - (2026-10-19) **상점·보상 상품 그림**(사용자 요청): 상품 그대로의 그림(방울·호박 구슬·염주·두루마리)은 에셋에 없어 효과가 비슷한 메달을 골랐다 — `Tools/gwimun_sprites/cut_offer_icons.py`가 1017 `원본/ui/status_icons.png`(6×3)·1016 `원본/ui/upgyeong_icons.png`(3×5)를 격자로 잘라 `Assets/Art/Rewards/offer_<id>.png`(높이 96px): 붉은 방울 = 공격↑(엇갈린 봉) · 먹 방울 = 업경 부적 할퀴기 · 호박 구슬 = 업경 초록 심장 · 도력 염주 = 업경 보라 구슬 · 체력 회복 = 재생(연꽃) · 도력 가득 = 무적(빛 고리) · 배움 두루마리 = 재화 혼불 아이콘 · 영혼석 = 재화 영혼석. 상점 진열대는 1016 `원본/bg/shop/props.png` 아래 줄 둘째(천 덮인 나무 상) → `shop_table.png`(폭 180px, 아래 가운데 피벗). `RewardArt.offerIds/offerIcons/OfferIcon(id)/shopTable`, `RoomOffer.IconId`(아이템 Id · soul · heal · gauge).
   - `RoomAltar`: 상점 = 진열대 + 그 위 상품 그림(둥실) + 뒤 빛, 보상·엘리트 = 상자 바로 위(바닥에서 1.55유닛) 상품 그림(영혼석은 기존 둥실 영혼석). `IconRenderer`. 받으면 그림이 사라지고, 다른 걸 골라 잠기면 흐려진다. 테스트 `RunTests`(상점 진열대·상품 그림, 보상 상품 그림), 캡처 `run_shop`·`run_reward`.
 - (2026-10-19) **상점방 배경**: 1016 `미리보기/bg/shop/far·mid`(소라 껍데기 동굴 장터) → `Assets/Art/Backgrounds/shop/`(사본 `ArtSource/gwimun/shop/`) → `shopSet.asset`(`CreateRoomBackgroundSet("shop")`) → `ParallaxBackground.shopSet`/`UseShopBackground()`/`IsShopBackground`. `RoomController`가 상점방에서 켠다. 상점 주인 우렁각시는 아직 안 씀. 테스트 `RunTests`.
+
+## 레벨 디자인: 전투 장면 · 구간 · 공격권 (2026-10-29, 사용자 요청 "1,2,4번 진행")
+- **전투 장면(인카운터)** `Run/Encounter.cs`: 몬스터 수 공식(`RoomPlan.For`) 대신 직접 짠 장면 12개(`EncounterCatalog.All`) — 일반 9(첫 만남 · 길목 · 시간차 · 협공 · 불빛 사이 · 엄호 사격 · 구멍 앞 압박 · 포위 · 파상 공세) + 엘리트 3(우두머리 창귀 · 도깨비불 무리 · 두 우두머리). 장면 = 웨이브들 × `SpawnSpec`(종류 · 자리 x · 기준 `SpawnAnchor`(방 좌표 / 플레이어 앞 / 플레이어 뒤) · 높이(도깨비불만, 땅에서 떠서 등장·유지) · 엘리트 · Delay(웨이브 시작 뒤 늦게 등장)) + 어울리는 지형 `Layouts` + 구간 범위 `MinZone/MaxZone` + `Intent`(기획 메모).
+  - 고르기 `EncounterCatalog.Pick`: 방 종류 · 구간 · **난이도 예산**(점수 = 창귀 2 · 도깨비불 3 · 엘리트 +4, `Budget(방)` 6/10/14/16/19, 예산 − 6 ~ 예산 사이) · 앞 방과 다른 장면(`RunState.LastEncounter`). 첫 방은 "첫 만남" 고정(지형 기본). 지형은 장면이 허용한 것 중 앞 방과 다르게(`PickLayout`, `RoomLayouts.ForcedIndex` 우선). 테스트 고정 `EncounterCatalog.ForcedId`.
+  - `RoomController`: 싸우는 방(일반·엘리트, 마지막 방 제외)은 Awake에서 장면 → 지형 순으로 고르고, 웨이브는 `_pending`을 Delay 순으로 세운다(`SpawnDue`; 다 잡았는데 남은 게 있으면 바로 다음을 부름, 늦게 나온 몬스터 머리 위 "!"). 보스방 등 장면이 없는 방은 `RoomPlan.Specs`(옛 공식을 자리로 바꾼 것). `EnemySpawner.SpawnEnemyAt(kind, x, height, elite)`: 범위 자르기 · 플레이어와 3 이상 떨어뜨리기(`MinSpawnGap`) · 창귀는 구멍 피하기. **지나온 쪽(플레이어보다 왼쪽)은 화면 안에서만** 나온다(2026-10-29 사용자 요청): 화면 왼쪽 끝 + `ScreenEdgeMargin`(0.8)보다 바깥이면 그 안쪽으로 당기고, 뒤에 보이는 자리가 없으면 같은 거리만큼 앞에서. 앞쪽(나아갈 쪽)은 화면 밖이어도 그대로.
+  - 장면을 추가할 땐 `EncounterTests`(예산·구간마다 후보 존재, 방 안쪽 자리, 높이 ≤ 4 · 도깨비불만 · 발판 있는 지형만, 기본 지형은 첫 방 전용)가 검사한다. 수치·구성은 가안(플레이해 보고 조정).
+- **구간 연결**: `RunState.ZoneFor(방)` — 싸우는 방(1~5)을 셋으로: 1·2 = 1구간, 3·4 = 2구간, 5(와 보스방 바닥) = 3구간. `RunState.Zone`(판 진행 중이 아니면 0)을 `ParallaxBackground`·`FloorDecorator`가 `GameTuning.backgroundZone`보다 먼저 쓴다(`forcedZone` 다음). 연습 모드는 예전처럼 설정 값. 방 시작 팝업 "N구간 · 방 n · 종류 — 장면 이름", HUD 상단 "N구간 · 방 n/6 · 종류"(오른쪽 정렬로 화면 가운데 왼쪽에서 끝나 재화 줄과 안 겹침, 28px).
+- **공격권(다수전 공격 겹침 대책)** `Enemy/AttackTokens.cs`: 몬스터는 공격권을 받아야 공격(예비 모션)을 시작한다 — 동시에 `GameTuning.maxAttackers`(2, 0 = 제한 없음)마리까지, 공격 시작 사이 최소 `attackStagger`(0.6초, 패링 판정 창 0.3초보다 넓게). 못 받으면 0.15초 뒤 다시 시도. 회복 동작에 들어가거나 공격이 끊기면(경직·기절·`CancelAttack`·죽음·`OnDisable`) 돌려준다. 설정 창 몬스터 탭 "다수전 — 공격이 겹치지 않게" 슬라이더 2개. 테스트 `EncounterTests`(5마리를 붙여도 예비 모션 ≤ 2 · 시작 간격 ≥ 0.6, 끄면 겹침).
+- 테스트 `EncounterTests` 11개, `HazardTests` 도깨비불 구멍 테스트는 `ForcedId = "embers"`(1구간 장면은 창귀만). 캡처 `레벨디자인_구간별_전투_장면`(`encounter_zone1_stagger/zone2_cover/zone3_siege.png`).
+

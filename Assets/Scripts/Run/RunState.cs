@@ -25,6 +25,22 @@ namespace ParryRL
         public static int Seed { get; private set; }
         /// <summary>바로 앞 방의 지형 번호 (같은 지형이 연달아 나오지 않게).</summary>
         public static int LastLayout { get; set; }
+        /// <summary>바로 앞 방의 전투 장면 (같은 장면이 연달아 나오지 않게, <see cref="EncounterCatalog"/>).</summary>
+        public static string LastEncounter { get; set; }
+
+        /// <summary>
+        /// 방 번호 → 구간: 싸우는 방(1 ~ 마지막 전)을 셋으로 나눈다 — 6방 기준 1·2 = 1구간, 3·4 = 2구간, 5 = 3구간, 6(보스) = 3구간 바닥 + 보스 배경.
+        /// 구간마다 배경·바닥 그림과 나오는 전투 장면이 달라진다.
+        /// </summary>
+        public static int ZoneFor(int roomNumber)
+        {
+            int fightRooms = System.Math.Max(1, TotalRooms - 1);
+            int n = System.Math.Clamp(roomNumber, 1, fightRooms);
+            return System.Math.Clamp(1 + (n - 1) * 3 / fightRooms, 1, 3);
+        }
+
+        /// <summary>지금 방의 구간 (판 진행 중이 아니면 0).</summary>
+        public static int Zone => Active && RoomNumber > 0 ? ZoneFor(RoomNumber) : 0;
 
         /// <summary>이번 판의 엽전 (판이 끝나면 사라진다). 상점에서 쓴다.</summary>
         public static int Gold { get; private set; }
@@ -79,6 +95,7 @@ namespace ParryRL
             Current = RoomType.Normal;
             Seed = System.Environment.TickCount;
             LastLayout = RoomLayouts.Basic;
+            LastEncounter = null;
             Gold = 0;
             _items.Clear();
             Changed?.Invoke();

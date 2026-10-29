@@ -354,6 +354,9 @@ namespace ParryRL
             BeginPage();
             Header("몬스터 수 (근접 · 원거리 각각)");
             AddSlider("동시에 유지할 수", 1f, 10f, 1f, "0", () => T.enemiesPerKind, v => T.enemiesPerKind = Mathf.RoundToInt(v));
+            Header("다수전 — 공격이 겹치지 않게");
+            AddSlider("동시에 공격하는 수 (0 = 제한 없음)", 0f, 5f, 1f, "0", () => T.maxAttackers, v => T.maxAttackers = Mathf.RoundToInt(v));
+            AddSlider("공격 시작 최소 간격 (초)", 0f, 1.5f, 0.05f, "0.00", () => T.attackStagger, v => T.attackStagger = v);
             Header("근접 — 예비 모션 = 반응시간 (베기는 한 번에)");
             AddSlider("일반 예비 모션 (초)", 0.15f, 1f, 0.01f, "0.00", () => T.meleeNormalReaction, v => T.meleeNormalReaction = v);
             AddSlider("강공격 예비 모션 (초)", 0.3f, 1.5f, 0.01f, "0.00", () => T.meleeHeavyReaction, v => T.meleeHeavyReaction = v);

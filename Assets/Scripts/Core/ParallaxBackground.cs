@@ -75,7 +75,7 @@ namespace ParryRL
             if (_cam == null) _cam = Camera.main;
             if (_cam == null) return;
 
-            int wanted = _useBoss ? BossZone : Mathf.Clamp(forcedZone >= 0 ? forcedZone : GameTuning.Current.backgroundZone, 0, sets.Length - 1);
+            int wanted = _useBoss ? BossZone : Mathf.Clamp(forcedZone >= 0 ? forcedZone : RunState.Zone > 0 ? RunState.Zone : GameTuning.Current.backgroundZone, 0, sets.Length - 1);
             if (wanted != _zone || _layers.Count == 0 || Mathf.Abs(_cam.orthographicSize - _builtOrtho) > 0.01f) Build(wanted);
 
             Vector3 camPos = _cam.transform.position;

@@ -24,13 +24,19 @@ namespace ParryRL
         public Phase CurrentPhase { get; private set; } = Phase.Intro;
         public int WaveIndex { get; private set; }
         public int WaveCount => _waves.Count;
+        /// <summary>이 방의 전투 장면 (보스·보상·상점·연습 모드는 null).</summary>
+        public Encounter Encounter { get; private set; }
+        /// <summary>지금 웨이브에서 아직 나오지 않은(늦게 나오는) 몬스터 수.</summary>
+        public int PendingSpawns => _pending.Count;
         public IReadOnlyList<RoomGate> Gates => _gates;
         public PortalArt PortalArt => portalArt;
         public IReadOnlyList<RoomAltar> Altars => _altars;
         public bool IsRunRoom { get; private set; }
 
         private EnemySpawner _spawner;
-        private List<RoomPlan.Wave> _waves = new();
+        private List<SpawnSpec[]> _waves = new();
+        private readonly List<SpawnSpec> _pending = new();
+        private float _waveTime;
         private readonly List<EnemyController> _alive = new();
         private readonly List<RoomGate> _gates = new();
         private readonly List<RoomAltar> _altars = new();
@@ -45,8 +51,16 @@ namespace ParryRL
         {
             Instance = this;
             IsRunRoom = RunState.Active;
-            // 방 지형(발판 배치): 연습 모드는 기본, 런은 방마다 다르게 (바닥 그림 데코레이터가 첫 프레임에 그 배치대로 깐다)
-            LayoutIndex = RoomLayouts.Pick(IsRunRoom, RunState.Current, RunState.RoomNumber, RunState.Seed, RunState.LastLayout);
+            // 싸우는 방(일반·엘리트)은 전투 장면을 먼저 고르고, 지형은 그 장면에 어울리는 것 중에서 (예: 높이 뜬 도깨비불 → 발판 있는 지형)
+            bool fightRoom = IsRunRoom && !RunState.IsFinalRoom && (RunState.Current == RoomType.Normal || RunState.Current == RoomType.Elite);
+            if (fightRoom)
+            {
+                Encounter = EncounterCatalog.Pick(RunState.Current, RunState.RoomNumber, RunState.Zone, RunState.Seed, RunState.LastEncounter);
+                RunState.LastEncounter = Encounter.Id;
+                LayoutIndex = EncounterCatalog.PickLayout(Encounter, RunState.Seed, RunState.RoomNumber, RunState.LastLayout);
+            }
+            // 그 밖의 방(지형): 연습 모드는 기본, 보상·상점·보스는 평지 (바닥 그림 데코레이터가 첫 프레임에 그 배치대로 깐다)
+            else LayoutIndex = RoomLayouts.Pick(IsRunRoom, RunState.Current, RunState.RoomNumber, RunState.Seed, RunState.LastLayout);
             if (IsRunRoom) RunState.LastLayout = LayoutIndex;
             var deco = FindAnyObjectByType<FloorDecorator>();
             if (deco != null)
@@ -79,7 +93,7 @@ namespace ParryRL
         private void Start()
         {
             if (!IsRunRoom) return;
-            _waves = RoomPlan.For(RunState.Current, RunState.RoomNumber);
+            _waves = Encounter != null ? new List<SpawnSpec[]>(Encounter.Waves) : RoomPlan.Specs(RunState.Current, RunState.RoomNumber);
             _timer = introDelay;
             EnemyController.AnyDied += OnEnemyDied;
             RunState.Changed += UpdateInfo;
@@ -103,7 +117,9 @@ namespace ParryRL
             PlacePlayerAtStart();
             StartCoroutine(PortalTransition.Arrive()); // 포탈에서 나오는 연출 (빛이 감겨 몸이 된다)
             UpdateInfo();
-            Hud.Popup($"방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}  ({Layout.Name})", RoomInfo.Color(RunState.Current), true);
+            string scene = Encounter != null ? $" — {Encounter.Name}" : "";
+            string zone = RunState.Current == RoomType.Boss ? "" : $"{RunState.Zone}구간 · ";
+            Hud.Popup($"{zone}방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}{scene}", RoomInfo.Color(RunState.Current), true);
         }
 
         /// <summary>방에 들어오면 플레이어는 가장 왼쪽에서 시작한다 (문은 오른쪽 끝 — 왼쪽에서 오른쪽으로 나아가는 흐름). 카메라도 바로 따라간다.</summary>
@@ -126,7 +142,7 @@ namespace ParryRL
 
         private void UpdateInfo()
         {
-            string text = $"방 {RunState.RoomNumber} / {RunState.TotalRooms}  ·  {RoomInfo.Label(RunState.Current)}";
+            string text = $"{RunState.Zone}구간 · 방 {RunState.RoomNumber}/{RunState.TotalRooms} · {RoomInfo.Label(RunState.Current)}";
             Hud.SetCurrency(RunState.Gold, RunState.SoulStones);
             if (RunState.Items.Count > 0)
             {
@@ -162,7 +178,7 @@ namespace ParryRL
         {
             get
             {
-                if (!BossWaitsForPlayer || _waves.Count == 0 || _waves[0].Boss <= 0) return false;
+                if (!BossWaitsForPlayer || _waves.Count == 0 || _waves[0].Length == 0 || !_waves[0][0].Boss) return false;
                 var party = FindAnyObjectByType<PlayerParty>();
                 return party != null && party.transform.position.x < StartX + BossTriggerAdvance;
             }
@@ -249,7 +265,15 @@ namespace ParryRL
                     // 혹시 바닥 밖으로 밀려난 몬스터가 있으면 치운다 (웨이브가 안 끝나는 일이 없게)
                     foreach (var e in _alive) if (e != null && !e.IsDead && e.transform.position.y < FallKillY) e.Despawn();
                     _alive.RemoveAll(e => e == null || e.IsDead);
+                    SpawnDue();
                     if (_alive.Count > 0) break;
+                    // 다 잡았는데 늦게 나올 몬스터가 남았으면 기다리지 않고 바로 다음을 부른다
+                    if (_pending.Count > 0)
+                    {
+                        Spawn(_pending[0]);
+                        _pending.RemoveAt(0);
+                        break;
+                    }
                     if (WaveIndex + 1 < _waves.Count)
                     {
                         CurrentPhase = Phase.BetweenWaves;
@@ -268,13 +292,44 @@ namespace ParryRL
         {
             WaveIndex = index;
             CurrentPhase = Phase.Fighting;
-            var w = _waves[index];
             if (_waves.Count > 1) Hud.Popup($"{index + 1} / {_waves.Count} 파도", new Color(1f, 1f, 1f), false);
-            int i = 0;
-            if (w.Boss > 0) Track(_spawner.SpawnBoss(BossAppearX()));
-            for (int m = 0; m < w.Melee; m++) Track(_spawner.SpawnEnemy(EnemyKind.Melee, i++, m < w.EliteMelee));
-            i = 0;
-            for (int r = 0; r < w.Ranged; r++) Track(_spawner.SpawnEnemy(EnemyKind.Ranged, i++, r < w.EliteRanged));
+            _pending.Clear();
+            _pending.AddRange(_waves[index]);
+            _pending.Sort((a, b) => a.Delay.CompareTo(b.Delay));
+            _waveTime = 0f;
+            SpawnDue();
+        }
+
+        /// <summary>웨이브 시작 뒤 Delay가 지난 몬스터를 세운다 (늦게 들어오는 몬스터 — 시간차·협공).</summary>
+        private void SpawnDue()
+        {
+            _waveTime += Time.deltaTime;
+            while (_pending.Count > 0 && _pending[0].Delay <= _waveTime)
+            {
+                Spawn(_pending[0]);
+                _pending.RemoveAt(0);
+            }
+        }
+
+        private void Spawn(SpawnSpec spec)
+        {
+            if (spec.Boss)
+            {
+                Track(_spawner.SpawnBoss(BossAppearX()));
+                return;
+            }
+            var party = FindAnyObjectByType<PlayerParty>();
+            float px = party != null ? party.transform.position.x : 0f;
+            float x = spec.Anchor switch
+            {
+                SpawnAnchor.AheadOfPlayer => px + spec.X,
+                SpawnAnchor.BehindPlayer => px - spec.X,
+                _ => spec.X,
+            };
+            var enemy = _spawner.SpawnEnemyAt(spec.Kind, x, spec.Height, spec.Elite);
+            if (enemy != null && spec.Delay > 0f)
+                Hud.WorldText(enemy.transform.position + Vector3.up * 1.4f, "!", new Color(1f, 0.85f, 0.3f), 1.2f); // 늦게 들어온 몬스터 — 어디서 나왔는지 보이게
+            Track(enemy);
         }
 
         private void Track(EnemyController enemy)

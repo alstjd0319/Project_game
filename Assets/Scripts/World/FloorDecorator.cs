@@ -6,7 +6,7 @@ namespace ParryRL
     /// <summary>
     /// 바닥·벽·발판의 보이는 그림. 판정(콜라이더가 있는 네모)은 그대로 두고, 그 위에 <see cref="FloorSet"/> 타일 그림을 자식으로 깐다
     /// → 보이는 땅 윗면 = 판정 윗면. 네모는 연습 스위치 "판정 상자 보기"일 때만 반투명하게 보인다.
-    /// 구간은 배경과 같은 규칙(<see cref="forcedZone"/> ≥ 0이면 고정, 아니면 GameTuning.backgroundZone)이고, 바뀌면 다시 깐다.
+    /// 구간은 배경과 같은 규칙(<see cref="forcedZone"/> ≥ 0이면 고정, 판 진행 중이면 방 번호의 구간(<see cref="RunState.Zone"/>), 아니면 GameTuning.backgroundZone)이고, 바뀌면 다시 깐다.
     /// </summary>
     public class FloorDecorator : MonoBehaviour
     {
@@ -51,7 +51,7 @@ namespace ParryRL
         private void LateUpdate()
         {
             if (sets == null || sets.Length == 0) return;
-            int wanted = Mathf.Clamp(forcedZone >= 0 ? forcedZone : GameTuning.Current.backgroundZone, 0, sets.Length - 1);
+            int wanted = Mathf.Clamp(forcedZone >= 0 ? forcedZone : RunState.Zone > 0 ? RunState.Zone : GameTuning.Current.backgroundZone, 0, sets.Length - 1);
             if (wanted != _zone) Build(wanted);
 
             // 그림이 깔린 판정 네모는 숨기고, "판정 상자 보기"일 때만 반투명하게 겹쳐 본다 (그림이 없는 건 예전 네모 그대로). 발판 그림이 없는 구간(사당)은 발판을 아예 끈다

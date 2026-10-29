@@ -478,10 +478,11 @@ namespace ParryRL
             _popupText.enabled = false;
 
             // 상단 중앙: 방 번호·종류 (런 중에만 채워진다)
-            _runInfo = UiKit.Text("RunInfo", _root, 32, TextAnchor.UpperCenter);
+            // 방 정보는 화면 가운데 바로 왼쪽에서 끝나게 오른쪽 정렬 — 오른쪽의 재화 줄(엽전·영혼석)과 겹치지 않게 (구간이 붙어 글이 길어졌다)
+            _runInfo = UiKit.Text("RunInfo", _root, 28, TextAnchor.UpperRight);
             _runInfo.color = new Color(0.95f, 0.9f, 1f);
-            UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(-160f, -24f), new Vector2(600f, 80f));
-            _runInfo.rectTransform.pivot = new Vector2(0.5f, 1f);
+            UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(-10f, -24f), new Vector2(760f, 80f));
+            _runInfo.rectTransform.pivot = new Vector2(1f, 1f);
             _runInfo.enabled = false;
             BuildCurrencyRow();
 

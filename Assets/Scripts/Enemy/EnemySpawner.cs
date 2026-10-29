@@ -125,6 +125,53 @@ namespace ParryRL
             if (prefab.Kind == EnemyKind.Melee) x = GroundProbe.NudgeOntoGround(x, half, groundY, arenaMinX, arenaMaxX);
 
             var pos = new Vector3(x, groundY + prefab.transform.localScale.y * 0.5f, 0f);
+            return Create(prefab, pos, barColor);
+        }
+
+        /// <summary>몬스터가 플레이어 바로 옆에 생기지 않게 두는 최소 거리.</summary>
+        public const float MinSpawnGap = 3f;
+        /// <summary>지나온 쪽에서 나올 때 화면 가장자리에서 이만큼 안쪽에 세운다.</summary>
+        public const float ScreenEdgeMargin = 0.8f;
+
+        /// <summary>
+        /// 전투 장면(<see cref="Encounter"/>)용: 정한 자리 x에 세운다. 바닥 범위 안으로 자르고, 플레이어와 너무 가까우면 떨어뜨리고,
+        /// 걷는 창귀는 구멍을 피해 가까운 땅으로 옮긴다. 도깨비불은 height만큼 떠서 나온다 (그 높이를 유지하며 좌우로만 움직인다).
+        /// </summary>
+        public EnemyController SpawnEnemyAt(EnemyKind kind, float x, float height, bool elite)
+        {
+            var prefab = kind == EnemyKind.Melee ? meleePrefab : rangedPrefab;
+            if (prefab == null) return null;
+            float half = prefab.transform.localScale.x * 0.5f;
+            float min = arenaMinX + half, max = arenaMaxX - half;
+            x = Mathf.Clamp(x, min, max);
+            if (_player != null)
+            {
+                float px = _player.position.x;
+                // 지나온 쪽(왼쪽 — 방은 왼쪽에서 오른쪽으로 나아간다)은 화면 안에서만 나온다: 이미 지나가 화면 밖이 된 곳에서 나오면 보이지 않는 데서 공격이 온다
+                var cam = Camera.main;
+                if (cam != null && cam.orthographic && x < px)
+                {
+                    float visibleMin = cam.transform.position.x - cam.orthographicSize * cam.aspect + half + ScreenEdgeMargin;
+                    if (x < visibleMin)
+                        x = visibleMin <= px - MinSpawnGap ? visibleMin : Mathf.Min(max, px + (px - x)); // 뒤에 보이는 자리가 없으면 같은 거리만큼 앞에서
+                }
+                if (Mathf.Abs(x - px) < MinSpawnGap)
+                {
+                    float side = x >= px ? 1f : -1f;
+                    if (px + side * MinSpawnGap > max || px + side * MinSpawnGap < min) side = -side; // 벽 쪽이면 반대편으로
+                    x = Mathf.Clamp(px + side * MinSpawnGap, min, max);
+                }
+            }
+            if (kind == EnemyKind.Melee) x = GroundProbe.NudgeOntoGround(x, half, groundY, arenaMinX, arenaMaxX);
+            float lift = kind == EnemyKind.Ranged ? Mathf.Max(0f, height) : 0f;
+            var pos = new Vector3(x, groundY + prefab.transform.localScale.y * 0.5f + lift, 0f);
+            var enemy = Create(prefab, pos, elite ? new Color(0.8f, 0.45f, 1f) : new Color(0.95f, 0.3f, 0.35f));
+            if (elite) enemy.MakeElite(RoomPlan.EliteHpMultiplier, 3);
+            return enemy;
+        }
+
+        private EnemyController Create(EnemyController prefab, Vector3 pos, Color barColor)
+        {
             var enemy = Instantiate(prefab, pos, Quaternion.identity);
             enemy.name = prefab.name;
             enemy.SetArena(arenaMinX, arenaMaxX);

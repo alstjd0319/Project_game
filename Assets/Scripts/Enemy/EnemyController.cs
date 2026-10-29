@@ -202,6 +202,7 @@ namespace ParryRL
         {
             if (IsDead) return;
             StopAllCoroutines();
+            AttackTokens.Release(this);
             RestoreBody();
             _state = State.Idle;
             _tint = _baseColor;
@@ -234,7 +235,11 @@ namespace ParryRL
         }
 
         // 꺼진 동안엔 Update가 돌지 않아 걷는 중 표시가 남지 않게
-        private void OnDisable() => IsMoving = false;
+        private void OnDisable()
+        {
+            IsMoving = false;
+            AttackTokens.Release(this);
+        }
 
         private void Update()
         {
@@ -253,7 +258,12 @@ namespace ParryRL
 
             Move();
             _cooldown -= Time.deltaTime;
-            if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive) StartCoroutine(AttackRoutine());
+            if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive)
+            {
+                // 다수전: 공격권을 못 받으면(다른 몬스터들이 공격 중) 잠깐 뒤 다시 시도한다
+                if (AttackTokens.TryTake(this)) StartCoroutine(AttackRoutine());
+                else _cooldown = 0.15f;
+            }
         }
 
         private float _attackDir = -1f; // 지금 공격의 방향 (시작할 때 고정)
@@ -404,6 +414,7 @@ namespace ParryRL
             }
 
             _state = State.Recover;
+            AttackTokens.Release(this);
             yield return new WaitForSeconds(recoverTime * Mathf.Max(0.1f, Tempo));
             _state = State.Idle;
             _cooldown = RollInterval() * Mathf.Max(0.1f, Tempo);
@@ -526,6 +537,7 @@ namespace ParryRL
             }
 
             StopAllCoroutines();
+            AttackTokens.Release(this);
             RestoreBody();
             float x = Mathf.Clamp(transform.position.x + fromDirection * knockback, _arenaMinX + half, _arenaMaxX - half);
             SetPosition(new Vector2(KnockbackX(x, half), transform.position.y));
@@ -548,6 +560,7 @@ namespace ParryRL
             if (_state == State.Windup || _state == State.Recover)
             {
                 StopAllCoroutines();
+                AttackTokens.Release(this);
                 RestoreBody();
                 _state = State.Idle;
             }
@@ -570,6 +583,7 @@ namespace ParryRL
             if (IsDead) return;
             _state = State.Dead;
             StopAllCoroutines();
+            AttackTokens.Release(this);
             Fx.Ring(transform.position, Color.white, 0.5f, 2.5f, 0.1f, 0.3f);
             Destroy(gameObject);
         }
@@ -578,6 +592,7 @@ namespace ParryRL
         {
             _state = State.Dead;
             StopAllCoroutines();
+            AttackTokens.Release(this);
             Sfx.Play(SfxId.EnemyDie);
             Fx.Sparks(transform.position, _baseColor, 20, 9f, 0.2f, 0.6f);
             FxClip.PlayAt(GameAssets.AttackFx != null ? GameAssets.AttackFx.yokaiDissolve : null, transform.position + Vector3.up * 0.2f, 0.9f);
