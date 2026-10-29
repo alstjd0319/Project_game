@@ -230,6 +230,7 @@ namespace ParryRL
         {
             var defense = FindAnyObjectByType<PlayerDefense>();
             if (defense != null) _player = defense.transform;
+            if (_player != null) _playerMotor = _player.GetComponent<PlayerMotor>();
             _feetY = transform.position.y - _baseScale.y * 0.5f;
             _cooldown = RollInterval() * 0.6f;
         }
@@ -256,6 +257,19 @@ namespace ParryRL
             if (Frozen) { IsMoving = false; return; }
             if (_state != State.Idle || IsStunned || _player == null || GameManager.InputBlocked) return;
 
+            // 발판 위 플레이어: 창귀는 닿지 않는 공격을 헛휘두르지 않고 그 아래로 와서 기다린다 — 내려오는 순간 바로 공격 준비 (발판이 안전지대가 되지 않게)
+            if (Walks && PlayerElevated)
+            {
+                WaitingBelow = true;
+                Move();
+                _cooldown = Mathf.Max(_cooldown - Time.deltaTime, 0f);
+                return;
+            }
+            if (WaitingBelow)
+            {
+                WaitingBelow = false;
+                _cooldown = 0f; // 내려왔다 — 사거리 안이면 바로 (예비 모션 = 반응시간은 그대로)
+            }
             Move();
             _cooldown -= Time.deltaTime;
             if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive)
@@ -266,9 +280,21 @@ namespace ParryRL
             }
         }
 
+        private float _lastFlightTime; // 마지막 불덩이가 플레이어에게 닿기까지 걸리는 시간 (공격권을 그만큼 더 쥔다)
         private float _attackDir = -1f; // 지금 공격의 방향 (시작할 때 고정)
 
         private float DxToPlayer => _player.position.x - transform.position.x;
+
+        /// <summary>플레이어 발이 이 몬스터 발보다 이만큼 높으면 "발판 위"로 본다.</summary>
+        public const float ElevatedThreshold = 0.6f;
+
+        /// <summary>플레이어가 발판 위에 있다 (발 높이 기준) — 창귀는 그 아래에서 기다린다.</summary>
+        private bool PlayerElevated => _player != null && !superArmor && _playerMotor != null && _playerMotor.IsGrounded
+            && _player.position.y - _player.localScale.y * 0.5f - _feetY > ElevatedThreshold; // 점프 중(공중)은 아님 — 발판에 서 있을 때만
+        private PlayerMotor _playerMotor;
+
+        /// <summary>창귀가 발판 위 플레이어 아래에서 기다리는 중 (테스트·그림).</summary>
+        public bool WaitingBelow { get; private set; }
 
         /// <summary>땅을 걷는 몬스터인가 (창귀). 도깨비불(원거리)은 떠다녀서 구멍을 건넌다.</summary>
         public bool Walks => kind == EnemyKind.Melee;
@@ -297,7 +323,9 @@ namespace ParryRL
 
             if (kind == EnemyKind.Melee)
             {
-                if (dist > meleeRange * meleeApproachRatio) dir = Mathf.Sign(dx);
+                // 발판 위 플레이어를 기다릴 땐 바로 아래(가로 0.5 안쪽)까지 온다
+                float stop = WaitingBelow ? 0.5f : meleeRange * meleeApproachRatio;
+                if (dist > stop) dir = Mathf.Sign(dx);
             }
             else
             {
@@ -434,7 +462,8 @@ namespace ParryRL
             }
 
             _state = State.Recover;
-            AttackTokens.Release(this);
+            // 근접은 베기가 이미 끝났으니 바로, 도깨비불은 불덩이가 날아가는 동안 공격권을 쥐고 있다 (D: 날아오는 불과 베기가 겹치지 않게)
+            AttackTokens.ReleaseAfter(this, kind == EnemyKind.Ranged ? _lastFlightTime : 0f);
             yield return new WaitForSeconds(recoverTime * Mathf.Max(0.1f, Tempo));
             _state = State.Idle;
             _cooldown = RollInterval() * Mathf.Max(0.1f, Tempo);
@@ -486,8 +515,9 @@ namespace ParryRL
             {
                 Vector2 origin = transform.position;
                 Vector2 aim = (Vector2)_player.position - origin;
-                var shot = EnemyAttack.Spawn(this, type, origin, aim, size, heavy ? T.rangedHeavySpeed : T.rangedNormalSpeed,
-                    rangedMaxTravel, color, damage);
+                float speed = heavy ? T.rangedHeavySpeed : T.rangedNormalSpeed;
+                var shot = EnemyAttack.Spawn(this, type, origin, aim, size, speed, rangedMaxTravel, color, damage);
+                _lastFlightTime = Mathf.Min(aim.magnitude, rangedMaxTravel) / Mathf.Max(0.1f, speed);
                 // 도깨비불 불덩이 그림: 앞 4장 청록(일반) · 뒤 4장 빨강(강공격 — 빨강은 적 공격 경고 전용 색)
                 var fx = GameAssets.AttackFx;
                 if (fx != null) shot.AttachProjectileArt(fx.dokkaebiProjectile, heavy ? 4 : 0, 4, 2.2f);

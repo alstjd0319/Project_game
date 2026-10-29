@@ -93,6 +93,21 @@ namespace ParryRL
         /// 바닥을 구멍을 뺀 구간들로 나눈다: 바닥 오브젝트(Ground 종류 세그먼트)를 순서대로 구간에 맞춰 옮기고 늘리고, 남는 건 판정째 끈다.
         /// 구간이 하나(전체)면 원래 바닥 그대로다. 그림은 다음 프레임에 다시 깐다.
         /// </summary>
+        /// <summary>옆 벽을 옮긴다: 벽 안쪽 면 = ±innerHalf (= 카메라가 멈추는 끝). 방 길이가 바뀌면 부른다 — 그림은 다음 프레임에 다시 깐다.</summary>
+        public void SetWalls(float innerHalf)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.kind != Kind.Wall || seg.solid == null) continue;
+                float side = Mathf.Sign(seg.solid.position.x);
+                if (side == 0f) continue;
+                float halfW = seg.solid.localScale.x * 0.5f;
+                seg.solid.position = new Vector3(side * (innerHalf + halfW), seg.solid.position.y, seg.solid.position.z);
+            }
+            _zone = -1;
+            Physics2D.SyncTransforms();
+        }
+
         public void SetGroundIntervals(IReadOnlyList<(float x0, float x1)> intervals)
         {
             int used = 0;

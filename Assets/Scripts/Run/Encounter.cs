@@ -86,6 +86,13 @@ namespace ParryRL
                 Layouts = new[] { Stairs, Zigzag, Roof },
                 Waves = new[] { new[] { M(-5f), M(1f, delay: 1.2f), M(7f, delay: 2.4f) }, new[] { M(0f), M(6f) } } },
 
+            new() { Id = "single_file", Name = "외길", Intent = "한 마리씩 세 번 — 한 번에 하나만 보며 패링 성공을 쌓는다", MaxZone = 1,
+                Layouts = new[] { Stairs, Zigzag, Roof },
+                Waves = new[] { new[] { M(-6f) }, new[] { M(0f), M(6f, delay: 1.5f) }, new[] { M(4f), M(10f, delay: 1.2f) } } },
+            new() { Id = "small_pincer", Name = "작은 협공", Intent = "처음으로 뒤에서 하나 — 돌아서 막는 연습", MaxZone = 1,
+                Layouts = new[] { Stairs, Tower, Roof },
+                Waves = new[] { new[] { M(-4f), M(4f, Behind, 2f) }, new[] { M(6f, Ahead), M(5f, Behind, 1.5f) } } },
+
             // ── 1~3구간 공통: 협공 ──
             new() { Id = "pincer", Name = "협공", Intent = "앞뒤에서 창귀 — 방향을 바꿔 막는다", MaxZone = 3,
                 Layouts = new[] { Stairs, Tower, Roof },
@@ -102,6 +109,10 @@ namespace ParryRL
                 Layouts = new[] { Zigzag, Roof },
                 Waves = new[] { new[] { M(-1f), M(9f), R(-12f, Lv1) }, new[] { M(0f), M(10f), R(4f, Lv2) } } },
 
+            new() { Id = "lantern", Name = "등불 하나", Intent = "도깨비불 첫 만남 — 하나가 쏘는 동안 창귀를 막고, 다음엔 발판 위에서", MinZone = 2,
+                Layouts = new[] { Stairs, Roof, Tower },
+                Waves = new[] { new[] { R(4f), M(-4f), M(8f, delay: 2f) }, new[] { R(0f, Lv1), M(5f, Ahead), M(5f, Behind, 2f) } } },
+
             // ── 3구간: 섞어서 몰아친다 ──
             new() { Id = "siege", Name = "포위", Intent = "앞뒤 창귀 + 위의 도깨비불 — 가장 바쁜 장면", MinZone = 3,
                 Layouts = new[] { Tower, Stairs, Roof },
@@ -114,6 +125,12 @@ namespace ParryRL
             new() { Id = "elite_changgwi", Name = "우두머리 창귀", Intent = "체력 많은 창귀 하나를 끝까지 막아 낸다", Type = RoomType.Elite, MaxZone = 2,
                 Layouts = new[] { Stairs, Roof },
                 Waves = new[] { new[] { ME(2f), M(8f) } } },
+            new() { Id = "elite_ambush", Name = "우두머리의 매복", Intent = "엘리트 창귀를 막는 동안 등 뒤에서 졸개", Type = RoomType.Elite, MaxZone = 2,
+                Layouts = new[] { Stairs, Tower, Roof },
+                Waves = new[] { new[] { ME(4f), M(4f, Behind, 2f) } } },
+            new() { Id = "elite_guard", Name = "호위", Intent = "발판 위 도깨비불이 엄호하는 엘리트 창귀, 이어서 앞뒤 졸개", Type = RoomType.Elite, MinZone = 2,
+                Layouts = new[] { Tower, Roof, Stairs },
+                Waves = new[] { new[] { ME(3f), R(8f, Lv2) }, new[] { M(4f, Ahead), M(4f, Behind, 1f) } } },
             new() { Id = "elite_wisp", Name = "도깨비불 무리", Intent = "높이 뜬 엘리트 도깨비불 + 창귀 둘", Type = RoomType.Elite,
                 Layouts = new[] { Tower, Roof },
                 Waves = new[] { new[] { RE(4f, Lv2), M(-4f), M(8f) } } },
@@ -134,7 +151,7 @@ namespace ParryRL
 
         public const int BudgetSpread = 6;
 
-        /// <summary>테스트가 장면을 고정할 때 (null = 고정 안 함).</summary>
+        /// <summary>테스트가 장면을 고정할 때 (null = 고정 안 함). 그 장면과 같은 종류의 방에만 적용된다.</summary>
         public static string ForcedId;
 
         public static Encounter Find(string id)
@@ -146,7 +163,8 @@ namespace ParryRL
         /// <summary>이 방에 맞는 장면을 고른다: 방 종류 · 구간 · 예산(점수) · 앞 방과 다른 것. 맞는 게 없으면 예산에 가장 가까운 것.</summary>
         public static Encounter Pick(RoomType type, int roomNumber, int zone, int seed, string previousId)
         {
-            if (!string.IsNullOrEmpty(ForcedId)) return Find(ForcedId);
+            var forced = string.IsNullOrEmpty(ForcedId) ? null : Find(ForcedId);
+            if (forced != null && forced.Type == type) return forced; // 고정은 같은 종류의 방에만 (엘리트 장면을 고정해도 일반방은 그대로 고른다)
             var fit = Candidates(type, roomNumber, zone);
             if (fit.Count > 1) fit.RemoveAll(e => e.Id == previousId);
             if (fit.Count == 0) return Closest(type, roomNumber);

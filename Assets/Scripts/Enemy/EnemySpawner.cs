@@ -42,6 +42,13 @@ namespace ParryRL
         public float ArenaMinX => arenaMinX;
         public float ArenaMaxX => arenaMaxX;
 
+        /// <summary>몬스터가 움직이는 좌우 범위 (방 길이가 바뀌면 — 이미 세운 몬스터에는 적용되지 않는다).</summary>
+        public void SetArena(float minX, float maxX)
+        {
+            arenaMinX = minX;
+            arenaMaxX = maxX;
+        }
+
         private void Start()
         {
             var defense = FindAnyObjectByType<PlayerDefense>();

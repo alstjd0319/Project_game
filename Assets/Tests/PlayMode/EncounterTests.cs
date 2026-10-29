@@ -53,6 +53,13 @@ namespace ParryRL.Tests
                     Assert.LessOrEqual(e.Cost, EncounterCatalog.Budget(n), $"{e.Name}: 예산 초과");
             }
             Assert.AreEqual("first", EncounterCatalog.Candidates(RoomType.Normal, 1, 1).Single().Id, "첫 방은 첫 만남만");
+            // 반복감을 줄이려면 방마다 고를 장면이 넉넉해야 한다 (A: 일반 4개 이상 · 엘리트 2개 이상)
+            for (int n = 2; n < RunState.TotalRooms; n++)
+            {
+                int zone = RunState.ZoneFor(n);
+                Assert.GreaterOrEqual(EncounterCatalog.Candidates(RoomType.Normal, n, zone).Count, 4, $"일반방 {n}: 장면 4개 이상");
+                Assert.GreaterOrEqual(EncounterCatalog.Candidates(RoomType.Elite, n, zone).Count, 2, $"엘리트방 {n}: 장면 2개 이상");
+            }
             Assert.IsFalse(EncounterCatalog.Candidates(RoomType.Normal, 3, 2).Any(e => e.MaxZone < 2), "2구간에 1구간 전용 장면이 나오지 않는다");
         }
 
@@ -248,6 +255,92 @@ namespace ParryRL.Tests
             yield return null;
             var e = Object.FindAnyObjectByType<EnemySpawner>().SpawnEnemyAt(EnemyKind.Melee, pos.x - 6f, 0f, false);
             Assert.Greater(e.transform.position.x, pos.x, "뒤가 화면 밖이면 앞에서");
+        }
+
+        [UnityTest]
+        public IEnumerator 구간이_깊을수록_싸우는_방이_길다()
+        {
+            float[] expected = { 1f, 1f, 1.3f, 1.3f, 1.6f };
+            for (int n = 2; n <= 5; n += 1)
+            {
+                RoomLayouts.ForcedIndex = RoomLayouts.Stairs;
+                yield return TestScene.LoadRun(Enumerable.Repeat(RoomType.Normal, n - 1).ToArray());
+                yield return null;
+                float scale = expected[n - 1];
+                Assert.AreEqual(scale, Room.ArenaScale, 0.001f, $"방 {n}");
+                float half = RoomLayouts.BaseArenaHalf * scale;
+                var spawner = Object.FindAnyObjectByType<EnemySpawner>();
+                Assert.AreEqual(half, spawner.ArenaMaxX, 0.01f);
+                Assert.AreEqual(half + 1f, CameraRig.Instance.ArenaMaxX, 0.01f, "카메라 끝 = 벽 안쪽 면");
+                var wallR = GameObject.Find("Wall_R").transform;
+                Assert.AreEqual(half + 1f, wallR.position.x - wallR.localScale.x * 0.5f, 0.01f, "오른쪽 벽 안쪽 면");
+                var party = Object.FindAnyObjectByType<PlayerParty>();
+                Assert.AreEqual(-half + 2f, party.transform.position.x, 0.3f, "왼쪽 끝에서 시작");
+                Assert.IsTrue(GroundProbe.HasGround(-half + 0.5f, 0f) && GroundProbe.HasGround(half - 0.5f, 0f), "늘어난 끝까지 바닥");
+                var widest = RoomLayouts.All[RoomLayouts.Stairs].Platforms.Max(p => p.X + p.Width * 0.5f);
+                Assert.AreEqual(widest * scale, Room.Layout.Platforms.Max(p => p.X + p.Width * 0.5f), 0.01f, "발판도 같은 비율로");
+            }
+            // 보상·상점·보스방과 연습 모드는 그대로
+            yield return TestScene.LoadRun(RoomType.Normal, RoomType.Normal, RoomType.Reward);
+            Assert.AreEqual(1f, Room.ArenaScale);
+            yield return TestScene.LoadPrototype();
+            Assert.AreEqual(1f, Room.ArenaScale);
+        }
+
+        [UnityTest]
+        public IEnumerator 창귀는_발판_위_플레이어를_아래서_기다렸다가_내려오면_바로_공격한다()
+        {
+            yield return TestScene.LoadPrototype();
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.hideRanged = true;
+            yield return null;
+            var party = Object.FindAnyObjectByType<PlayerParty>();
+            var rb = party.GetComponent<Rigidbody2D>();
+            void Put(Vector3 pos)
+            {
+                party.transform.position = pos;
+                rb.position = pos;
+                rb.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+            }
+            // 기본 지형 가운데 발판(2층) 위
+            Put(new Vector3(0f, RoomLayouts.Level(2) + party.transform.localScale.y * 0.5f + 0.05f, 0f));
+            var melee = Enemies().First(e => e.Kind == EnemyKind.Melee);
+            bool woundUp = false;
+            for (float t = 0f; t < 4f; t += Time.deltaTime)
+            {
+                woundUp |= melee.IsWindingUp;
+                yield return null;
+            }
+            Assert.IsTrue(melee.WaitingBelow, "발판 아래에서 기다린다");
+            Assert.LessOrEqual(Mathf.Abs(melee.transform.position.x - party.transform.position.x), 0.8f, "바로 아래까지 왔다");
+            Assert.IsFalse(woundUp, "닿지 않는 공격을 헛휘두르지 않는다");
+
+            // 내려오면 바로 공격 준비
+            Put(new Vector3(melee.transform.position.x - 1.6f, party.transform.localScale.y * 0.5f + 0.05f, 0f));
+            float waited = 0f;
+            while (!melee.IsWindingUp && waited < 1f) { waited += Time.deltaTime; yield return null; }
+            Assert.IsTrue(melee.IsWindingUp, "내려오자마자 공격");
+            Assert.Less(waited, 0.5f);
+            Assert.IsFalse(melee.WaitingBelow);
+        }
+
+        [UnityTest]
+        public IEnumerator 도깨비불은_불덩이가_날아가는_동안_공격권을_쥐고_있다()
+        {
+            yield return TestScene.LoadPrototype();
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.hideMelee = true;
+            yield return null;
+            var ranged = Enemies().First(e => e.Kind == EnemyKind.Ranged);
+            float t = 0f;
+            while (!ranged.IsRecovering && t < 8f) { t += Time.deltaTime; yield return null; }
+            Assert.IsTrue(ranged.IsRecovering, "불덩이를 쐈다");
+            Assert.IsTrue(AttackTokens.Holds(ranged), "쏜 직후에도 공격권을 쥐고 있다");
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual(1, AttackTokens.Count, "날아가는 동안 (회복 동작이 끝나도)");
+            yield return new WaitForSeconds(0.9f);
+            Assert.IsFalse(AttackTokens.Holds(ranged) && !ranged.IsWindingUp, "다 날아간 뒤엔 돌려준다");
         }
 
         /// <summary>몬스터를 플레이어 양옆 사거리 안으로 모은다 (모두가 바로 공격하려는 상황).</summary>

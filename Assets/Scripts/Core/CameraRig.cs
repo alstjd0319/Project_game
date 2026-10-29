@@ -27,6 +27,16 @@ namespace ParryRL
             _basePos = transform.position;
         }
 
+        public float ArenaMinX => arenaMinX;
+        public float ArenaMaxX => arenaMaxX;
+
+        /// <summary>카메라가 멈추는 좌우 끝 (= 벽 안쪽 면). 방 길이가 바뀌면 바꾼다.</summary>
+        public void SetArena(float minX, float maxX)
+        {
+            arenaMinX = minX;
+            arenaMaxX = maxX;
+        }
+
         /// <summary>카메라 크기와 높이를 바꾼다 (보스방: 큰 보스가 화면에 들어오게 넓게). 바닥이 화면에서 같은 높이에 오도록 높이를 함께 준다.</summary>
         public void SetView(float orthographicSize, float y)
         {

@@ -37,6 +37,29 @@ namespace ParryRL.Tests
         }
 
         [Test]
+        public void 길어진_방에서도_싸우는_지형은_올라갈_수_있고_문을_가리지_않는다()
+        {
+            foreach (int index in new[] { RoomLayouts.Stairs, RoomLayouts.Zigzag, RoomLayouts.Tower, RoomLayouts.Roof })
+            foreach (float scale in new[] { 1.3f, 1.6f })
+            {
+                var layout = RoomLayouts.Scaled(RoomLayouts.All[index], scale);
+                foreach (var p in layout.Platforms)
+                {
+                    Assert.LessOrEqual(p.X + p.Width * 0.5f, RoomLayouts.MaxGateReach + RoomLayouts.BaseArenaHalf * (scale - 1f), $"{layout.Name} ×{scale}: 문 앞");
+                    if (Surface(p) <= StepReach) continue;
+                    bool reachable = layout.Platforms.Any(q =>
+                    {
+                        if (q.Equals(p) || Surface(q) >= Surface(p) || Surface(p) - Surface(q) > StepReach) return false;
+                        float gap = Mathf.Max(0f, Mathf.Abs(p.X - q.X) - (p.Width + q.Width) * 0.5f);
+                        return gap <= JumpGap;
+                    });
+                    Assert.IsTrue(reachable, $"{layout.Name} ×{scale}: x={p.X:0.0}, y={p.Y} 발판에 올라갈 수 없다");
+                }
+                foreach (var pit in layout.Pits) Assert.LessOrEqual(pit.Width, RoomLayouts.MaxPitWidth, $"{layout.Name} ×{scale}: 구멍 폭은 그대로");
+            }
+        }
+
+        [Test]
         public void 위아래로_겹치는_발판은_두_층_이상_떨어져_있다()
         {
             foreach (var layout in RoomLayouts.All)

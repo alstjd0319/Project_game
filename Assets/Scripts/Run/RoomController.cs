@@ -45,7 +45,10 @@ namespace ParryRL
         private float _timer;
 
         public int LayoutIndex { get; private set; }
-        public RoomLayout Layout => RoomLayouts.All[LayoutIndex];
+        /// <summary>이 방의 지형 (방 길이 배율을 적용한 것).</summary>
+        public RoomLayout Layout { get; private set; }
+        /// <summary>방 길이 배율: 싸우는 방은 구간이 깊을수록 길다 (1구간 1 · 2구간 1.3 · 3구간 1.6), 그 밖은 1.</summary>
+        public float ArenaScale { get; private set; } = 1f;
 
         private void Awake()
         {
@@ -62,11 +65,23 @@ namespace ParryRL
             // 그 밖의 방(지형): 연습 모드는 기본, 보상·상점·보스는 평지 (바닥 그림 데코레이터가 첫 프레임에 그 배치대로 깐다)
             else LayoutIndex = RoomLayouts.Pick(IsRunRoom, RunState.Current, RunState.RoomNumber, RunState.Seed, RunState.LastLayout);
             if (IsRunRoom) RunState.LastLayout = LayoutIndex;
+            ArenaScale = fightRoom ? RoomLayouts.ArenaScaleFor(RunState.Zone) : 1f;
+            Layout = RoomLayouts.Scaled(RoomLayouts.All[LayoutIndex], ArenaScale);
+            float arenaHalf = RoomLayouts.BaseArenaHalf * ArenaScale;
             var deco = FindAnyObjectByType<FloorDecorator>();
             if (deco != null)
             {
                 deco.SetPlatformLayout(Layout.Platforms);
-                deco.SetGroundIntervals(RoomLayouts.GroundIntervals(Layout));
+                deco.SetGroundIntervals(RoomLayouts.GroundIntervals(Layout, RoomLayouts.GroundHalfExtent + arenaHalf - RoomLayouts.BaseArenaHalf));
+                if (ArenaScale != 1f) deco.SetWalls(arenaHalf + 1f);
+            }
+            if (ArenaScale != 1f)
+            {
+                // 길어진 방: 몬스터 범위 · 카메라 끝(= 벽 안쪽 면)을 함께 넓힌다 (문·시작 자리는 스포너 범위를 따른다)
+                var spawner = FindAnyObjectByType<EnemySpawner>();
+                if (spawner != null) spawner.SetArena(-arenaHalf, arenaHalf);
+                var rig = FindAnyObjectByType<CameraRig>();
+                if (rig != null) rig.SetArena(-arenaHalf - 1f, arenaHalf + 1f);
             }
             BuildPits();
             if (!IsRunRoom) return;
@@ -327,7 +342,7 @@ namespace ParryRL
             {
                 SpawnAnchor.AheadOfPlayer => px + spec.X,
                 SpawnAnchor.BehindPlayer => px - spec.X,
-                _ => spec.X,
+                _ => spec.X * ArenaScale, // 방 좌표는 기본 길이 기준으로 짰다 — 늘어난 방에선 같은 비율 자리
             };
             float height = spec.Height;
             float? confineMin = null, confineMax = null;

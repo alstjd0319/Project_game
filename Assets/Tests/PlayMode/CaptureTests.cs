@@ -132,6 +132,7 @@ namespace ParryRL.Tests
             yield return Capture("run_reward_opened");
 
             // 엘리트방: 깬 뒤 영혼석/아이템 제단
+            EncounterCatalog.ForcedId = "elite_changgwi";
             yield return TestScene.LoadRun(RoomType.Elite);
             GameTuning.Current.godMode = true;
             yield return new WaitForSeconds(2.2f);
@@ -144,6 +145,7 @@ namespace ParryRL.Tests
             }
             Put(-3.25f);
             yield return new WaitForSeconds(0.8f);
+            EncounterCatalog.ForcedId = null;
             yield return Capture("run_elite_reward");
         }
 

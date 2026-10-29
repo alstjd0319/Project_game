@@ -30,7 +30,15 @@ namespace ParryRL.Tests
         }
 
         [SetUp]
-        public void SetUp() => GameTuning.UseDefaultsForTests();
+        public void SetUp()
+        {
+            GameTuning.UseDefaultsForTests();
+            // 엘리트방 테스트의 기준 장면: 엘리트 창귀 + 같은 종류 졸개가 처음부터 함께 (매복 장면은 졸개가 늦게 나온다). 일반방은 그대로 고른다
+            EncounterCatalog.ForcedId = "elite_changgwi";
+        }
+
+        [TearDown]
+        public void TearDown() => EncounterCatalog.ForcedId = null;
 
         [Test]
         public void 문은_서로_다른_두_종류이고_마지막_방_직전에는_하나다()
