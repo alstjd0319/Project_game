@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ParryRL
 {
-    /// <summary>발판 하나의 배치: 가운데 x · 가운데 y(두께 0.4) · 폭. 바닥이 y=0이고 점프 한 번 약 1.56, 이단 점프 약 3.1.</summary>
+    /// <summary>발판 하나의 배치: 가운데 x · 가운데 y(두께 0.4) · 폭. 바닥이 y=0이고 점프 한 번 약 1.56, 이단 점프 약 3.1 — 한 층은 윗면 StepHeight(1.5)씩.</summary>
     public struct PlatformSpec
     {
         public float X, Y, Width;
@@ -58,30 +58,62 @@ namespace ParryRL
 
         public const int Basic = 0, Stairs = 1, Zigzag = 2, Tower = 3, Roof = 4, Flat = 5;
 
+        /// <summary>
+        /// 층 높이 규칙: 바닥이나 옆 발판에서 한 층 = 윗면 <see cref="StepHeight"/>씩 (점프 한 번 약 1.56 · 이단 점프 약 3.1 — 이단 점프로 넉넉히, 최대로 뛰지 않아도),
+        /// 가로로 겹치는 발판끼리는 두 층 이상 떨어뜨린다 (아래 발판에 선 몸 1.4가 위 발판에 걸리지 않게). 윗면 = Y + 0.2.
+        /// 2026-10-29: 처음 1.6~2.2 → "너무 높다"로 1.2 → "좀 더 높게"로 1.5.
+        /// </summary>
+        public const float StepHeight = 1.5f;
+
+        /// <summary>n층 발판의 가운데 y (윗면 = n × StepHeight).</summary>
+        private static float L(int n) => n * StepHeight - 0.2f;
+
+        /// <summary>n층 윗면 높이 (장면이 도깨비불을 세울 층을 고를 때).</summary>
+        public static float Level(int n) => n * StepHeight;
+
         public static readonly RoomLayout[] All =
         {
-            new() { Name = "기본", Platforms = new[] { new PlatformSpec(-7f, 2.4f, 4f), new PlatformSpec(7f, 2.4f, 4f), new PlatformSpec(0f, 4.4f, 3f) } },
+            new() { Name = "기본", Platforms = new[] { new PlatformSpec(-7f, L(1), 4f), new PlatformSpec(7f, L(1), 4f), new PlatformSpec(0f, L(2), 3f) } },
             new() { Name = "계단산", Platforms = new[]
             {
-                new PlatformSpec(-12f, 1.8f, 4f), new PlatformSpec(-6f, 3.4f, 4f), new PlatformSpec(0f, 5.0f, 4f),
-                new PlatformSpec(6f, 3.4f, 4f), new PlatformSpec(12f, 1.8f, 4f),
+                new PlatformSpec(-12f, L(1), 4f), new PlatformSpec(-6f, L(2), 4f), new PlatformSpec(0f, L(3), 4f),
+                new PlatformSpec(6f, L(2), 4f), new PlatformSpec(12f, L(1), 4f),
             } },
             new() { Name = "지그재그", Platforms = new[]
             {
-                new PlatformSpec(-11.5f, 2.4f, 5f), new PlatformSpec(0f, 2.4f, 5f), new PlatformSpec(11.5f, 2.4f, 5f),
-                new PlatformSpec(-7f, 4.6f, 4f), new PlatformSpec(7f, 4.6f, 4f), new PlatformSpec(0f, 6.6f, 3f),
+                new PlatformSpec(-11.5f, L(1), 5f), new PlatformSpec(0f, L(1), 5f), new PlatformSpec(11.5f, L(1), 5f),
+                new PlatformSpec(-7f, L(2), 4f), new PlatformSpec(7f, L(2), 4f), new PlatformSpec(0f, L(3), 3f),
             }, Pits = new[] { new PitSpec(-5.5f, 3.4f), new PitSpec(5.5f, 3.4f) } },
             new() { Name = "탑", Platforms = new[]
             {
-                new PlatformSpec(0f, 4.6f, 8f), new PlatformSpec(-9f, 2.2f, 4f), new PlatformSpec(9f, 2.2f, 4f),
-                new PlatformSpec(-12f, 3.8f, 4f), new PlatformSpec(12f, 3.8f, 4f),
+                new PlatformSpec(0f, L(2), 8f), new PlatformSpec(-9f, L(1), 4f), new PlatformSpec(9f, L(1), 4f),
+                new PlatformSpec(-12.5f, L(2), 3f), new PlatformSpec(12.5f, L(2), 3f),
             }, Pits = new[] { new PitSpec(0f, 3.4f) } },
             new() { Name = "지붕", Platforms = new[]
             {
-                new PlatformSpec(0f, 2.6f, 14f), new PlatformSpec(-11f, 1.6f, 3.5f), new PlatformSpec(11f, 1.6f, 3.5f), new PlatformSpec(0f, 5.2f, 3f),
+                new PlatformSpec(0f, L(2), 14f), new PlatformSpec(-11f, L(1), 3.5f), new PlatformSpec(11f, L(1), 3.5f),
             }, Pits = new[] { new PitSpec(-8.5f, 3f), new PitSpec(8.5f, 3f) } },
             new() { Name = "평지", Platforms = new PlatformSpec[0] },
         };
+
+        /// <summary>발판 윗면 높이.</summary>
+        public static float Top(PlatformSpec p) => p.Y + 0.2f;
+
+        /// <summary>
+        /// 도깨비불이 설 발판: 장면이 원하는 자리(x)·높이에 가장 가까운 발판 (가로 거리 + 높이 차 × 2). 발판이 없으면 null.
+        /// </summary>
+        public static PlatformSpec? NearestPlatform(RoomLayout layout, float x, float height)
+        {
+            PlatformSpec? best = null;
+            float bestScore = float.MaxValue;
+            foreach (var p in layout.Platforms)
+            {
+                float dx = System.Math.Max(0f, System.Math.Abs(x - p.X) - p.Width * 0.5f);
+                float score = dx + System.Math.Abs(Top(p) - height) * 2f;
+                if (score < bestScore) { bestScore = score; best = p; }
+            }
+            return best;
+        }
 
         /// <summary>테스트가 레이아웃을 고정할 때 쓴다 (−1 = 고정 안 함).</summary>
         public static int ForcedIndex = -1;

@@ -77,7 +77,7 @@ namespace ParryRL.Tests
                     if (s.Height > 0f)
                     {
                         Assert.AreEqual(EnemyKind.Ranged, s.Kind, $"{e.Name}: 떠서 나오는 건 도깨비불만");
-                        Assert.LessOrEqual(s.Height, 4f, $"{e.Name}: 이단 점프·발판으로 닿을 높이");
+                        Assert.LessOrEqual(s.Height, RoomLayouts.Level(3) + 0.01f, $"{e.Name}: 3층까지");
                         high = true;
                     }
                 }
@@ -152,7 +152,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 엄호_사격_장면의_도깨비불은_높이_떠서_나온다()
+        public IEnumerator 엄호_사격_장면의_도깨비불은_발판_위에서_나오고_발판을_벗어나지_않는다()
         {
             EncounterCatalog.ForcedId = "cover";
             yield return TestScene.LoadRun(RoomType.Normal, RoomType.Normal, RoomType.Normal);
@@ -161,18 +161,34 @@ namespace ParryRL.Tests
             yield return WaitUntil(() => Room.CurrentPhase == RoomController.Phase.Fighting);
             var ranged = Enemies().Where(e => e.Kind == EnemyKind.Ranged).ToArray();
             Assert.AreEqual(1, ranged.Length);
-            Assert.Greater(ranged[0].transform.position.y, 3f, "땅에서 3.5 떠 있다");
+            var r = ranged[0];
+            Assert.IsTrue(r.IsConfined, "발판에 묶여 있다");
+            // 발판 위에 서 있다: 발판 윗면 + 몸 절반 (땅 위 도깨비불과 같은 뜬 높이)
+            var layout = Room.Layout;
+            bool onPlatform = layout.Platforms.Any(p =>
+                Mathf.Abs(r.transform.position.y - (RoomLayouts.Top(p) + r.transform.localScale.y * 0.5f)) < 0.05f &&
+                Mathf.Abs(r.transform.position.x - p.X) <= p.Width * 0.5f);
+            Assert.IsTrue(onPlatform, $"허공이 아니라 발판 위에서 나온다 (y={r.transform.position.y:0.00})");
             var melee = Enemies().Where(e => e.Kind == EnemyKind.Melee).ToArray();
             Assert.AreEqual(2, melee.Length);
             foreach (var m in melee) Assert.Less(m.transform.position.y, 1.5f, "창귀는 땅 위");
-            yield return new WaitForSeconds(1f);
-            Assert.Greater(ranged[0].transform.position.y, 3f, "움직여도 높이를 유지한다");
+            // 플레이어는 왼쪽 끝(멀리) — 다가오려 해도 발판 끝에서 멈춘다
+            float y0 = r.transform.position.y;
+            for (float t = 0f; t < 3f; t += Time.deltaTime)
+            {
+                Assert.GreaterOrEqual(r.transform.position.x, r.ConfineMin - 0.001f, "발판 밖(허공)으로 나가지 않는다");
+                Assert.LessOrEqual(r.transform.position.x, r.ConfineMax + 0.001f);
+                yield return null;
+            }
+            Assert.AreEqual(y0, r.transform.position.y, 0.01f, "높이 그대로");
+            Assert.AreEqual(r.ConfineMin, r.transform.position.x, 0.05f, "플레이어 쪽 발판 끝까지 와서 멈춘다");
         }
 
         [UnityTest]
         public IEnumerator 협공_장면은_플레이어_뒤에서도_나온다()
         {
             EncounterCatalog.ForcedId = "pincer";
+            RoomLayouts.ForcedIndex = RoomLayouts.Stairs; // 구멍 없는 지형 — 탑(가운데 구멍)이 뽑히면 x=0에 세운 플레이어가 떨어져 시작 자리로 돌아간다
             yield return TestScene.LoadRun(RoomType.Normal, RoomType.Normal);
             GameTuning.Current.godMode = true;
             GameTuning.Current.enemyPassive = true;

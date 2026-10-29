@@ -138,7 +138,10 @@ namespace ParryRL.Tests
             Assert.IsTrue(Object.FindAnyObjectByType<FxPiece>() != null, "대시 잔상");
 
             yield return new WaitForSeconds(0.4f);
-            _sprite.transform.position += Vector3.up * 3f; // 정점에서 떨어지기 시작
+            // 정점에서 떨어지기 시작 — 아래에 발판이 없는 자리(기본 지형 발판 사이 x −5 ~ −1.5)에서, 떨어지다 발판에 먼저 내려앉지 않게
+            var top = _sprite.transform.position;
+            _sprite.transform.position = new Vector3(-3.3f, top.y + 3f, top.z);
+            _sprite.GetComponent<Rigidbody2D>().position = _sprite.transform.position;
             yield return new WaitForFixedUpdate();
             yield return null;
             Assert.AreEqual("air", _sprite.Clip);

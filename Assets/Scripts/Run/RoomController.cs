@@ -311,6 +311,9 @@ namespace ParryRL
             }
         }
 
+        /// <summary>발판 위 도깨비불이 발판 끝에서 이만큼 안쪽까지만 움직인다 (몸이 발판 밖 허공에 걸치지 않게).</summary>
+        public const float PlatformEdgeInset = 0.4f;
+
         private void Spawn(SpawnSpec spec)
         {
             if (spec.Boss)
@@ -326,7 +329,22 @@ namespace ParryRL
                 SpawnAnchor.BehindPlayer => px - spec.X,
                 _ => spec.X,
             };
-            var enemy = _spawner.SpawnEnemyAt(spec.Kind, x, spec.Height, spec.Elite);
+            float height = spec.Height;
+            float? confineMin = null, confineMax = null;
+            if (spec.Kind == EnemyKind.Ranged && spec.Height > 0f)
+            {
+                // 떠서 나오는 도깨비불은 허공이 아니라 원하는 층에 가장 가까운 발판 위에서 나오고, 그 발판 안에서만 움직인다
+                var platform = RoomLayouts.NearestPlatform(Layout, x, spec.Height);
+                if (platform.HasValue)
+                {
+                    var p = platform.Value;
+                    height = RoomLayouts.Top(p);
+                    confineMin = p.X - p.Width * 0.5f + PlatformEdgeInset;
+                    confineMax = p.X + p.Width * 0.5f - PlatformEdgeInset;
+                }
+                else height = 0f;
+            }
+            var enemy = _spawner.SpawnEnemyAt(spec.Kind, x, height, spec.Elite, confineMin, confineMax);
             if (enemy != null && spec.Delay > 0f)
                 Hud.WorldText(enemy.transform.position + Vector3.up * 1.4f, "!", new Color(1f, 0.85f, 0.3f), 1.2f); // 늦게 들어온 몬스터 — 어디서 나왔는지 보이게
             Track(enemy);

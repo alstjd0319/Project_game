@@ -137,7 +137,8 @@ namespace ParryRL
         /// 전투 장면(<see cref="Encounter"/>)용: 정한 자리 x에 세운다. 바닥 범위 안으로 자르고, 플레이어와 너무 가까우면 떨어뜨리고,
         /// 걷는 창귀는 구멍을 피해 가까운 땅으로 옮긴다. 도깨비불은 height만큼 떠서 나온다 (그 높이를 유지하며 좌우로만 움직인다).
         /// </summary>
-        public EnemyController SpawnEnemyAt(EnemyKind kind, float x, float height, bool elite)
+        /// <param name="confineMin">발판 위에서 나오는 도깨비불: 이 가로 범위(발판) 안에 세우고 그 밖으로 나가지 않게 한다 (null = 제한 없음)</param>
+        public EnemyController SpawnEnemyAt(EnemyKind kind, float x, float height, bool elite, float? confineMin = null, float? confineMax = null)
         {
             var prefab = kind == EnemyKind.Melee ? meleePrefab : rangedPrefab;
             if (prefab == null) return null;
@@ -163,10 +164,12 @@ namespace ParryRL
                 }
             }
             if (kind == EnemyKind.Melee) x = GroundProbe.NudgeOntoGround(x, half, groundY, arenaMinX, arenaMaxX);
+            if (confineMin.HasValue && confineMax.HasValue) x = Mathf.Clamp(x, confineMin.Value, confineMax.Value);
             float lift = kind == EnemyKind.Ranged ? Mathf.Max(0f, height) : 0f;
             var pos = new Vector3(x, groundY + prefab.transform.localScale.y * 0.5f + lift, 0f);
             var enemy = Create(prefab, pos, elite ? new Color(0.8f, 0.45f, 1f) : new Color(0.95f, 0.3f, 0.35f));
             if (elite) enemy.MakeElite(RoomPlan.EliteHpMultiplier, 3);
+            if (confineMin.HasValue && confineMax.HasValue) enemy.ConfineTo(confineMin.Value, confineMax.Value);
             return enemy;
         }
 

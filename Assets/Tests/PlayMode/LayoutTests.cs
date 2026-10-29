@@ -10,29 +10,44 @@ namespace ParryRL.Tests
     public class LayoutTests
     {
         private const float PlatformThickness = 0.4f;
-        private const float DoubleJumpReach = 2.9f;  // 이단 점프로 닿는 높이(약 3.1)에서 여유를 둔 값
-        private const float JumpGap = 3.5f;          // 올라가며 건널 수 있는 가로 간격
+        private const float StepReach = RoomLayouts.StepHeight + 0.05f; // 한 층: 이단 점프(약 3.1)로 넉넉히 — 점프를 최대로 해야 닿는 높이는 쓰지 않는다
+        private const float JumpGap = 3.5f;      // 올라가며 건널 수 있는 가로 간격
+        private const float StackGap = RoomLayouts.StepHeight * 2f - 0.01f; // 가로로 겹치는 발판끼리의 높이 차 (아래에 선 몸 1.4가 위 발판에 걸리지 않게)
 
         private static float Surface(PlatformSpec p) => p.Y + PlatformThickness * 0.5f;
 
         [Test]
-        public void 모든_발판은_바닥이나_다른_발판에서_점프로_올라갈_수_있다()
+        public void 모든_발판은_바닥이나_옆_발판에서_점프_한_번으로_넉넉히_올라간다()
         {
             foreach (var layout in RoomLayouts.All)
             {
                 Assert.LessOrEqual(layout.Platforms.Length, RoomLayouts.MaxPlatforms, layout.Name);
                 foreach (var p in layout.Platforms)
                 {
-                    if (Surface(p) <= DoubleJumpReach) continue; // 바닥에서 바로
+                    if (Surface(p) <= StepReach) continue; // 바닥에서 바로
                     bool reachable = layout.Platforms.Any(q =>
                     {
-                        if (q.Equals(p) || Surface(q) >= Surface(p) || Surface(p) - Surface(q) > DoubleJumpReach) return false;
+                        if (q.Equals(p) || Surface(q) >= Surface(p) || Surface(p) - Surface(q) > StepReach) return false;
                         float gap = Mathf.Max(0f, Mathf.Abs(p.X - q.X) - (p.Width + q.Width) * 0.5f);
                         return gap <= JumpGap;
                     });
-                    Assert.IsTrue(reachable, $"{layout.Name}: x={p.X}, y={p.Y} 발판에 올라갈 수 없다");
+                    Assert.IsTrue(reachable, $"{layout.Name}: x={p.X}, y={p.Y} 발판은 한 층 아래 발판이 옆에 있어야 한다");
                 }
             }
+        }
+
+        [Test]
+        public void 위아래로_겹치는_발판은_두_층_이상_떨어져_있다()
+        {
+            foreach (var layout in RoomLayouts.All)
+                foreach (var p in layout.Platforms)
+                    foreach (var q in layout.Platforms)
+                    {
+                        if (p.Equals(q)) continue;
+                        float overlap = (p.Width + q.Width) * 0.5f - Mathf.Abs(p.X - q.X);
+                        if (overlap <= 0.01f) continue;
+                        Assert.GreaterOrEqual(Mathf.Abs(Surface(p) - Surface(q)), StackGap, $"{layout.Name}: x={p.X} · x={q.X}");
+                    }
         }
 
         [Test]
@@ -75,7 +90,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 연습_모드는_예전_발판_세_개_그대로다()
+        public IEnumerator 연습_모드는_기본_지형_발판_세_개다()
         {
             yield return TestScene.LoadPrototype();
             yield return null;
@@ -83,7 +98,7 @@ namespace ParryRL.Tests
             Assert.AreEqual(3, deco.ActivePlatformCount);
             Assert.AreEqual(RoomLayouts.Basic, RoomController.Instance.LayoutIndex);
             var platform = GameObject.Find("Platform_Top");
-            Assert.AreEqual(new Vector3(0f, 4.4f, 0f), platform.transform.position);
+            Assert.AreEqual(new Vector3(0f, RoomLayouts.Level(2) - 0.2f, 0f), platform.transform.position, "기본 지형 가운데 발판 = 2층");
         }
 
         [UnityTest]

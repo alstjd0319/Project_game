@@ -5,7 +5,10 @@ namespace ParryRL
     /// <summary>몬스터가 서는 자리의 기준: 방 좌표(플레이어는 왼쪽 끝 x≈−19에서 시작, 문은 오른쪽 끝) · 플레이어 앞 · 플레이어 뒤.</summary>
     public enum SpawnAnchor { Room, AheadOfPlayer, BehindPlayer }
 
-    /// <summary>몬스터 한 마리의 등장: 종류 · 자리 · 높이(도깨비불만 — 땅에서 이만큼 떠서 등장) · 엘리트 · 웨이브 시작 뒤 늦게 나오는 시간.</summary>
+    /// <summary>
+    /// 몬스터 한 마리의 등장: 종류 · 자리 · 높이 · 엘리트 · 웨이브 시작 뒤 늦게 나오는 시간.
+    /// 높이(도깨비불만)는 서고 싶은 층(발판 윗면 RoomLayouts.Level(1~3)) — 그 자리·높이에 가장 가까운 발판 위에서 나오고, 그 발판 밖으로는 나가지 않는다.
+    /// </summary>
     public struct SpawnSpec
     {
         public EnemyKind Kind;
@@ -65,6 +68,9 @@ namespace ParryRL
         private static SpawnSpec R(float x, float h = 0f, SpawnAnchor a = SpawnAnchor.Room, float delay = 0f) => SpawnSpec.Ranged(x, h, a, delay);
         private static SpawnSpec RE(float x, float h = 0f) => SpawnSpec.Ranged(x, h, SpawnAnchor.Room, 0f, true);
 
+        // 도깨비불이 설 층 (발판 윗면 높이)
+        private static readonly float Lv1 = RoomLayouts.Level(1), Lv2 = RoomLayouts.Level(2), Lv3 = RoomLayouts.Level(3);
+
         private const int Basic = RoomLayouts.Basic, Stairs = RoomLayouts.Stairs, Zigzag = RoomLayouts.Zigzag, Tower = RoomLayouts.Tower, Roof = RoomLayouts.Roof;
 
         public static readonly Encounter[] All =
@@ -88,21 +94,21 @@ namespace ParryRL
             // ── 2구간: 도깨비불과 높이가 더해진다 ──
             new() { Id = "embers", Name = "불빛 사이", Intent = "도깨비불 둘이 거리를 두고 쏜다 — 날아오는 불과 다가오는 창귀를 함께 본다", MinZone = 2,
                 Layouts = new[] { Zigzag, Stairs },
-                Waves = new[] { new[] { R(-4f), R(6f) }, new[] { M(5f, Ahead), M(5f, Behind, 2f), R(10f, 2.5f) } } },
+                Waves = new[] { new[] { R(-4f), R(6f) }, new[] { M(5f, Ahead), M(5f, Behind, 2f), R(10f, Lv2) } } },
             new() { Id = "cover", Name = "엄호 사격", Intent = "높이 뜬 도깨비불이 위에서 쏘는 동안 바닥의 창귀를 막는다 — 부적이나 발판으로 위를 처리", MinZone = 2,
                 Layouts = new[] { Tower, Roof, Stairs },
-                Waves = new[] { new[] { R(-5.5f, 3.5f), M(-6f), M(4f) }, new[] { R(-8f, 3f), R(8f, 3f), M(0f) } } },
+                Waves = new[] { new[] { R(-5.5f, Lv3), M(-6f), M(4f) }, new[] { R(-8f, Lv2), R(8f, Lv2), M(0f) } } },
             new() { Id = "brink", Name = "구멍 앞 압박", Intent = "구멍 건너편 창귀와 위의 도깨비불 — 밀리면 떨어진다", MinZone = 2,
                 Layouts = new[] { Zigzag, Roof },
-                Waves = new[] { new[] { M(-1f), M(9f), R(-12f, 2f) }, new[] { M(0f), M(10f), R(4f, 3f) } } },
+                Waves = new[] { new[] { M(-1f), M(9f), R(-12f, Lv1) }, new[] { M(0f), M(10f), R(4f, Lv2) } } },
 
             // ── 3구간: 섞어서 몰아친다 ──
             new() { Id = "siege", Name = "포위", Intent = "앞뒤 창귀 + 위의 도깨비불 — 가장 바쁜 장면", MinZone = 3,
                 Layouts = new[] { Tower, Stairs, Roof },
-                Waves = new[] { new[] { M(5f, Ahead), M(5f, Behind, 1.5f), R(0f, 4f) }, new[] { M(4f, Ahead), M(4f, Behind, 1f), R(-8f, 3f), R(8f, 3f) } } },
+                Waves = new[] { new[] { M(5f, Ahead), M(5f, Behind, 1.5f), R(0f, Lv3) }, new[] { M(4f, Ahead), M(4f, Behind, 1f), R(-8f, Lv2), R(8f, Lv2) } } },
             new() { Id = "surge", Name = "파상 공세", Intent = "세 번 밀려오는 파도 — 마지막엔 앞뒤로 셋", MinZone = 3,
                 Layouts = new[] { Zigzag, Roof, Stairs },
-                Waves = new[] { new[] { M(-6f), M(0f) }, new[] { R(-6f), R(6f, 3f), M(3f) }, new[] { M(5f, Ahead), M(5f, Behind, 1f), M(8f, Ahead, 2f) } } },
+                Waves = new[] { new[] { M(-6f), M(0f) }, new[] { R(-6f), R(6f, Lv2), M(3f) }, new[] { M(5f, Ahead), M(5f, Behind, 1f), M(8f, Ahead, 2f) } } },
 
             // ── 엘리트방 ──
             new() { Id = "elite_changgwi", Name = "우두머리 창귀", Intent = "체력 많은 창귀 하나를 끝까지 막아 낸다", Type = RoomType.Elite, MaxZone = 2,
@@ -110,10 +116,10 @@ namespace ParryRL
                 Waves = new[] { new[] { ME(2f), M(8f) } } },
             new() { Id = "elite_wisp", Name = "도깨비불 무리", Intent = "높이 뜬 엘리트 도깨비불 + 창귀 둘", Type = RoomType.Elite,
                 Layouts = new[] { Tower, Roof },
-                Waves = new[] { new[] { RE(4f, 2.5f), M(-4f), M(8f) } } },
+                Waves = new[] { new[] { RE(4f, Lv2), M(-4f), M(8f) } } },
             new() { Id = "elite_pair", Name = "두 우두머리", Intent = "엘리트 창귀와 엘리트 도깨비불이 차례로", Type = RoomType.Elite, MinZone = 3,
                 Layouts = new[] { Tower, Stairs },
-                Waves = new[] { new[] { ME(5f, Ahead), R(-6f, 3f) }, new[] { RE(6f, 3f), M(5f, Behind, 1.5f) } } },
+                Waves = new[] { new[] { ME(5f, Ahead), R(-6f, Lv2) }, new[] { RE(6f, Lv2), M(5f, Behind, 1.5f) } } },
         };
 
         /// <summary>방 번호별 난이도 예산 (가안). 장면의 점수가 예산 이하이고, 예산 − <see cref="BudgetSpread"/> 이상인 것 중에서 고른다.</summary>

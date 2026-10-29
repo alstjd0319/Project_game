@@ -310,12 +310,32 @@ namespace ParryRL
             float x = Mathf.Clamp(transform.position.x + dir * moveSpeed * Time.deltaTime, _arenaMinX + half, _arenaMaxX - half);
             // 걷는 몬스터는 바닥 구멍 앞에서 멈춘다 (앞발 아래에 땅이 없으면 더 가지 않는다). 떠다니는 도깨비불은 그냥 건넌다
             if (Walks && !GroundProbe.HasGround(x + dir * half, _feetY)) return;
+            x = Mathf.Clamp(x, _confineMin, _confineMax);
+            if (Mathf.Approximately(x, transform.position.x)) return; // 발판 끝에서 멈춤
             IsMoving = true;
             SetPosition(new Vector2(x, transform.position.y));
         }
 
+        private float _confineMin = float.NegativeInfinity, _confineMax = float.PositiveInfinity;
+
+        /// <summary>
+        /// 이 가로 범위 안에서만 움직인다 (발판 위에서 나온 도깨비불): 이동·밀림 모두 발판 끝에서 멈춰,
+        /// 발판을 벗어나 허공에 떠서 쫓아오거나 공격하지 않는다.
+        /// </summary>
+        public void ConfineTo(float minX, float maxX)
+        {
+            _confineMin = Mathf.Min(minX, maxX);
+            _confineMax = Mathf.Max(minX, maxX);
+            SetPosition(transform.position);
+        }
+
+        public bool IsConfined => !float.IsNegativeInfinity(_confineMin);
+        public float ConfineMin => _confineMin;
+        public float ConfineMax => _confineMax;
+
         private void SetPosition(Vector2 pos)
         {
+            pos.x = Mathf.Clamp(pos.x, _confineMin, _confineMax);
             transform.position = pos;
             _rb.position = pos;
         }
