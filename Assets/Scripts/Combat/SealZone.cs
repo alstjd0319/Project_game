@@ -165,7 +165,8 @@ namespace ParryRL
                 if (_t >= _nextBind)
                 {
                     _nextBind = _t + BindInterval;
-                    foreach (var e in Inside) e.Stun(BindSeconds);
+                    // 보스(슈퍼 아머)는 묶지 않는다: 0.2초마다 기절을 다시 걸면 예비 모션이 계속 끊겨 진 안에서 아무것도 못 했다 (사용자 지적). 지속 피해만 받는다
+                    foreach (var e in Inside) if (!e.SuperArmor) e.Stun(BindSeconds);
                 }
                 if (_t >= _nextTick)
                 {

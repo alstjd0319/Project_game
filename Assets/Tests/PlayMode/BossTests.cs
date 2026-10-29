@@ -332,6 +332,33 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 부적_봉인진은_보스를_묶지_않고_피해만_준다()
+        {
+            yield return LoadBossRoom();
+            GameTuning.Current.infiniteGauge = true;
+            var enemy = BossController.Instance.Enemy;
+            var combat = Object.FindAnyObjectByType<PlayerCombat>();
+            Assert.IsTrue(combat.TrySwitchWeapon(), "부적으로");
+            yield return new WaitForSeconds(0.6f);
+            // 진(플레이어 앞 3.2)이 보스 몸에 걸치게 선다
+            var pos = new Vector3(enemy.transform.position.x - 3.2f, combat.transform.position.y, 0f);
+            combat.transform.position = pos;
+            combat.GetComponent<Rigidbody2D>().position = pos;
+            Physics2D.SyncTransforms();
+            yield return null;
+            float hp0 = enemy.HpRatio;
+            Assert.IsTrue(combat.TrySkill(2), "봉인진");
+            bool stunned = false;
+            for (float t = 0f; t < 2.5f; t += Time.deltaTime)
+            {
+                stunned |= enemy.IsStunned;
+                yield return null;
+            }
+            Assert.IsFalse(stunned, "보스는 봉인진에 묶이지(기절·공격 끊김) 않는다");
+            Assert.Less(enemy.HpRatio, hp0, "지속 피해는 들어간다");
+        }
+
+        [UnityTest]
         public IEnumerator 봉_3단_마무리는_보스를_기절시키지_않는다()
         {
             yield return LoadBossRoom();

@@ -66,8 +66,6 @@ namespace ParryRL
         [SerializeField, Tooltip("2단 / 3단 데미지 (1단은 위 일반공격 데미지). 1·2단은 몬스터를 경직시키지 않고 3단만 경직 + 기절")] private int comboDamage2 = 12;
         [SerializeField] private int comboDamage3 = 20;
         [SerializeField, Tooltip("2단 베기 박스 (앞쪽, 위로 올려 벰)")] private Vector2 comboBox2 = new(2.6f, 1.9f);
-        [SerializeField, Tooltip("3단 마무리 박스 — 플레이어를 가운데로 양옆을 모두 휩쓴다")] private Vector2 comboBox3 = new(3.4f, 2.2f);
-        [SerializeField, Tooltip("3단 마무리에 맞은 적의 기절 시간")] private float comboStun3 = 0.35f;
         [SerializeField, Tooltip("마무리(3단) 뒤 다음 공격까지 쿨타임 — 1·2단보다 길게 두어 박자를 만든다")] private float comboFinisherCooldown = 0.6f;
         [SerializeField, Tooltip("쿨타임이 끝나기 이 시간 안쪽에 A를 누르면 기억해 뒀다가 쿨타임이 끝나는 순간 바로 나간다 — 연속으로 칠 때 박자를 살짝 놓쳐도 끊기지 않게")] private float attackBuffer = 0.22f;
         [SerializeField, Tooltip("한 단을 치고 쿨타임이 끝난 뒤에도 이 시간 안에 다음 A를 누르면 다음 단으로 이어진다")] private float comboWindow = 0.6f;
@@ -92,10 +90,9 @@ namespace ParryRL
         [SerializeField] private float skill1Cooldown = 3f;
         [SerializeField] private int skill2Cost = 5;
         [SerializeField] private float skill2Cooldown = 6f;
-        [Header("봉 D: 휩쓸기 — 앞쪽 넓은 박스를 한 번에 쓸어 데미지 + 짧은 기절")]
+        [Header("봉 D: 휩쓸기 — 앞쪽 넓은 박스를 한 번에 쓸어 데미지 (기절 없음 — 사용자 요청으로 뺐다)")]
         [SerializeField] private int sweepDamage = 30;
         [SerializeField] private Vector2 sweepBox = new(4f, 2.2f);
-        [SerializeField] private float sweepStun = 0.5f;
         [Header("봉 F: 내려찍기 — 공중에서 내리꽂아 앞쪽 바닥 충격파, 큰 데미지 + 긴 기절")]
         [SerializeField] private int slamDamage = 45;
         [SerializeField] private Vector2 slamBox = new(3.8f, 1.6f);
@@ -338,8 +335,8 @@ namespace ParryRL
             Vector2 pos = transform.position;
             Color color = WeaponColor;
             var hit = NewHit(DamageSource.AttackSkill, false);
-            // 평타는 몬스터 공격을 끊지 않는다(패링이 할 일): 부적 = 살짝 밀림만, 봉 1·2단 = 경직 없음, 봉 3단(마무리)만 경직 + 기절
-            hit.Stagger = IsRanged ? HitStagger.Light : stage == 3 ? HitStagger.Full : HitStagger.None;
+            // 평타는 몬스터 공격을 끊지 않는다(패링이 할 일): 부적 = 살짝 밀림만, 봉 1~3단 = 경직 없음 (3단 마무리의 경직·기절도 없앴다 — 사용자 요청)
+            hit.Stagger = IsRanged ? HitStagger.Light : HitStagger.None;
 
             if (IsRanged)
             {
@@ -351,14 +348,11 @@ namespace ParryRL
             else
             {
                 var fx = GameAssets.AttackFx;
-                Vector2 box = stage == 1 ? meleeSkillBox : stage == 2 ? comboBox2 : comboBox3;
+                Vector2 box = stage == 1 ? meleeSkillBox : comboBox2; // 3단도 2단과 같은 앞쪽 범위 (예전엔 양옆을 휩쓰는 더 큰 박스 — 사용자 요청으로 1~2단과 같게)
                 int damage = stage == 1 ? attackSkillDamage : stage == 2 ? comboDamage2 : comboDamage3;
                 var art = fx == null ? null : stage == 1 ? fx.meleeAttack : stage == 2 ? fx.meleeAttack2 : fx.meleeAttack3;
-                // 1·2단은 앞쪽 박스, 3단 마무리는 플레이어를 가운데로 양옆을 휩쓴다 (그림도 몸을 감싸는 회오리)
-                var center = stage == 3 ? new Vector2(pos.x, pos.y) : new Vector2(pos.x + dir * box.x * 0.5f, pos.y);
-                // 3단 기절은 일반 몬스터만 — 보스(슈퍼 아머)에겐 하던 공격이 끊겨 경직처럼 되므로 걸지 않는다 (너무 쉬워진다는 사용자 피드백)
-                System.Action<EnemyController> onHit = stage == 3 ? e => { if (!e.SuperArmor) e.Stun(comboStun3); } : null;
-                int hits = MeleeStrike.Spawn(center, box, new Color(color.r, color.g, color.b, 0.45f), damage, hit, onHit, art, dir, follow: transform);
+                var center = new Vector2(pos.x + dir * box.x * 0.5f, pos.y);
+                int hits = MeleeStrike.Spawn(center, box, new Color(color.r, color.g, color.b, 0.45f), damage, hit, null, art, dir, follow: transform);
                 if (hits > 0 && HitFeel.Instance != null)
                 {
                     if (stage == 3) HitFeel.Instance.Play(new HitFeelProfile { hitStop = 0.05f, slowMotion = 0f, slowScale = 1f, shake = 0.2f, shakeDuration = 0.15f });
@@ -413,7 +407,7 @@ namespace ParryRL
             var center = new Vector2(pos.x + dir * sweepBox.x * 0.5f, pos.y);
             var hit = NewHit(DamageSource.AttackSkill, false);
             int hits = MeleeStrike.Spawn(center, sweepBox, new Color(WeaponColor.r, WeaponColor.g, WeaponColor.b, 0.45f), sweepDamage, hit,
-                e => e.Stun(sweepStun), GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeAttack : null, dir, stretchArt: true, follow: transform);
+                null, GameAssets.AttackFx != null ? GameAssets.AttackFx.meleeAttack : null, dir, stretchArt: true, follow: transform);
             if (hits > 0 && HitFeel.Instance != null) HitFeel.Instance.SkillHit();
             _motor.Lunge(dir);
         }

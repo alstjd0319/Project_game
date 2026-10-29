@@ -129,7 +129,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 봉_1_2단은_몬스터를_경직시키지_않고_3단만_경직시킨다()
+        public IEnumerator 봉_평타는_1_2_3단_모두_몬스터를_경직시키지_않는다()
         {
             TestScene.SetAttackSkillFree(true);
             int staggers = 0;
@@ -153,10 +153,14 @@ namespace ParryRL.Tests
 
             yield return new WaitForSeconds(0.4f);
             Place(_enemy, 1.5f);
+            x0 = _enemy.transform.position.x;
+            float hp3 = _enemy.HpRatio;
             Assert.IsTrue(_combat.TryAttackSkill()); // 3단
             yield return null;
-            Assert.AreEqual(1, staggers, "3단(마무리): 경직");
-            Assert.IsTrue(_enemy.IsStunned, "3단은 기절도");
+            Assert.Less(_enemy.HpRatio, hp3, "3단 피해는 들어간다");
+            Assert.AreEqual(0, staggers, "3단(마무리)도 경직 없음");
+            Assert.IsFalse(_enemy.IsStunned, "3단도 기절 없음");
+            Assert.AreEqual(x0, _enemy.transform.position.x, 0.01f, "3단: 밀리지 않음");
         }
 
         [UnityTest]
@@ -192,7 +196,7 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 봉_일반공격은_이어_누르면_1_2_3단으로_커지고_3단은_양옆을_휩쓸며_기절시킨다()
+        public IEnumerator 봉_일반공격은_이어_누르면_1_2_3단으로_세지고_3단도_같은_앞쪽_범위다()
         {
             GameTuning.Current.enemyInvincible = false;
             TestScene.SetAttackSkillFree(true);
@@ -204,12 +208,22 @@ namespace ParryRL.Tests
             yield return ComboHit(1.5f, d => d2 = d);
             Assert.AreEqual(3, _combat.NextComboStage);
             yield return new WaitForSeconds(0.4f);
-            _enemy.Stun(0f);
-            yield return ComboHit(-1.2f, d => d3 = d); // 3단은 플레이어 뒤쪽(반대편) 적도 맞는다
+            yield return ComboHit(1.5f, d => d3 = d);
             Assert.AreEqual(1, _combat.NextComboStage, "마무리 뒤에는 다시 1단");
             Assert.Less(d1, d2, "2단이 1단보다 세다");
             Assert.Less(d2, d3, "3단 마무리가 가장 세다");
-            Assert.IsTrue(_enemy.IsStunned, "3단은 기절시킨다");
+            Assert.IsFalse(_enemy.IsStunned, "3단도 기절은 없다");
+
+            // 3단은 더 이상 양옆을 휩쓸지 않는다: 플레이어 뒤쪽 적은 맞지 않는다
+            yield return new WaitForSeconds(0.8f);
+            yield return ComboHit(1.5f, _ => { });
+            yield return new WaitForSeconds(0.4f);
+            yield return ComboHit(1.5f, _ => { });
+            yield return new WaitForSeconds(0.4f);
+            Assert.AreEqual(3, _combat.NextComboStage);
+            int behind = -1;
+            yield return ComboHit(-1.2f, d => behind = d);
+            Assert.AreEqual(0, behind, "3단도 앞쪽만 (1·2단과 같은 범위)");
             Assert.Greater(d1, 0);
         }
 
@@ -279,13 +293,13 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 봉_휩쓸기는_앞쪽_넓은_범위를_때리고_기절시킨다()
+        public IEnumerator 봉_휩쓸기는_앞쪽_넓은_범위를_때리고_기절은_없다()
         {
             Place(_enemy, 3.2f); // 일반공격 박스(2.4)는 닿지 않지만 휩쓸기(4.0)는 닿는다
             _gauge.Add(3);
             Assert.IsTrue(_combat.TrySkill(1));
             Assert.Less(_enemy.HpRatio, 1f, "맞았다");
-            Assert.IsTrue(_enemy.IsStunned, "짧게 기절");
+            Assert.IsFalse(_enemy.IsStunned, "기절은 없다 (사용자 요청으로 뺐다)");
             yield return null;
         }
 
