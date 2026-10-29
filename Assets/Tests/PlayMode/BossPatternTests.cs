@@ -61,10 +61,12 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
-        public IEnumerator 가시_다섯_개를_모두_패링해도_연속_패링은_한_번만_센다()
+        public IEnumerator 가시_다섯_개를_모두_패링해도_연속_패링과_반격은_한_번만()
         {
             yield return LoadBossRoom(-9f);
             var combat = Object.FindAnyObjectByType<PlayerCombat>();
+            int counters = 0;
+            combat.CounterFired += _ => counters++;
             Assert.AreEqual(0, Boss.ParryStreak);
             for (int round = 1; round <= 2; round++)
             {
@@ -75,6 +77,7 @@ namespace ParryRL.Tests
                 Assert.AreEqual(5, spines.Length);
                 foreach (var s in spines) combat.OnDefenseSuccess(s); // 다섯 개 모두 막았다
                 Assert.AreEqual(round, Boss.ParryStreak, "가시 한 번 발사 = 연속 패링 1번");
+                Assert.AreEqual(round, counters, "가시 다섯 개를 막아도 반격은 한 번 (가시마다 반격이 나가지 않는다)");
                 foreach (var s in spines) if (s != null) Object.Destroy(s.gameObject);
                 yield return WaitPatternEnd();
                 yield return null;

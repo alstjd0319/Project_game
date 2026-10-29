@@ -247,8 +247,19 @@ namespace ParryRL
             {
                 Hud.Popup($"{defenseName}!", Color.white, false);
             }
+            // 한 번에 여러 개 날아오는 공격(보스 가시 5개·땅 찍기 충격파)은 다 막아도 반격은 한 번만 — 가시마다 반격이 나가 데미지가 몇 배가 됐다 (사용자 지적)
+            int volley = attack.Volley;
+            if (volley != 0)
+            {
+                if (volley == _lastCounterVolley && source == _lastCounterSource) return;
+                _lastCounterVolley = volley;
+                _lastCounterSource = source;
+            }
             Counter(source, attackerX, heavy);
         }
+
+        private int _lastCounterVolley;
+        private EnemyController _lastCounterSource;
 
         /// <summary>패링 = "막는다": 공격이 부서지고, 딱 멈추고(히트스탑), 금속성 "팅 + 쿵", 파편과 충격파.</summary>
         private void PlayParryFeel(Vector2 hitPoint, bool heavy, bool perfect)
