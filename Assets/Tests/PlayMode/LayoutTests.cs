@@ -60,6 +60,40 @@ namespace ParryRL.Tests
         }
 
         [Test]
+        public void 웨이브_맵은_바닥부터_한_층씩_맨_위까지_이어지고_겹치는_발판은_두_층_떨어져_있다()
+        {
+            var map = RoomLayouts.WaveMap;
+            Assert.LessOrEqual(map.Platforms.Length, RoomLayouts.MaxPlatforms);
+            Assert.LessOrEqual(map.Pits.Length, RoomLayouts.MaxPits);
+            foreach (var pit in map.Pits) Assert.LessOrEqual(pit.Width, RoomLayouts.MaxPitWidth);
+            foreach (var p in map.Platforms)
+            {
+                Assert.LessOrEqual(Mathf.Abs(p.X) + p.Width * 0.5f, RoomLayouts.WaveArenaHalf, $"x={p.X}: 맵 안");
+                foreach (var q in map.Platforms)
+                {
+                    if (p.Equals(q)) continue;
+                    float overlap = (p.Width + q.Width) * 0.5f - Mathf.Abs(p.X - q.X);
+                    if (overlap > 0.01f) Assert.GreaterOrEqual(Mathf.Abs(Surface(p) - Surface(q)), StackGap, $"x={p.X}, y={p.Y} · x={q.X}, y={q.Y}");
+                }
+            }
+            // 바닥에서 시작해 한 층씩 닿는 발판을 넓혀 가면 모든 발판에 도달한다
+            var reached = map.Platforms.Where(p => Surface(p) <= StepReach).ToList();
+            for (bool grew = true; grew;)
+            {
+                grew = false;
+                foreach (var p in map.Platforms)
+                {
+                    if (reached.Contains(p)) continue;
+                    bool ok = reached.Any(q => Mathf.Abs(Surface(p) - Surface(q)) <= StepReach &&
+                        Mathf.Max(0f, Mathf.Abs(p.X - q.X) - (p.Width + q.Width) * 0.5f) <= JumpGap);
+                    if (ok) { reached.Add(p); grew = true; }
+                }
+            }
+            foreach (var p in map.Platforms) Assert.Contains(p, reached, $"x={p.X}, y={p.Y} 발판에 갈 수 없다");
+            Assert.AreEqual(RoomLayouts.Level(7), map.Platforms.Max(Surface), 0.01f, "7층까지");
+        }
+
+        [Test]
         public void 위아래로_겹치는_발판은_두_층_이상_떨어져_있다()
         {
             foreach (var layout in RoomLayouts.All)

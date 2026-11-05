@@ -198,6 +198,48 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 웨이브_맵_구역별()
+        {
+            RoomController.UseWaveMap = true;
+            yield return TestScene.LoadRun();
+            RoomController.UseWaveMap = true;
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            yield return new WaitForSeconds(0.8f);
+            var player = Object.FindAnyObjectByType<PlayerDefense>();
+            var cam = Camera.main;
+            void Put(float x, float y)
+            {
+                var pos = new Vector3(x, y, 0f);
+                player.transform.position = pos;
+                player.GetComponent<Rigidbody2D>().position = pos;
+                player.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+            }
+            // 평소 카메라로 구역마다: 서 있는 높이를 따라 카메라가 올라간다
+            var shots = new[] { ("wave_map_plaza", 0f, 0f), ("wave_map_pits", 15f, 0f), ("wave_map_tower", -33f, 6.0f), ("wave_map_stairs", 33f, 4.5f), ("wave_map_sky", 0f, 10.5f) };
+            foreach (var (name, x, feet) in shots)
+            {
+                Put(x, feet + 0.75f);
+                yield return new WaitForSeconds(1.2f);
+                yield return Capture(name);
+            }
+            // 맵 전체: 구조가 보이게 배경과 HUD를 치우고 멀리서
+            Put(0f, 0.75f);
+            var rig = cam.GetComponent<CameraRig>();
+            rig.enabled = false;
+            Object.FindAnyObjectByType<ParallaxBackground>().gameObject.SetActive(false);
+            foreach (var canvas in Object.FindObjectsByType<Canvas>()) canvas.gameObject.SetActive(false);
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.13f, 0.14f, 0.2f);
+            cam.orthographicSize = 26f;
+            cam.transform.position = new Vector3(0f, 9f, -10f);
+            yield return new WaitForSeconds(0.5f);
+            yield return Capture("wave_map_all");
+            RoomController.UseWaveMap = false;
+        }
+
+        [UnityTest]
         public IEnumerator 런_바닥_구멍과_추락_복귀()
         {
             RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;

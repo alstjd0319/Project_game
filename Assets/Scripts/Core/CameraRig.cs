@@ -16,6 +16,10 @@ namespace ParryRL
 
         private Camera _cam;
         private Vector3 _basePos;
+        private bool _followY;
+        private float _maxY;
+        private float _standY;      // 플레이어가 마지막으로 서 있던 발 높이 (점프만으로는 카메라가 출렁이지 않게)
+        private PlayerMotor _motor;
         private float _shakeAmplitude;
         private float _shakeDuration;
         private float _shakeTimer;
@@ -37,6 +41,27 @@ namespace ParryRL
             arenaMaxX = maxX;
         }
 
+        /// <summary>위아래로 넓은 맵: 플레이어가 선 높이를 따라 카메라가 오르내린다 (바닥에 서면 fixedY, maxY까지).</summary>
+        public void SetVerticalFollow(float maxY)
+        {
+            _followY = true;
+            _maxY = maxY;
+            _motor = target != null ? target.GetComponent<PlayerMotor>() : null;
+        }
+
+        private float WantedY()
+        {
+            if (!_followY || target == null) return fixedY;
+            float feet = target.position.y - target.localScale.y * 0.5f;
+            // 발판에 서 있을 때만 높이를 바꾼다. 떨어질 땐 화면 아래로 빠지지 않게 바로 따라 내려간다
+            if ((_motor != null && _motor.IsGrounded) || feet < _standY) _standY = Mathf.Max(0f, feet);
+            // 선 높이의 70%만 올라간다: 높은 곳에서 아래쪽(몰려오는 몬스터)이 더 보이게
+            return Mathf.Clamp(fixedY + _standY * 0.7f, fixedY, Mathf.Max(fixedY, _maxY));
+        }
+
+        /// <summary>바닥에 섰을 때보다 카메라가 올라간 높이 (배경이 높이감을 내는 데 쓴다).</summary>
+        public float VerticalRise => _followY ? Mathf.Max(0f, _basePos.y - fixedY) : 0f;
+
         /// <summary>카메라 크기와 높이를 바꾼다 (보스방: 큰 보스가 화면에 들어오게 넓게). 바닥이 화면에서 같은 높이에 오도록 높이를 함께 준다.</summary>
         public void SetView(float orthographicSize, float y)
         {
@@ -55,7 +80,7 @@ namespace ParryRL
             float halfWidth = _cam.orthographicSize * _cam.aspect;
             float x = Mathf.Clamp(target.position.x, arenaMinX + halfWidth, arenaMaxX - halfWidth);
             if (arenaMaxX - arenaMinX < halfWidth * 2f) x = (arenaMinX + arenaMaxX) * 0.5f;
-            _basePos = new Vector3(x, fixedY, _basePos.z);
+            _basePos = new Vector3(x, WantedY(), _basePos.z);
             transform.position = _basePos;
         }
 
@@ -79,7 +104,8 @@ namespace ParryRL
                 float x = Mathf.Clamp(target.position.x, arenaMinX + halfWidth, arenaMaxX - halfWidth);
                 if (arenaMaxX - arenaMinX < halfWidth * 2f) x = (arenaMinX + arenaMaxX) * 0.5f;
                 float t = 1f - Mathf.Exp(-followSharpness * dt);
-                _basePos = new Vector3(Mathf.Lerp(_basePos.x, x, t), fixedY, _basePos.z);
+                float ty = 1f - Mathf.Exp(-followSharpness * 0.6f * dt);
+                _basePos = new Vector3(Mathf.Lerp(_basePos.x, x, t), Mathf.Lerp(_basePos.y, WantedY(), ty), _basePos.z);
             }
 
             Vector3 offset = Vector3.zero;

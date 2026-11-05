@@ -94,7 +94,8 @@ namespace ParryRL
         /// 구간이 하나(전체)면 원래 바닥 그대로다. 그림은 다음 프레임에 다시 깐다.
         /// </summary>
         /// <summary>옆 벽을 옮긴다: 벽 안쪽 면 = ±innerHalf (= 카메라가 멈추는 끝). 방 길이가 바뀌면 부른다 — 그림은 다음 프레임에 다시 깐다.</summary>
-        public void SetWalls(float innerHalf)
+        /// <param name="height">0보다 크면 벽 판정 높이도 바꾼다 (위아래로 넓은 맵: 맨 위 발판에서 뛰어도 벽을 넘지 않게)</param>
+        public void SetWalls(float innerHalf, float height = 0f)
         {
             foreach (var seg in segments)
             {
@@ -102,7 +103,13 @@ namespace ParryRL
                 float side = Mathf.Sign(seg.solid.position.x);
                 if (side == 0f) continue;
                 float halfW = seg.solid.localScale.x * 0.5f;
-                seg.solid.position = new Vector3(side * (innerHalf + halfW), seg.solid.position.y, seg.solid.position.z);
+                float y = seg.solid.position.y;
+                if (height > 0f)
+                {
+                    seg.solid.localScale = new Vector3(seg.solid.localScale.x, height, 1f);
+                    y = height * 0.5f - 1f;
+                }
+                seg.solid.position = new Vector3(side * (innerHalf + halfW), y, seg.solid.position.z);
             }
             _zone = -1;
             Physics2D.SyncTransforms();
@@ -213,7 +220,7 @@ namespace ParryRL
                     {
                         var s = set.fill[(i * 7 + row * 3) % set.fill.Length];
                         float w = Width(s, scale);
-                        var tile = Tile(s, new Vector2(x + w * 0.5f, y), scale, FillOrder);
+                        var tile = Tile(s, new Vector2(Mathf.Min(x, x1 - w) + w * 0.5f, y), scale, FillOrder); // 마지막 장은 끝에 맞춘다 — 구멍 쪽으로 튀어나오면 보이는 땅 ≠ 판정
                         if (set.fillDarken > 0f) // 깊어질수록 어둡게 (채움이 한 줄 반복인 구간이 아래로 갈수록 자연스럽게 가라앉는다)
                             tile.color = Color.Lerp(Color.white, new Color(0.14f, 0.13f, 0.22f), Mathf.Clamp01((rowTop - y) / (rowTop - bottom)) * set.fillDarken);
                         x += w;
@@ -229,7 +236,7 @@ namespace ParryRL
             {
                 var s = set.top[(k * 5 + k / 3) % set.top.Length];
                 float w = Width(s, scale);
-                Tile(s, new Vector2(x + w * 0.5f, surface), scale, TopOrder);
+                Tile(s, new Vector2(Mathf.Min(x, x1 - w) + w * 0.5f, surface), scale, TopOrder);
                 x += w;
             }
         }

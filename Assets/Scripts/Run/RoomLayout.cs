@@ -30,9 +30,9 @@ namespace ParryRL
     public static class RoomLayouts
     {
         /// <summary>발판 오브젝트는 빌더가 이만큼 만들어 둔다 (레이아웃이 쓰는 개수가 이보다 적으면 나머지는 꺼 둔다).</summary>
-        public const int MaxPlatforms = 6;
+        public const int MaxPlatforms = 32;
         /// <summary>바닥 조각도 빌더가 이만큼 만들어 둔다 (구멍 n개 → 조각 n+1개).</summary>
-        public const int MaxPits = 2;
+        public const int MaxPits = 4;
         public const float GroundHalfExtent = 25f; // 바닥 판정이 놓인 가로 범위 (벽 안쪽 여유 포함)
         /// <summary>구멍은 점프로 건널 수 있어야 한다 (이단 점프가 아니어도 한 번 점프로 약 4.5, 여유를 둔 값).</summary>
         public const float MaxPitWidth = 3.6f;
@@ -122,6 +122,39 @@ namespace ParryRL
             for (int i = 0; i < pits.Length; i++) pits[i] = new PitSpec(layout.Pits[i].X * scale, layout.Pits[i].Width);
             return new RoomLayout { Name = layout.Name, Platforms = platforms, Pits = pits };
         }
+
+        // ── 웨이브 맵: 한 방에서 오래 싸우는 넓고 높은 맵 (wave-mode) ──
+        /// <summary>웨이브 맵의 몬스터 범위 절반 (화면 약 4개 폭).</summary>
+        public const float WaveArenaHalf = 44f;
+        /// <summary>웨이브 맵에서 카메라가 올라가는 한계 (맨 위 7층에 서면 이 높이).</summary>
+        public const float WaveCameraMaxY = 11f;
+
+        /// <summary>
+        /// 가운데 광장(시작·보스 자리, 낮은 발판 없음) · 양옆 구멍 지대와 지그재그 기둥 · 왼쪽 탑 구역 · 오른쪽 계단산 구역 · 7층 하늘길.
+        /// 어느 끝에서든 한 층씩 올라 맨 위까지 이어진다 (<see cref="All"/>의 방 규칙 대신 LayoutTests의 웨이브 맵 검사).
+        /// </summary>
+        public static readonly RoomLayout WaveMap = new()
+        {
+            Name = "웨이브 맵",
+            Platforms = new[]
+            {
+                // 지그재그 기둥 (양쪽): 구멍 지대 위로 1층부터 6층까지
+                new PlatformSpec(-17f, L(1), 4f), new PlatformSpec(-12f, L(2), 4f), new PlatformSpec(-17f, L(3), 4f),
+                new PlatformSpec(-12f, L(4), 4f), new PlatformSpec(-17f, L(5), 4f), new PlatformSpec(-12f, L(6), 5f),
+                new PlatformSpec(17f, L(1), 4f), new PlatformSpec(12f, L(2), 4f), new PlatformSpec(17f, L(3), 4f),
+                new PlatformSpec(12f, L(4), 4f), new PlatformSpec(17f, L(5), 4f), new PlatformSpec(12f, L(6), 5f),
+                // 가운데 하늘 섬
+                new PlatformSpec(0f, L(7), 12f),
+                // 왼쪽 탑 구역: 넓은 층이 겹겹이, 양옆 작은 발판으로 오른다
+                new PlatformSpec(-24f, L(1), 4f), new PlatformSpec(-33f, L(2), 14f), new PlatformSpec(-24.5f, L(3), 3f), new PlatformSpec(-42f, L(3), 3f),
+                new PlatformSpec(-33f, L(4), 8f), new PlatformSpec(-41f, L(5), 3f), new PlatformSpec(-25f, L(5), 3f), new PlatformSpec(-33f, L(6), 10f),
+                new PlatformSpec(-23f, L(7), 10f),
+                // 오른쪽 계단산 구역: 오른쪽 끝까지 올랐다가 되돌아 올라간다
+                new PlatformSpec(22f, L(1), 4f), new PlatformSpec(27f, L(2), 4f), new PlatformSpec(32f, L(3), 4f), new PlatformSpec(37f, L(4), 4f),
+                new PlatformSpec(41f, L(5), 4f), new PlatformSpec(36f, L(6), 4f), new PlatformSpec(31f, L(7), 4f), new PlatformSpec(22f, L(7), 10f),
+            },
+            Pits = new[] { new PitSpec(-21f, 3.4f), new PitSpec(-13f, 3.4f), new PitSpec(13f, 3.4f), new PitSpec(21f, 3.4f) },
+        };
 
         /// <summary>발판 윗면 높이.</summary>
         public static float Top(PlatformSpec p) => p.Y + 0.2f;

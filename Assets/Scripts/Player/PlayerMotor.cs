@@ -12,6 +12,8 @@ namespace ParryRL
         [SerializeField] private float jumpVelocity = 7f;
         [SerializeField] private int maxJumps = 2;
 
+        [SerializeField, Tooltip("떨어질 때 발이 발판 윗면보다 이만큼 아래까지는 올려 세워 준다 (발판 두께 0.4 안쪽)")] private float ledgeAssist = 0.35f;
+
         [Header("대시")]
         [SerializeField] private float dashDistance = 3f;
         [SerializeField] private float dashDuration = 0.15f;
@@ -149,10 +151,32 @@ namespace ParryRL
             {
                 if (_groundHits[i] == _collider || _groundHits[i] == _dropCollider) continue;
                 // 올라가는 중에 발판을 통과하는 동안은 바닥으로 치지 않는다 (점프 횟수가 공짜로 돌아오지 않게)
-                if (rising && _groundHits[i].GetComponent<PlatformEffector2D>() != null) continue;
+                bool oneWay = _groundHits[i].GetComponent<PlatformEffector2D>() != null;
+                if (rising && oneWay) continue;
+                if (oneWay)
+                {
+                    // 한쪽 통과 발판은 아래·옆에서 파고든 동안 물리 충돌이 꺼져 있어, 겹쳤다고 착지로 치면 착지 모션만 나오고 그대로 빠진다.
+                    // 발이 윗면에 살짝 못 미치면 올려 세우고(점프 높이에 간신히 닿는 층을 놓치지 않게), 그보다 아래면 착지가 아니다
+                    float gap = _groundHits[i].bounds.max.y - (transform.position.y - size.y * 0.5f);
+                    if (gap > OnPlatformTolerance)
+                    {
+                        if (gap > ledgeAssist) continue;
+                        StepUp(gap);
+                    }
+                }
                 return true;
             }
             return false;
+        }
+
+        private const float OnPlatformTolerance = 0.05f; // 발판에 서 있을 때 발이 윗면보다 낮아도 되는 정도 (물리 오차)
+
+        private void StepUp(float gap)
+        {
+            var pos = _rb.position + Vector2.up * (gap + 0.01f);
+            _rb.position = pos;
+            transform.position = pos;
+            _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0f);
         }
 
         /// <summary>서 있는 곳이 얇은 발판(PlatformEffector2D)이면 잠깐 충돌을 꺼서 아래로 내려간다.</summary>

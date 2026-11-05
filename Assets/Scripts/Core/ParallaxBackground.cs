@@ -79,14 +79,18 @@ namespace ParryRL
             if (wanted != _zone || _layers.Count == 0 || Mathf.Abs(_cam.orthographicSize - _builtOrtho) > 0.01f) Build(wanted);
 
             Vector3 camPos = _cam.transform.position;
-            foreach (var layer in _layers)
+            float rise = CameraRig.Instance != null ? CameraRig.Instance.VerticalRise : 0f;
+            for (int l = 0; l < _layers.Count; l++)
             {
+                var layer = _layers[l];
+                // 위로 올라가면 먼 겹(맨 뒤)은 화면에 붙어 있고 앞 겹들이 scroll만큼 아래로 내려가 높이감이 난다 (앞 겹은 위쪽이 비어 있어 틈이 안 생긴다)
+                float y = camPos.y - (l == 0 ? 0f : rise * layer.scroll);
                 // 카메라를 따라가되 scroll만큼만 월드에 대해 흐르게: 오프셋을 한 칸 폭으로 감아 돌린다
                 float offset = Mathf.Repeat(camPos.x * layer.scroll, layer.width);
                 float baseX = camPos.x - offset;
                 int n = layer.copies.Length;
                 for (int i = 0; i < n; i++)
-                    layer.copies[i].position = new Vector3(baseX + (i - n / 2) * layer.width, camPos.y, 0f);
+                    layer.copies[i].position = new Vector3(baseX + (i - n / 2) * layer.width, y, 0f);
             }
         }
 

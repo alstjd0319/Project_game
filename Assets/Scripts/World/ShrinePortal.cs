@@ -45,7 +45,7 @@ namespace ParryRL
             // 방 문과 같은 포탈 연출: 몸이 빛으로 흩어진 뒤 한 판 시작 (첫 방은 일반방)
             StartCoroutine(PortalTransition.Enter(() =>
             {
-                RunState.Begin();
+                RunState.Begin(waveMap: true);
                 GameManager.LoadRun();
             }));
         }

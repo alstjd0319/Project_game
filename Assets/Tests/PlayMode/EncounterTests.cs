@@ -30,6 +30,7 @@ namespace ParryRL.Tests
         {
             EncounterCatalog.ForcedId = null;
             RoomLayouts.ForcedIndex = -1;
+            RoomController.UseWaveMap = false;
         }
 
         [Test]
@@ -341,6 +342,74 @@ namespace ParryRL.Tests
             Assert.AreEqual(1, AttackTokens.Count, "날아가는 동안 (회복 동작이 끝나도)");
             yield return new WaitForSeconds(0.9f);
             Assert.IsFalse(AttackTokens.Holds(ranged) && !ranged.IsWindingUp, "다 날아간 뒤엔 돌려준다");
+        }
+
+        [UnityTest]
+        public IEnumerator 웨이브_맵은_넓고_높으며_카메라가_서_있는_높이를_따라간다()
+        {
+            RoomController.UseWaveMap = true;
+            yield return TestScene.LoadRun();
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            yield return null;
+            Assert.AreEqual(RoomLayouts.WaveArenaHalf, Object.FindAnyObjectByType<EnemySpawner>().ArenaMaxX, 0.01f);
+            Assert.AreEqual(RoomLayouts.WaveArenaHalf + 1f, CameraRig.Instance.ArenaMaxX, 0.01f);
+            Assert.AreEqual(RoomLayouts.WaveMap.Platforms.Length, Object.FindAnyObjectByType<FloorDecorator>().ActivePlatformCount, "발판이 다 켜진다");
+            var party = Object.FindAnyObjectByType<PlayerParty>();
+            Assert.AreEqual(0f, party.transform.position.x, 0.3f, "가운데 광장에서 시작");
+            float groundY = Camera.main.transform.position.y;
+
+            // 7층 하늘 섬에 세우면 카메라가 올라가고, 내려오면 돌아온다
+            var rb = party.GetComponent<Rigidbody2D>();
+            void Put(float feet)
+            {
+                var pos = new Vector3(0f, feet + party.transform.localScale.y * 0.5f + 0.05f, 0f);
+                party.transform.position = pos;
+                rb.position = pos;
+                rb.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+            }
+            Put(RoomLayouts.Level(7));
+            yield return new WaitForSeconds(1.5f);
+            Assert.Greater(Camera.main.transform.position.y, groundY + 5f, "카메라가 따라 올라간다");
+            Assert.Greater(CameraRig.Instance.VerticalRise, 5f);
+            Put(0f);
+            yield return new WaitForSeconds(1.5f);
+            Assert.AreEqual(groundY, Camera.main.transform.position.y, 0.3f, "바닥에 서면 원래 높이");
+        }
+
+        [UnityTest]
+        public IEnumerator 사당_포탈로_들어가면_웨이브_맵에서_시작하고_다시_시작해도_유지된다()
+        {
+            yield return TestScene.LoadHub();
+            Object.FindAnyObjectByType<ShrinePortal>().GetComponent<Interactable>().Interact();
+            yield return null; yield return null; yield return null;
+            Assert.IsTrue(RunState.WaveMap);
+            Assert.AreSame(RoomLayouts.WaveMap, Room.Layout);
+            Assert.AreEqual(0f, Object.FindAnyObjectByType<PlayerParty>().transform.position.x, 0.3f, "가운데 광장에서 시작");
+            Object.FindAnyObjectByType<GameManager>().Restart();
+            yield return null; yield return null; yield return null;
+            Assert.AreSame(RoomLayouts.WaveMap, Room.Layout, "다시 시작해도 웨이브 맵");
+            GameManager.GoToBossRoom();
+            yield return null; yield return null; yield return null;
+            Assert.IsFalse(RunState.WaveMap, "보스방 바로 가기는 기존 보스방");
+        }
+
+        [UnityTest]
+        public IEnumerator 바닥_타일은_구멍_쪽으로_튀어나오지_않는다()
+        {
+            RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
+            yield return TestScene.LoadRun(RoomType.Normal);
+            yield return null;
+            yield return null;
+            var deco = Object.FindAnyObjectByType<FloorDecorator>();
+            foreach (var pit in Room.Layout.Pits)
+                foreach (var sr in deco.GetComponentsInChildren<SpriteRenderer>())
+                {
+                    if (sr.sprite == null || !(sr.sprite.name.Contains("_top_") || sr.sprite.name.Contains("_fill_"))) continue;
+                    bool inside = sr.bounds.min.x < pit.Right - 0.05f && sr.bounds.max.x > pit.Left + 0.05f;
+                    Assert.IsFalse(inside, $"{sr.sprite.name}이 구멍({pit.Left:0.0}~{pit.Right:0.0}) 안으로 들어왔다: {sr.bounds.min.x:0.00}~{sr.bounds.max.x:0.00}");
+                }
         }
 
         /// <summary>몬스터를 플레이어 양옆 사거리 안으로 모은다 (모두가 바로 공격하려는 상황).</summary>

@@ -111,9 +111,9 @@ namespace ParryRL
 
         public void Restart()
         {
-            bool wasRun = RunState.Active;
+            bool wasRun = RunState.Active, wasWave = RunState.WaveMap;
             PlayerSession.Reset(); // 다시 시작 = 이 씬을 처음 상태로
-            if (wasRun) RunState.Begin(); // 판 도중이면 첫 방부터 새로 시작
+            if (wasRun) RunState.Begin(wasWave); // 판 도중이면 첫 방부터 새로 시작
             Time.timeScale = 1f;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }

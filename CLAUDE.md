@@ -389,3 +389,11 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 - 결정된 것: 덮치기를 막으면 1.5초 기절 · 난이도는 보스보다 낮게(체력 240, 경직 걸림, 막을 시간 보스보다 짧지 않게, 특수 패턴 2개) · 목소리 흉내 페인트는 넣지 않음 · 2구간부터 엘리트방. 수치는 가안.
 - (2026-11-05, 수정) **보스 기절·변신 뒤 느낌표가 남던 버그**: 특수 패턴의 느낌표는 `manual`이라 `PatternRoutine` 끝의 `FadeOut`으로만 지워지는데, 연속 패링 기절·변신의 `StopPattern`이 코루틴을 끊어 그 줄까지 못 갔다(머리 위에 계속 남음) → `BossController._patternCue`로 들고 있다가 `StopPattern`이 지운다. 테스트 `BossPatternTests`(수정 전엔 실패).
 - (2026-11-05) **어떤 기절이든 보스 특수 패턴을 끊는다**(사용자 요청: F 내려찍기로 기절해도 패턴이 그대로 나갔다): 패턴은 `BossController` 코루틴이라 `EnemyController.Stun`이 못 끊었다 → `EnemyController.Stunned` 이벤트 → `BossController.OnStunned`가 `StopPattern` + 멈춤 해제 + 패턴 쿨타임을 다시 센다(풀리자마자 다음 패턴이 나오지 않게). 돌진 중에 끊기면 박치기 판정도 지운다(`_dashHitbox`). 연속 패링 기절도 이 경로를 쓴다. 테스트 `BossPatternTests`.
+
+## 웨이브 모드 (`wave-mode` 브랜치, 2026-11-05~) — 다른 방향성 실험
+- 방향(사용자): 한 방에서 몬스터가 계속 나오고 특정 시간·웨이브에 엘리트·보스가 나온다. 맵부터 정립 중이고 **웨이브 진행은 아직 없다**.
+- **웨이브 맵** `RoomLayouts.WaveMap`: 폭 ±44(`WaveArenaHalf`, 화면 약 4개) · 7층(윗면 10.5) · 발판 30 · 구멍 4 — 가운데 광장(시작) · 양옆 구멍 + 지그재그 기둥 · 왼쪽 탑 구역 · 오른쪽 계단산 구역 · 7층 하늘길. `All`의 방 규칙 대신 `LayoutTests`의 웨이브 맵 검사(바닥부터 한 층씩 모두 도달 · 겹치는 발판 두 층 간격). 빌더 여분: `MaxPlatforms` 32 · `MaxPits` 4 (씬 재생성 필요).
+- **사당 포탈이 웨이브 맵으로 연결된다**: `ShrinePortal` → `RunState.Begin(waveMap: true)` → `RunState.WaveMap`(`Restart`가 유지, `End`가 끔). 테스트·캡처는 `RoomController.UseWaveMap` 정적 스위치를 쓴다. 가운데에서 시작하고, 웨이브 진행이 없어 몬스터는 옛 공식(`RoomPlan.Specs`) 2파도 뒤 오른쪽 끝에 문이 열린다(문으로 가면 다시 웨이브 맵, 방 번호만 오름 — 임시). F2 보스방 바로 가기는 기존 보스방.
+- **위아래 카메라** `CameraRig.SetVerticalFollow(maxY)`: 서 있는 높이의 70%만큼 올라간다(발판에 섰을 때만 갱신 — 점프로 출렁이지 않게, 떨어지면 바로 따라감). `VerticalRise`를 `ParallaxBackground`가 읽어 맨 뒤 겹은 화면에 붙이고 앞 겹들을 scroll만큼 내려 높이감을 낸다. `FloorDecorator.SetWalls(inner, height)`로 벽 판정을 높인다.
+- (수정, main에도 필요) `FloorDecorator.BuildGround`: 마지막 타일이 바닥 조각 끝을 넘어 구멍 쪽으로 튀어나와 보이는 땅 ≠ 판정이었다 → 끝에 맞춘다. 테스트 `EncounterTests`.
+- (2026-11-05, 수정, **main에도 필요**) **발판 착지 모션만 나오고 떨어지던 버그**(사용자 지적): 한쪽 통과 발판은 아래·옆에서 파고든 동안 물리 충돌이 꺼져 있는데 `PlayerMotor.CheckGround`는 겹치기만 하면 착지로 쳤다. 층 1.5 · 점프 약 1.56이라 방향키를 누른 채 뛰면 발이 윗면을 못 넘고 경계에 자주 걸렸다 → 발이 윗면보다 `ledgeAssist`(0.35) 안쪽 아래면 올려 세우고(`StepUp`, 떨어지는 중일 때만), 그보다 아래면 착지가 아니다. `Controls.TestHorizontal`(테스트가 방향키를 누른 것처럼). 테스트 `PlatformLandingTests`(수정 전엔 실패).

@@ -21,6 +21,10 @@ namespace ParryRL
 
         public static RoomController Instance { get; private set; }
 
+        /// <summary>테스트·캡처가 웨이브 맵을 바로 열 때. 게임에서는 사당 포탈이 <see cref="RunState.WaveMap"/>을 켠다.</summary>
+        public static bool UseWaveMap;
+        private static bool WaveMapOn => UseWaveMap || RunState.WaveMap;
+
         public Phase CurrentPhase { get; private set; } = Phase.Intro;
         public int WaveIndex { get; private set; }
         public int WaveCount => _waves.Count;
@@ -55,8 +59,10 @@ namespace ParryRL
             Instance = this;
             IsRunRoom = RunState.Active;
             // 싸우는 방(일반·엘리트)은 전투 장면을 먼저 고르고, 지형은 그 장면에 어울리는 것 중에서 (예: 높이 뜬 도깨비불 → 발판 있는 지형)
-            bool fightRoom = IsRunRoom && !RunState.IsFinalRoom && (RunState.Current == RoomType.Normal || RunState.Current == RoomType.Elite);
-            if (fightRoom)
+            bool waveMap = WaveMapOn && IsRunRoom;
+            bool fightRoom = !waveMap && IsRunRoom && !RunState.IsFinalRoom && (RunState.Current == RoomType.Normal || RunState.Current == RoomType.Elite);
+            if (waveMap) LayoutIndex = RoomLayouts.Flat;
+            else if (fightRoom)
             {
                 Encounter = EncounterCatalog.Pick(RunState.Current, RunState.RoomNumber, RunState.Zone, RunState.Seed, RunState.LastEncounter);
                 RunState.LastEncounter = Encounter.Id;
@@ -66,14 +72,15 @@ namespace ParryRL
             else LayoutIndex = RoomLayouts.Pick(IsRunRoom, RunState.Current, RunState.RoomNumber, RunState.Seed, RunState.LastLayout);
             if (IsRunRoom) RunState.LastLayout = LayoutIndex;
             ArenaScale = fightRoom ? RoomLayouts.ArenaScaleFor(RunState.Zone) : 1f;
-            Layout = RoomLayouts.Scaled(RoomLayouts.All[LayoutIndex], ArenaScale);
+            if (waveMap) ArenaScale = RoomLayouts.WaveArenaHalf / RoomLayouts.BaseArenaHalf;
+            Layout = waveMap ? RoomLayouts.WaveMap : RoomLayouts.Scaled(RoomLayouts.All[LayoutIndex], ArenaScale);
             float arenaHalf = RoomLayouts.BaseArenaHalf * ArenaScale;
             var deco = FindAnyObjectByType<FloorDecorator>();
             if (deco != null)
             {
                 deco.SetPlatformLayout(Layout.Platforms);
                 deco.SetGroundIntervals(RoomLayouts.GroundIntervals(Layout, RoomLayouts.GroundHalfExtent + arenaHalf - RoomLayouts.BaseArenaHalf));
-                if (ArenaScale != 1f) deco.SetWalls(arenaHalf + 1f);
+                if (ArenaScale != 1f) deco.SetWalls(arenaHalf + 1f, waveMap ? 40f : 0f);
             }
             if (ArenaScale != 1f)
             {
@@ -82,6 +89,7 @@ namespace ParryRL
                 if (spawner != null) spawner.SetArena(-arenaHalf, arenaHalf);
                 var rig = FindAnyObjectByType<CameraRig>();
                 if (rig != null) rig.SetArena(-arenaHalf - 1f, arenaHalf + 1f);
+                if (rig != null && waveMap) rig.SetVerticalFollow(RoomLayouts.WaveCameraMaxY);
             }
             BuildPits();
             if (!IsRunRoom) return;
@@ -143,7 +151,7 @@ namespace ParryRL
             var party = FindAnyObjectByType<PlayerParty>();
             if (party == null) return;
             float left = _spawner != null ? _spawner.ArenaMinX : -22f;
-            var pos = new Vector3(left + startInset, party.transform.position.y, 0f);
+            var pos = new Vector3(WaveMapOn ? 0f : left + startInset, party.transform.position.y, 0f); // 웨이브 맵은 가운데 광장에서 시작
             party.transform.position = pos;
             var rb = party.GetComponent<Rigidbody2D>();
             if (rb != null)

@@ -19,6 +19,9 @@ namespace ParryRL
         public static int RoomNumber { get; private set; }
         public static RoomType Current { get; private set; }
 
+        /// <summary>이번 판은 웨이브 맵에서 한다 (wave-mode).</summary>
+        public static bool WaveMap { get; private set; }
+
         public static bool IsFinalRoom => Active && RoomNumber >= TotalRooms;
 
         /// <summary>한 판마다 다른 값 (방 지형을 뽑을 때 쓴다).</summary>
@@ -88,8 +91,10 @@ namespace ParryRL
         }
 
         /// <summary>새 판을 시작한다 (첫 방은 일반방).</summary>
-        public static void Begin()
+        /// <param name="waveMap">웨이브 맵에서 시작한다 (사당 포탈 — wave-mode)</param>
+        public static void Begin(bool waveMap = false)
         {
+            WaveMap = waveMap;
             Active = true;
             RoomNumber = 1;
             Current = RoomType.Normal;
@@ -121,6 +126,7 @@ namespace ParryRL
         public static void End()
         {
             Active = false;
+            WaveMap = false;
             RoomNumber = 0;
             Gold = 0; // 엽전·아이템은 이번 판 것 (영혼석은 남는다)
             _items.Clear();
