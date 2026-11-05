@@ -77,6 +77,8 @@ namespace ParryRL
         public Color ArtTint { get; private set; } = Color.white;
         /// <summary>맞고 경직에 들어갈 때 (죽는 타격 제외). 피격 그림을 처음부터 다시 재생하는 데 쓴다.</summary>
         public event Action Staggered;
+        /// <summary>기절이 걸렸을 때 — 보스는 하던 특수 패턴을 그만둔다 (패턴은 이 컴포넌트 밖의 코루틴이라 Stun이 직접 못 끊는다).</summary>
+        public event Action Stunned;
         public float HpRatio => (float)_hp / maxHp;
         public int XpReward => xpReward;
         /// <summary>엘리트 몬스터 (체력이 많고 경험치도 많다). 크기는 판정이라 그대로 두고 보라 빛무리로 구분한다.</summary>
@@ -617,6 +619,7 @@ namespace ParryRL
             _cooldown = Mathf.Max(_cooldown, 0.5f); // 풀리자마자 바로 치지 않게
             if (fresh)
                 Hud.WorldText(transform.position + Vector3.up * (_baseScale.y * 0.5f + 1.25f), "기절", StunColor, 0.9f);
+            Stunned?.Invoke();
         }
 
         private IEnumerator StaggerRoutine()

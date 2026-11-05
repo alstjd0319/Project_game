@@ -387,3 +387,5 @@ powershell -ExecutionPolicy Bypass -File Tools\run_tests.ps1 -SkipBuild -Filter 
 ## 장산범 엘리트 — 기획만 (2026-10-29, 구현 전)
 - 기획 문서: [`docs/기획_장산범_엘리트.md`](docs/기획_장산범_엘리트.md). 사용자 요청으로 **아직 만들지 않는다** — "만들어 달라"고 할 때 그 문서대로 구현한다.
 - 결정된 것: 덮치기를 막으면 1.5초 기절 · 난이도는 보스보다 낮게(체력 240, 경직 걸림, 막을 시간 보스보다 짧지 않게, 특수 패턴 2개) · 목소리 흉내 페인트는 넣지 않음 · 2구간부터 엘리트방. 수치는 가안.
+- (2026-11-05, 수정) **보스 기절·변신 뒤 느낌표가 남던 버그**: 특수 패턴의 느낌표는 `manual`이라 `PatternRoutine` 끝의 `FadeOut`으로만 지워지는데, 연속 패링 기절·변신의 `StopPattern`이 코루틴을 끊어 그 줄까지 못 갔다(머리 위에 계속 남음) → `BossController._patternCue`로 들고 있다가 `StopPattern`이 지운다. 테스트 `BossPatternTests`(수정 전엔 실패).
+- (2026-11-05) **어떤 기절이든 보스 특수 패턴을 끊는다**(사용자 요청: F 내려찍기로 기절해도 패턴이 그대로 나갔다): 패턴은 `BossController` 코루틴이라 `EnemyController.Stun`이 못 끊었다 → `EnemyController.Stunned` 이벤트 → `BossController.OnStunned`가 `StopPattern` + 멈춤 해제 + 패턴 쿨타임을 다시 센다(풀리자마자 다음 패턴이 나오지 않게). 돌진 중에 끊기면 박치기 판정도 지운다(`_dashHitbox`). 연속 패링 기절도 이 경로를 쓴다. 테스트 `BossPatternTests`.

@@ -84,6 +84,74 @@ namespace ParryRL.Tests
             }
         }
 
+        private static IEnumerator WaitForCue()
+        {
+            float t = 0f;
+            while (Object.FindAnyObjectByType<PressCueIcon>() == null && t < 2f) { t += Time.deltaTime; yield return null; }
+            Assert.IsNotNull(Object.FindAnyObjectByType<PressCueIcon>(), "패턴 예비 동작의 느낌표");
+        }
+
+        [UnityTest]
+        public IEnumerator 패턴_도중_연속_패링_기절로_끊기면_느낌표가_사라진다()
+        {
+            yield return LoadBossRoom(-9f);
+            var combat = Object.FindAnyObjectByType<PlayerCombat>();
+            Boss.StartPattern(BossPattern.GroundSlam);
+            yield return WaitForCue();
+            for (int i = 0; i < Boss.ParryStreakToStun; i++)
+            {
+                var hit = EnemyAttack.Spawn(Boss.Enemy, AttackType.Normal, (Vector2)Boss.transform.position + Vector2.up * 30f, Vector2.up, new Vector2(0.5f, 0.5f), 1f, 1f, Color.red, 1);
+                combat.OnDefenseSuccess(hit);
+                Object.Destroy(hit.gameObject);
+            }
+            Assert.IsTrue(Boss.Enemy.IsStunned, "5연속 패링 기절");
+            Assert.IsFalse(Boss.IsUsingPattern, "기절이 패턴을 끊었다");
+            yield return new WaitForSeconds(0.4f);
+            Assert.IsNull(Object.FindAnyObjectByType<PressCueIcon>(), "끊긴 패턴의 느낌표가 남지 않는다");
+        }
+
+        [UnityTest]
+        public IEnumerator 패턴_준비_중_스킬_기절이_걸리면_패턴이_나가지_않는다()
+        {
+            yield return LoadBossRoom(-9f);
+            Boss.StartPattern(BossPattern.SpineVolley);
+            yield return WaitForCue();
+            Boss.Enemy.Stun(1.2f); // F 내려찍기의 기절 (저항 적용)
+            Assert.IsFalse(Boss.IsUsingPattern, "기절이 패턴을 끊었다");
+            Assert.IsFalse(Boss.Enemy.Frozen, "멈춤도 풀린다");
+            yield return new WaitForSeconds(1.5f);
+            Assert.AreEqual(0, BossAttacks().Length, "가시가 나가지 않는다");
+            Assert.AreEqual(0, Boss.PatternCount, "끝까지 나간 패턴이 없다");
+            Assert.IsNull(Object.FindAnyObjectByType<PressCueIcon>(), "느낌표도 사라진다");
+        }
+
+        [UnityTest]
+        public IEnumerator 돌진_중_기절이_걸리면_박치기_판정도_사라진다()
+        {
+            yield return LoadBossRoom(-14f);
+            Boss.StartPattern(BossPattern.Dash);
+            float t = 0f;
+            while (BossAttacks().Length == 0 && t < 3f) { t += Time.deltaTime; yield return null; }
+            Assert.AreEqual(1, BossAttacks().Length, "돌진 중");
+            Boss.Enemy.Stun(1.2f);
+            yield return null;
+            Assert.AreEqual(0, BossAttacks().Length, "판정만 혼자 날아가지 않는다");
+            float x = Boss.transform.position.x;
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(x, Boss.transform.position.x, 0.01f, "그 자리에 멈춘다");
+        }
+
+        [UnityTest]
+        public IEnumerator 패턴_도중_변신으로_끊겨도_느낌표가_사라진다()
+        {
+            yield return LoadBossRoom(-9f);
+            Boss.StartPattern(BossPattern.GroundSlam);
+            yield return WaitForCue();
+            Boss.ForcePhase2();
+            yield return new WaitForSeconds(0.4f);
+            Assert.IsNull(Object.FindAnyObjectByType<PressCueIcon>(), "끊긴 패턴의 느낌표가 남지 않는다");
+        }
+
         [UnityTest]
         public IEnumerator 땅_찍기는_앞뒤로_바닥을_타는_충격파를_보낸다()
         {

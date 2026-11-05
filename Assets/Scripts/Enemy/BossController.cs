@@ -104,6 +104,7 @@ namespace ParryRL
             if (defense != null) _player = defense.transform;
             _enemy.Died += OnDied;
             _enemy.ComboPreparing += OnComboPreparing;
+            _enemy.Stunned += OnStunned;
             if (PlayEntrance) StartCoroutine(EntranceRoutine());
             else ShowBar();
         }
@@ -232,14 +233,21 @@ namespace ParryRL
             if (ParryStreak < parryStreakToStun) return;
             ParryStreak = 0;
             if (IsTransforming) return; // 변신 중엔 무적·멈춤이라 기절은 건너뛴다
-            StopPattern();
-            _enemy.Frozen = false;
-            _enemy.Stun(parryStunTime, ignoreResist: true);
+            _enemy.Stun(parryStunTime, ignoreResist: true); // 하던 패턴은 OnStunned가 끊는다
             ParryStunCount++;
             StartCoroutine(StunAnnounce()); // 같은 순간 뜨는 "패링 성공!" 팝업에 덮이지 않게 한 박자 뒤에
             Hud.ScreenFlash(new Color(0.6f, 0.85f, 1f, 0.35f));
             if (CameraRig.Instance != null) CameraRig.Instance.Shake(0.3f, 0.3f);
             Fx.Ring(transform.position, new Color(0.6f, 0.85f, 1f), 1f, 6f, 0.15f, 0.5f);
+        }
+
+        /// <summary>어떤 기절이든(연속 패링·F 내려찍기) 하던 특수 패턴을 끊는다 — 기절했는데 패턴이 그대로 나가지 않게. 풀리자마자 다음 패턴이 나오지 않게 쿨타임도 다시 센다.</summary>
+        private void OnStunned()
+        {
+            if (!IsUsingPattern || IsTransforming) return;
+            StopPattern();
+            _enemy.Frozen = false;
+            _patternTimer = Random.Range(patternCooldown.x, Mathf.Max(patternCooldown.x, patternCooldown.y)) * Mathf.Max(0.1f, _enemy.Tempo);
         }
 
         private IEnumerator StunAnnounce()
@@ -310,7 +318,15 @@ namespace ParryRL
             _patternRoutine = null;
             if (IsUsingPattern && _sprite != null) _sprite.StopOverride();
             IsUsingPattern = false;
+            // 느낌표는 패턴 코루틴이 끝에서 지우는데, 코루틴이 끊기면(연속 패링 기절·변신) 그 줄까지 못 간다 — 여기서 지운다
+            if (_patternCue != null) _patternCue.FadeOut();
+            _patternCue = null;
+            if (_dashHitbox != null) Destroy(_dashHitbox.gameObject); // 돌진 중에 끊기면 박치기 판정만 혼자 날아가지 않게
+            _dashHitbox = null;
         }
+
+        private PressCueIcon _patternCue; // 지금 패턴의 느낌표 (manual이라 직접 지워야 한다)
+        private EnemyAttack _dashHitbox;  // 돌진 중인 박치기 판정
 
         private IEnumerator PatternRoutine(BossPattern pattern)
         {
@@ -326,6 +342,7 @@ namespace ParryRL
             float windup = patternWindup * tempo * (pattern == BossPattern.Dash ? 0.9f : 1f);
             if (_sprite != null && art != null) _sprite.PlayOnce(art.heavyWindup);
             var cue = PressCueIcon.Spawn(_enemy, manual: true);
+            _patternCue = cue;
             Sfx.Play(SfxId.HeavyCue);
             float redAt = windup - GameTuning.Current.defenseActiveTime * 0.8f;
             bool red = false;
@@ -343,6 +360,7 @@ namespace ParryRL
                 case BossPattern.Dash: yield return Dash(dir, art); break;
             }
             cue.FadeOut();
+            _patternCue = null;
 
             yield return new WaitForSeconds(patternRecover * tempo);
             if (_sprite != null) _sprite.StopOverride();
@@ -411,6 +429,7 @@ namespace ParryRL
             float reach = dashDistance;
             if (_player != null) reach = Mathf.Clamp(Mathf.Abs(_player.position.x - front.x) + dashOvershoot, 2f, dashDistance);
             var hitbox = EnemyAttack.Spawn(_enemy, AttackType.Heavy, front, new Vector2(dir, 0f), size, dashSpeed, reach, PatternColor, dashDamage);
+            _dashHitbox = hitbox;
             if (GameAssets.AttackFx != null) hitbox.AttachProjectileArt(GameAssets.AttackFx.bossDash, 0, 4, FxScale); // 박치기 판정에 앞 압력파 그림
             DashTrail(dir);
             Sfx.Play(SfxId.BossDash);
