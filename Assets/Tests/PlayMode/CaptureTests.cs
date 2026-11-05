@@ -240,6 +240,30 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 웨이브_진행과_가장자리_표시()
+        {
+            RoomController.UseWaveMap = true;
+            WaveController.RestTime = 0.2f;
+            yield return TestScene.LoadRun();
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            var waves = (WaveController)null;
+            yield return new WaitUntil(() => (waves = WaveController.Instance) != null);
+            yield return new WaitForSeconds(1.5f);
+            waves.JumpTo(1);
+            yield return new WaitForSeconds(2.8f);
+            yield return Capture("wave_fight");              // 광장: 위쪽 "웨이브 1 · 남은 요괴", 몬스터
+            waves.JumpTo(3);                                  // 탑 구역: 플레이어는 광장 → 왼쪽 큰 화살표, 표식
+            yield return new WaitForSeconds(3.5f);
+            yield return Capture("wave_edge_marks");
+            waves.JumpTo(5);
+            yield return new WaitForSeconds(2.5f);
+            yield return Capture("wave_elite");
+            RoomController.UseWaveMap = false;
+            WaveController.RestTime = 3f;
+        }
+
+        [UnityTest]
         public IEnumerator 런_바닥_구멍과_추락_복귀()
         {
             RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;

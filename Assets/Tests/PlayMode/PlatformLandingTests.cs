@@ -10,7 +10,7 @@ namespace ParryRL.Tests
     /// <summary>얇은 발판 착지: 방향키를 누른 채 올라가도 착지하면 그대로 서 있어야 한다 (착지 모션만 나오고 떨어지던 버그).</summary>
     public class PlatformLandingTests
     {
-        private const float JumpVelocity = 7f;
+        private static float JumpVelocity => GameTuning.Current.jumpVelocity;
         private PlayerMotor _motor;
         private Rigidbody2D _rb;
 
@@ -46,9 +46,16 @@ namespace ParryRL.Tests
         /// 발판 옆·아래 여러 자리에서 방향키를 누른 채 뛰어 본다. "착지했다"(IsGrounded)고 나온 뒤 발이 발판 윗면 아래로 빠지면 실패.
         /// </summary>
         [UnityTest]
-        public IEnumerator 방향키를_누른_채_뛰어올라도_착지했으면_떨어지지_않는다()
+        public IEnumerator 방향키를_누른_채_뛰어올라도_착지했으면_떨어지지_않는다() => JumpOntoPlatform(GameTuning.Current.jumpVelocity);
+
+        // 세기 7 = 높이 약 1.56: 1층(1.5)에 간신히 닿는다 — 올려 세우기가 없으면 착지 모션만 나오고 떨어지던 경우
+        [UnityTest]
+        public IEnumerator 점프가_낮을_때도_윗면에_간신히_못_미치면_올려_세운다() => JumpOntoPlatform(7f);
+
+        private IEnumerator JumpOntoPlatform(float jump)
         {
             yield return Load();
+            GameTuning.Current.jumpVelocity = jump;
             var platform = RoomLayouts.All[RoomLayouts.Basic].Platforms[0]; // 왼쪽 1층 발판
             float top = RoomLayouts.Top(platform), left = platform.X - platform.Width * 0.5f;
             var failed = new List<string>();

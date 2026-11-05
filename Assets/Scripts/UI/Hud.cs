@@ -169,6 +169,9 @@ namespace ParryRL
 
         private bool _goldIcon, _soulIcon;
 
+        /// <summary>화면 위 방·웨이브 정보 글자 (테스트용).</summary>
+        public static string RunInfoText => _instance != null && _instance._runInfo != null ? _instance._runInfo.text : "";
+
         public static void SetRunInfo(string message)
         {
             if (_instance == null || _instance._runInfo == null) return;

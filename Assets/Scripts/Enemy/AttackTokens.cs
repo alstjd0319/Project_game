@@ -15,6 +15,17 @@ namespace ParryRL
         // 공격권을 조금 더 쥐고 있을 몬스터 → 그때까지 (도깨비불: 불덩이가 날아가는 동안)
         private static readonly Dictionary<EnemyController, float> HoldUntil = new();
         private static float _lastGrant = float.NegativeInfinity;
+        // 웨이브마다 달라지는 값 (튜닝 파일에 저장되지 않게 따로 둔다), 음수 = GameTuning 값
+        private static int _maxOverride = -1;
+        private static float _staggerOverride = -1f;
+
+        public static void SetOverride(int max, float stagger)
+        {
+            _maxOverride = max;
+            _staggerOverride = stagger;
+        }
+
+        public static void ClearOverride() => SetOverride(-1, -1f);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -22,6 +33,7 @@ namespace ParryRL
             Holders.Clear();
             HoldUntil.Clear();
             _lastGrant = float.NegativeInfinity;
+            ClearOverride();
         }
 
         /// <summary>지금 공격권을 쥔 몬스터 수.</summary>
@@ -50,16 +62,18 @@ namespace ParryRL
         public static bool TryTake(EnemyController enemy)
         {
             var t = GameTuning.Current;
-            if (t.maxAttackers <= 0) return true;
+            int max = _maxOverride >= 0 ? _maxOverride : t.maxAttackers;
+            float stagger = _staggerOverride >= 0f ? _staggerOverride : t.attackStagger;
+            if (max <= 0) return true;
             int count = Count;
             if (Holders.Contains(enemy))
             {
                 HoldUntil.Remove(enemy); // 불덩이가 날아가는 중에 다시 공격 — 새 공격 동안 계속 쥔다
                 return true;
             }
-            if (count >= t.maxAttackers) return false;
+            if (count >= max) return false;
             // 누군가 막 공격을 시작했으면 조금 기다린다 (먼저 시작한 공격이 짧게 끝나 공격권을 돌려줬어도 — 원거리 예비 모션은 0.2초뿐)
-            if (Time.time - _lastGrant < t.attackStagger) return false;
+            if (Time.time - _lastGrant < stagger) return false;
             Holders.Add(enemy);
             _lastGrant = Time.time;
             return true;

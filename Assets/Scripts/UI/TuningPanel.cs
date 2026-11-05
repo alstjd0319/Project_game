@@ -337,6 +337,7 @@ namespace ParryRL
             AddSlider("공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.playerAttackMultiplier, v => T.playerAttackMultiplier = v);
             AddSlider("받는 피해 감소", 0f, 0.8f, 0.05f, "0%", () => T.playerDamageReduction, v => T.playerDamageReduction = v);
             AddSlider("이동 속도", 2f, 10f, 0.25f, "0.00", () => T.playerMoveSpeed, v => T.playerMoveSpeed = v);
+            AddSlider("점프 세기", 5f, 11f, 0.25f, "0.00", () => T.jumpVelocity, v => T.jumpVelocity = v);
             AddSlider("원거리 공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.rangedAttackMultiplier, v => T.rangedAttackMultiplier = v);
             AddSlider("초반 데미지 배율 (모든 딜, 성장 전)", 0.3f, 1.5f, 0.05f, "0.00", () => T.startDamageScale, v => T.startDamageScale = v);
             AddSlider("무기 전환 쿨타임 (초)", 0f, 2f, 0.05f, "0.00", () => T.weaponSwitchCooldown, v => T.weaponSwitchCooldown = v);

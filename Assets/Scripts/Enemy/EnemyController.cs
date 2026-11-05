@@ -98,6 +98,20 @@ namespace ParryRL
             aura.color = new Color(0.75f, 0.4f, 1f, 0.55f);
             aura.sortingOrder = _sr != null ? _sr.sortingOrder - 1 : 0;
         }
+        /// <summary>최대 체력을 배율만큼 (웨이브의 일반 몬스터). 지금 체력도 가득.</summary>
+        public void ScaleMaxHp(float scale)
+        {
+            maxHp = Mathf.Max(1, Mathf.RoundToInt(maxHp * scale));
+            _hp = maxHp;
+        }
+
+        /// <summary>이 몬스터의 강공격 확률 (웨이브마다 다르다).</summary>
+        public void SetHeavyChance(float chance) => heavyChanceOverride = chance;
+
+        /// <summary>이 시간 동안 공격을 시작하지 않는다 (막 나왔을 때 억울하지 않게).</summary>
+        public void HoldAttack(float seconds) => _holdAttackUntil = Time.time + seconds;
+        private float _holdAttackUntil = float.NegativeInfinity;
+
         public bool IsStunned => !IsDead && Time.time < _stunUntil;
         /// <summary>몸 가로 절반 (예비 모션 크기 변화 제외).</summary>
         public float HalfWidth => _baseScale.x * 0.5f;
@@ -260,7 +274,7 @@ namespace ParryRL
             if (_state != State.Idle || IsStunned || _player == null || GameManager.InputBlocked) return;
 
             // 발판 위 플레이어: 창귀는 닿지 않는 공격을 헛휘두르지 않고 그 아래로 와서 기다린다 — 내려오는 순간 바로 공격 준비 (발판이 안전지대가 되지 않게)
-            if (Walks && PlayerElevated)
+            if (Walks && !IsConfined && PlayerElevated)
             {
                 WaitingBelow = true;
                 Move();
@@ -274,7 +288,7 @@ namespace ParryRL
             }
             Move();
             _cooldown -= Time.deltaTime;
-            if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive)
+            if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive && Time.time >= _holdAttackUntil)
             {
                 // 다수전: 공격권을 못 받으면(다른 몬스터들이 공격 중) 잠깐 뒤 다시 시도한다
                 if (AttackTokens.TryTake(this)) StartCoroutine(AttackRoutine());
@@ -304,7 +318,7 @@ namespace ParryRL
         /// <summary>밀려날 때: 걷는 몬스터는 구멍 쪽으로 밀려 땅 밖으로 나가지 않게 한다.</summary>
         private float KnockbackX(float targetX, float half)
         {
-            if (!Walks) return targetX;
+            if (!Walks || IsConfined) return targetX; // 발판 위 몬스터는 ConfineTo가 발판 끝에서 멈춘다
             float dir = Mathf.Sign(targetX - transform.position.x);
             if (dir == 0f || GroundProbe.HasGround(targetX + dir * half, _feetY)) return targetX;
             return transform.position.x;
@@ -313,8 +327,15 @@ namespace ParryRL
         private bool InAttackRange()
         {
             if (kind == EnemyKind.Melee)
-                return Mathf.Abs(DxToPlayer) <= meleeRange && Mathf.Abs(_player.position.y - transform.position.y) < 2.5f;
-            return Vector2.Distance(_player.position, transform.position) <= fireRange;
+                return Mathf.Abs(DxToPlayer) <= meleeRange && Mathf.Abs(_player.position.y - transform.position.y) < (IsConfined ? 1.2f : 2.5f); // 발판 위 창귀는 같은 층만
+            if (Vector2.Distance(_player.position, transform.position) > fireRange) return false;
+            // 도깨비불은 자기 층 ±1층에서, 화면 안에 보일 때만 쏜다 — 지나가는 길에 다른 층이나 안 보이는 곳에서 날아오면 불쾌하다
+            float playerFeet = _player.position.y - _player.localScale.y * 0.5f;
+            if (Mathf.Abs(playerFeet - _feetY) > RoomLayouts.StepHeight + 0.6f) return false;
+            var cam = Camera.main;
+            if (cam == null) return true;
+            var v = cam.WorldToViewportPoint(transform.position);
+            return v.x >= 0f && v.x <= 1f && v.y >= 0f && v.y <= 1f;
         }
 
         private void Move()
@@ -332,14 +353,14 @@ namespace ParryRL
             else
             {
                 // 사거리 안이면 그 자리에서 쏘고, 벗어나면 사거리 안으로 다시 접근한다 (거리 유지·후퇴 없음)
-                if (!InAttackRange()) dir = Mathf.Sign(dx); // 사격 판정과 같은 거리 기준 (발판 위 플레이어에도 멈춰 서지 않게)
+                if (!InAttackRange() && dist > 1f) dir = Mathf.Sign(dx); // 사격 판정과 같은 거리 기준 (층이 달라 못 쏘면 바로 아래·위까지만)
             }
 
             if (dir == 0f) return;
             float half = _baseScale.x * 0.5f;
             float x = Mathf.Clamp(transform.position.x + dir * moveSpeed * Time.deltaTime, _arenaMinX + half, _arenaMaxX - half);
             // 걷는 몬스터는 바닥 구멍 앞에서 멈춘다 (앞발 아래에 땅이 없으면 더 가지 않는다). 떠다니는 도깨비불은 그냥 건넌다
-            if (Walks && !GroundProbe.HasGround(x + dir * half, _feetY)) return;
+            if (Walks && !IsConfined && !GroundProbe.HasGround(x + dir * half, _feetY)) return;
             x = Mathf.Clamp(x, _confineMin, _confineMax);
             if (Mathf.Approximately(x, transform.position.x)) return; // 발판 끝에서 멈춤
             IsMoving = true;
@@ -519,6 +540,7 @@ namespace ParryRL
                 Vector2 aim = (Vector2)_player.position - origin;
                 float speed = heavy ? T.rangedHeavySpeed : T.rangedNormalSpeed;
                 var shot = EnemyAttack.Spawn(this, type, origin, aim, size, speed, rangedMaxTravel, color, damage);
+                shot.BlockedByTerrain = true;
                 _lastFlightTime = Mathf.Min(aim.magnitude, rangedMaxTravel) / Mathf.Max(0.1f, speed);
                 // 도깨비불 불덩이 그림: 앞 4장 청록(일반) · 뒤 4장 빨강(강공격 — 빨강은 적 공격 경고 전용 색)
                 var fx = GameAssets.AttackFx;

@@ -47,6 +47,9 @@ namespace ParryRL
 
         private const float GhostLife = 0.45f;
 
+        /// <summary>땅·발판에 닿으면 사라진다 (도깨비불 불덩이 — 지형이 엄폐물이 된다).</summary>
+        public bool BlockedByTerrain { get; set; }
+
         /// <summary>회피로 흘려보내져 판정 없이 지나가는 중.</summary>
         public bool IsGhost => _ghost;
 
@@ -232,7 +235,19 @@ namespace ParryRL
             float step = _speed * Time.fixedDeltaTime;
             _rb.MovePosition(_rb.position + _direction * step);
             _traveled += step;
-            if (_traveled >= _maxDistance) Expire();
+            if (_traveled >= _maxDistance || (BlockedByTerrain && TouchesTerrain())) Expire();
+        }
+
+        private static readonly Collider2D[] TerrainHits = new Collider2D[8];
+
+        // 땅·벽·발판은 리지드바디 없는 비트리거 콜라이더다 (플레이어·몬스터는 리지드바디가 있다)
+        private bool TouchesTerrain()
+        {
+            var filter = new ContactFilter2D { useTriggers = false };
+            int n = Physics2D.OverlapBox(_rb.position, (Vector2)transform.localScale * 0.6f, 0f, filter, TerrainHits);
+            for (int i = 0; i < n; i++)
+                if (TerrainHits[i].attachedRigidbody == null) return true;
+            return false;
         }
 
         private void ExtendSlash()

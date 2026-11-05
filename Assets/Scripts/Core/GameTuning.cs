@@ -58,6 +58,8 @@ namespace ParryRL
         public float startDamageScale = 0.7f;
         [Tooltip("무기 전환 쿨타임 (초, 도력 소모 없음)")]
         public float weaponSwitchCooldown = 0.5f;
+        [Tooltip("점프 세기 — 높이는 세기의 제곱에 비례 (7 = 약 1.56, 8 = 약 2.04, 이단 점프는 두 배)")]
+        public float jumpVelocity = 8f;
 
 
         public float AttackMultiplier(CharacterKind kind) =>

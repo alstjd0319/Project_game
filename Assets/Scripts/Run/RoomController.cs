@@ -140,6 +140,11 @@ namespace ParryRL
             PlacePlayerAtStart();
             StartCoroutine(PortalTransition.Arrive()); // 포탈에서 나오는 연출 (빛이 감겨 몸이 된다)
             UpdateInfo();
+            if (WaveMapOn)
+            {
+                gameObject.AddComponent<WaveController>(); // 방 진행 대신 웨이브 진행
+                return;
+            }
             string scene = Encounter != null ? $" — {Encounter.Name}" : "";
             string zone = RunState.Current == RoomType.Boss ? "" : $"{RunState.Zone}구간 · ";
             Hud.Popup($"{zone}방 {RunState.RoomNumber} · {RoomInfo.Label(RunState.Current)}{scene}", RoomInfo.Color(RunState.Current), true);
@@ -165,8 +170,9 @@ namespace ParryRL
 
         private void UpdateInfo()
         {
-            string text = $"{RunState.Zone}구간 · 방 {RunState.RoomNumber}/{RunState.TotalRooms} · {RoomInfo.Label(RunState.Current)}";
             Hud.SetCurrency(RunState.Gold, RunState.SoulStones);
+            if (WaveMapOn) return; // 방 정보는 WaveController가 표시한다
+            string text = $"{RunState.Zone}구간 · 방 {RunState.RoomNumber}/{RunState.TotalRooms} · {RoomInfo.Label(RunState.Current)}";
             if (RunState.Items.Count > 0)
             {
                 var counts = new List<string>();
@@ -274,7 +280,7 @@ namespace ParryRL
         private void Update()
         {
             if (!GameManager.InputBlocked) TrackFall();
-            if (!IsRunRoom || GameManager.InputBlocked) return;
+            if (!IsRunRoom || GameManager.InputBlocked || WaveMapOn) return;
             switch (CurrentPhase)
             {
                 case Phase.Intro:
@@ -430,6 +436,14 @@ namespace ParryRL
         {
             foreach (var altar in _altars) if (altar != chosen) altar.Lock();
             OpenGates();
+        }
+
+        /// <summary>웨이브를 다 깼다: 사당으로 나가는 문 (플레이어 앞).</summary>
+        public void OpenWaveExit()
+        {
+            if (_gatesOpen) return;
+            _gatesOpen = true;
+            _gates.Add(RoomGate.Create(new Vector3(6f, 0f, 0f), RoomType.Normal, true, gateSprite, portalArt));
         }
 
         private void OpenGates(bool announce = true)

@@ -145,14 +145,15 @@ namespace ParryRL
         /// 걷는 창귀는 구멍을 피해 가까운 땅으로 옮긴다. 도깨비불은 height만큼 떠서 나온다 (그 높이를 유지하며 좌우로만 움직인다).
         /// </summary>
         /// <param name="confineMin">발판 위에서 나오는 도깨비불: 이 가로 범위(발판) 안에 세우고 그 밖으로 나가지 않게 한다 (null = 제한 없음)</param>
-        public EnemyController SpawnEnemyAt(EnemyKind kind, float x, float height, bool elite, float? confineMin = null, float? confineMax = null)
+        /// <param name="exact">정해 둔 스폰 지점: 자리를 옮기지 않는다 (웨이브 — 지점을 고를 때 이미 살폈다)</param>
+        public EnemyController SpawnEnemyAt(EnemyKind kind, float x, float height, bool elite, float? confineMin = null, float? confineMax = null, bool exact = false)
         {
             var prefab = kind == EnemyKind.Melee ? meleePrefab : rangedPrefab;
             if (prefab == null) return null;
             float half = prefab.transform.localScale.x * 0.5f;
             float min = arenaMinX + half, max = arenaMaxX - half;
             x = Mathf.Clamp(x, min, max);
-            if (_player != null)
+            if (_player != null && !exact)
             {
                 float px = _player.position.x;
                 // 지나온 쪽(왼쪽 — 방은 왼쪽에서 오른쪽으로 나아간다)은 화면 안에서만 나온다: 이미 지나가 화면 밖이 된 곳에서 나오면 보이지 않는 데서 공격이 온다
@@ -170,9 +171,9 @@ namespace ParryRL
                     x = Mathf.Clamp(px + side * MinSpawnGap, min, max);
                 }
             }
-            if (kind == EnemyKind.Melee) x = GroundProbe.NudgeOntoGround(x, half, groundY, arenaMinX, arenaMaxX);
+            if (kind == EnemyKind.Melee && !exact) x = GroundProbe.NudgeOntoGround(x, half, groundY, arenaMinX, arenaMaxX);
             if (confineMin.HasValue && confineMax.HasValue) x = Mathf.Clamp(x, confineMin.Value, confineMax.Value);
-            float lift = kind == EnemyKind.Ranged ? Mathf.Max(0f, height) : 0f;
+            float lift = kind == EnemyKind.Ranged || confineMin.HasValue ? Mathf.Max(0f, height) : 0f; // 창귀도 발판 지점이면 그 위에
             var pos = new Vector3(x, groundY + prefab.transform.localScale.y * 0.5f + lift, 0f);
             var enemy = Create(prefab, pos, elite ? new Color(0.8f, 0.45f, 1f) : new Color(0.95f, 0.3f, 0.35f));
             if (elite) enemy.MakeElite(RoomPlan.EliteHpMultiplier, 3);

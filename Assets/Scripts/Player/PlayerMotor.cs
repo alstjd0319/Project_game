@@ -9,7 +9,6 @@ namespace ParryRL
         // 걷기 속도는 캐릭터별 — GameTuning (F1 캐릭터 탭). 궁수가 플레이어보다 빠르다.
 
         [Header("점프 (2단, 누르는 시간과 무관한 고정 높이 — 공중에서 한 번 더 누르면 그 자리에서 다시 솟는다)")]
-        [SerializeField] private float jumpVelocity = 7f;
         [SerializeField] private int maxJumps = 2;
 
         [SerializeField, Tooltip("떨어질 때 발이 발판 윗면보다 이만큼 아래까지는 올려 세워 준다 (발판 두께 0.4 안쪽)")] private float ledgeAssist = 0.35f;
@@ -94,7 +93,7 @@ namespace ParryRL
             {
                 _jumpsLeft--;
                 var v = _rb.linearVelocity;
-                v.y = jumpVelocity;
+                v.y = GameTuning.Current.jumpVelocity;
                 _rb.linearVelocity = v;
                 Sfx.Play(SfxId.Jump);
             }
