@@ -183,6 +183,7 @@ namespace ParryRL
             _defense = GetComponent<PlayerDefense>();
             _effects = GetComponent<SuccessEffects>();
             if (_effects == null) _effects = gameObject.AddComponent<SuccessEffects>();
+            _party.Damaged += OnHurtWhileHealing;
             // 대시 횟수는 여기서 채운다 — 첫 프레임부터 꺼져 있으면(포탈 도착 연출) Update가 못 채워 스킬바에 "-1/2"로 보였다
             if (_moveCharges < 0) _moveCharges = MoveSkillMaxCharges;
         }
@@ -210,7 +211,10 @@ namespace ParryRL
             for (int w = 0; w < 2; w++)
                 for (int k = 0; k < 2; k++) _skillCd[w, k] = Mathf.Max(0f, _skillCd[w, k] - Time.deltaTime); // 들고 있지 않은 무기의 쿨타임도 흐른다
 
+            _healCd = Mathf.Max(0f, _healCd - Time.deltaTime);
             if (GameManager.InputBlocked || _party.IsDead) return;
+            UpdateHeal();
+            if (Input.GetKeyDown(Controls.Heal)) TryHeal();
             if (Input.GetKeyDown(Controls.AttackSkill)) PressAttack();
             if (Input.GetKeyDown(Controls.Skill1)) TrySkill(1);
             if (Input.GetKeyDown(Controls.Skill2)) TrySkill(2);
@@ -372,6 +376,80 @@ namespace ParryRL
                 // (평타 때 앞으로 내딛던 Lunge는 없앴다 — 사용자 요청: 제자리에서 벤다)
             }
             return true;
+        }
+
+        // ───────────── 도력 회복 (웨이브 모드, W) ─────────────
+
+        private float _healTimer;   // 시전 남은 시간 (0 = 시전 중 아님)
+        private float _healCd;
+        private int _healGauge;     // 이번 시전에 쓸 도력
+
+        public bool IsHealing => _healTimer > 0f;
+        public float HealCastLeft => _healTimer;
+        public float HealCooldownLeft => _healCd;
+        /// <summary>지금 쓰면 들어갈 도력 (가진 도력과 상한 중 작은 쪽).</summary>
+        public int HealGaugeNow => SkillGauge.Infinite ? GameTuning.Current.healMaxGauge : Mathf.Min(_gauge.Value, GameTuning.Current.healMaxGauge);
+        /// <summary>도력 gauge만큼 쓰면 회복되는 체력.</summary>
+        public int HealAmount(int gauge) => Mathf.CeilToInt(_party.MaxHp * GameTuning.Current.healPercentPerGauge * gauge / 100f);
+
+        /// <summary>
+        /// 가진 도력을 최대 10까지 써서 쓴 만큼 회복한다. 1초 동안 제자리에서 시전하고, 끝나는 순간 도력을 쓰고 체력이 찬다.
+        /// 움직이거나 다른 행동을 하면 취소(도력은 그대로), 맞으면 실패(도력을 잃는다).
+        /// </summary>
+        public bool TryHeal()
+        {
+            if (!RoomController.WaveMapOn) return false;
+            bool parrying = _defense.State == DefenseState.Active && !_defense.SucceededThisActive;
+            if (_party.IsDead || IsHealing || parrying || _healCd > 0f || !_motor.IsGrounded)
+            {
+                ActionDenied?.Invoke(PlayerAction.Heal);
+                return false;
+            }
+            if (_party.Hp >= _party.MaxHp)
+            {
+                Denied(PlayerAction.Heal, "체력이 가득하다");
+                return false;
+            }
+            if (HealGaugeNow <= 0)
+            {
+                Denied(PlayerAction.Heal, "도력 부족");
+                return false;
+            }
+            _healGauge = HealGaugeNow;
+            _healTimer = Mathf.Max(0.05f, GameTuning.Current.healCastTime);
+            ActionUsed?.Invoke(PlayerAction.Heal);
+            Sfx.Play(SfxId.SkillSeal, 0.6f);
+            var art = GameAssets.AttackFx;
+            if (art != null) FxClip.PlayFit(art.yogiAbsorb, transform.position + Vector3.up * 0.55f, new Vector2(1.7f, 3.2f), false, 8);
+            return true;
+        }
+
+        public void CancelHeal() => _healTimer = 0f;
+
+        private void UpdateHeal()
+        {
+            if (!IsHealing) return;
+            // 움직이거나 다른 행동을 누르면 취소 — 위험할 때 바로 패링으로 빠져나올 수 있게
+            if (Controls.Horizontal != 0f || !_motor.IsGrounded || Input.GetKeyDown(Controls.Defend) || Input.GetKeyDown(Controls.AttackSkill) ||
+                Input.GetKeyDown(Controls.Skill1) || Input.GetKeyDown(Controls.Skill2) || Input.GetKeyDown(Controls.MoveSkill) || Input.GetKeyDown(Controls.Weapon))
+            {
+                CancelHeal();
+                return;
+            }
+            _healTimer -= Time.deltaTime;
+            if (_healTimer > 0f) return;
+            _healTimer = 0f;
+            _gauge.TrySpend(_healGauge);
+            _party.Heal(HealAmount(_healGauge));
+            _healCd = GameTuning.Current.healCooldown;
+        }
+
+        private void OnHurtWhileHealing(int damage)
+        {
+            if (!IsHealing) return;
+            CancelHeal();
+            _gauge.TrySpend(_healGauge); // 싸움 한가운데서 쓰면 손해
+            Hud.Popup("회복 실패", new Color(1f, 0.6f, 0.6f), false);
         }
 
         // ───────────── 스킬 D / F ─────────────

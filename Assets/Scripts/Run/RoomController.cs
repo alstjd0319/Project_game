@@ -23,7 +23,8 @@ namespace ParryRL
 
         /// <summary>테스트·캡처가 웨이브 맵을 바로 열 때. 게임에서는 사당 포탈이 <see cref="RunState.WaveMap"/>을 켠다.</summary>
         public static bool UseWaveMap;
-        private static bool WaveMapOn => UseWaveMap || RunState.WaveMap;
+        /// <summary>웨이브 모드인가.</summary>
+        public static bool WaveMapOn => UseWaveMap || RunState.WaveMap;
 
         public Phase CurrentPhase { get; private set; } = Phase.Intro;
         public int WaveIndex { get; private set; }

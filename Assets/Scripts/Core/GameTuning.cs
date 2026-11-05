@@ -61,6 +61,12 @@ namespace ParryRL
         [Tooltip("점프 세기 — 높이는 세기의 제곱에 비례 (7 = 약 1.56, 8 = 약 2.04, 이단 점프는 두 배)")]
         public float jumpVelocity = 8f;
 
+        // ── 도력 회복 (웨이브 모드, W): 가진 도력을 최대 healMaxGauge까지 쓰고, 쓴 만큼 최대 체력의 healPercentPerGauge%씩 회복 ──
+        public int healMaxGauge = 10;
+        public float healPercentPerGauge = 3f;
+        public float healCastTime = 1f;
+        public float healCooldown = 15f;
+
 
         public float AttackMultiplier(CharacterKind kind) =>
             playerAttackMultiplier;

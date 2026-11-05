@@ -50,6 +50,7 @@ namespace ParryRL.Tests
         {
             RoomController.UseWaveMap = false;
             WaveController.RestTime = 3f;
+            Controls.TestHorizontal = 0f;
         }
 
         [Test]
@@ -188,6 +189,77 @@ namespace ParryRL.Tests
                 yield return null;
             }
             Assert.IsTrue(fired, "같은 층이면 쏜다");
+        }
+
+        private static IEnumerator HealSetup(int gauge, int hp)
+        {
+            yield return LoadWave();
+            yield return new WaitForSeconds(0.2f); // 땅에 서게
+            var party = Object.FindAnyObjectByType<PlayerParty>();
+            party.SetHp(hp);
+            Object.FindAnyObjectByType<SkillGauge>().SetValue(gauge);
+        }
+
+        [UnityTest]
+        public IEnumerator 도력_회복은_쓴_만큼_회복하고_최대_10까지만_쓴다()
+        {
+            yield return HealSetup(14, 20);
+            var combat = Object.FindAnyObjectByType<PlayerCombat>();
+            var party = combat.GetComponent<PlayerParty>();
+            var gauge = combat.GetComponent<SkillGauge>();
+            Assert.IsTrue(combat.TryHeal());
+            Assert.IsTrue(combat.IsHealing);
+            Assert.AreEqual(20, party.Hp, "시전이 끝나야 찬다");
+            Assert.AreEqual(14, gauge.Value);
+            yield return new WaitForSeconds(1.2f);
+            Assert.IsFalse(combat.IsHealing);
+            Assert.AreEqual(4, gauge.Value, "최대 10까지만");
+            Assert.AreEqual(20 + Mathf.RoundToInt(party.MaxHp * 0.3f), party.Hp, "도력 10 = 최대 체력 30%");
+            Assert.Greater(combat.HealCooldownLeft, 0f);
+            Assert.IsFalse(combat.TryHeal(), "쿨타임");
+
+            yield return HealSetup(4, 20);
+            combat = Object.FindAnyObjectByType<PlayerCombat>();
+            party = combat.GetComponent<PlayerParty>();
+            Assert.IsTrue(combat.TryHeal());
+            yield return new WaitForSeconds(1.2f);
+            Assert.AreEqual(0, combat.GetComponent<SkillGauge>().Value, "가진 만큼");
+            Assert.AreEqual(20 + Mathf.RoundToInt(party.MaxHp * 0.12f), party.Hp, "도력 4 = 12%");
+        }
+
+        [UnityTest]
+        public IEnumerator 움직이면_도력을_안_쓰고_취소되고_맞으면_도력을_잃는다()
+        {
+            yield return HealSetup(10, 20);
+            var combat = Object.FindAnyObjectByType<PlayerCombat>();
+            var party = combat.GetComponent<PlayerParty>();
+            var gauge = combat.GetComponent<SkillGauge>();
+            Assert.IsTrue(combat.TryHeal());
+            Controls.TestHorizontal = 1f;
+            yield return null; yield return null;
+            Controls.TestHorizontal = 0f;
+            Assert.IsFalse(combat.IsHealing, "움직이면 취소");
+            Assert.AreEqual(10, gauge.Value, "도력은 그대로");
+            Assert.AreEqual(0f, combat.HealCooldownLeft, "쿨타임도 없다");
+
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsTrue(combat.TryHeal());
+            GameTuning.Current.godMode = false;
+            party.ClearInvulnerability();
+            party.TakeDamage(5);
+            Assert.IsFalse(combat.IsHealing, "맞으면 실패");
+            Assert.AreEqual(0, gauge.Value, "도력을 잃는다");
+        }
+
+        [UnityTest]
+        public IEnumerator 도력_회복은_웨이브_모드에서만_된다()
+        {
+            yield return TestScene.LoadPrototype();
+            yield return new WaitForSeconds(0.2f);
+            var combat = Object.FindAnyObjectByType<PlayerCombat>();
+            combat.GetComponent<PlayerParty>().SetHp(20);
+            combat.GetComponent<SkillGauge>().SetValue(10);
+            Assert.IsFalse(combat.TryHeal());
         }
 
         [UnityTest]

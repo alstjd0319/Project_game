@@ -338,6 +338,11 @@ namespace ParryRL
             AddSlider("받는 피해 감소", 0f, 0.8f, 0.05f, "0%", () => T.playerDamageReduction, v => T.playerDamageReduction = v);
             AddSlider("이동 속도", 2f, 10f, 0.25f, "0.00", () => T.playerMoveSpeed, v => T.playerMoveSpeed = v);
             AddSlider("점프 세기", 5f, 11f, 0.25f, "0.00", () => T.jumpVelocity, v => T.jumpVelocity = v);
+            Header("도력 회복 (웨이브 모드, W)");
+            AddSlider("한 번에 쓰는 도력 최대", 1f, 20f, 1f, "0", () => T.healMaxGauge, v => T.healMaxGauge = Mathf.RoundToInt(v));
+            AddSlider("도력 1당 회복 (최대 체력 %)", 1f, 10f, 0.5f, "0.0", () => T.healPercentPerGauge, v => T.healPercentPerGauge = v);
+            AddSlider("시전 시간 (초)", 0.2f, 3f, 0.1f, "0.0", () => T.healCastTime, v => T.healCastTime = v);
+            AddSlider("쿨타임 (초)", 0f, 40f, 1f, "0", () => T.healCooldown, v => T.healCooldown = v);
             AddSlider("원거리 공격력 배율", 0.5f, 3f, 0.05f, "0.00", () => T.rangedAttackMultiplier, v => T.rangedAttackMultiplier = v);
             AddSlider("초반 데미지 배율 (모든 딜, 성장 전)", 0.3f, 1.5f, 0.05f, "0.00", () => T.startDamageScale, v => T.startDamageScale = v);
             AddSlider("무기 전환 쿨타임 (초)", 0f, 2f, 0.05f, "0.00", () => T.weaponSwitchCooldown, v => T.weaponSwitchCooldown = v);

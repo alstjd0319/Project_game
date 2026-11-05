@@ -19,6 +19,8 @@ namespace ParryRL
         public const KeyCode Skill1 = KeyCode.D;
         public const KeyCode Skill2 = KeyCode.F;
         /// <summary>E = 상호작용 (사당의 포탈·NPC).</summary>
+        /// <summary>도력으로 회복 (웨이브 모드).</summary>
+        public const KeyCode Heal = KeyCode.W;
         public const KeyCode Interact = KeyCode.E;
         public const KeyCode Confirm = KeyCode.Return;
         public const KeyCode Pause = KeyCode.Escape;

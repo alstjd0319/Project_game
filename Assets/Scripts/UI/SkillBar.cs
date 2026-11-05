@@ -78,7 +78,8 @@ namespace ParryRL
             var bar = new GameObject("SkillBar", typeof(RectTransform)).GetComponent<RectTransform>();
             bar.SetParent(canvasRoot, false);
             float slotOuter = SlotSize + Border * 2f;
-            const int slotCount = 6;
+            bool heal = RoomController.WaveMapOn; // 도력 회복은 웨이브 모드에만 있다
+            int slotCount = heal ? 7 : 6;
             float width = slotOuter * slotCount + Spacing * (slotCount - 1);
             UiKit.Place(bar, new Vector2(0.5f, 0f), new Vector2(0f, 26f), new Vector2(width, slotOuter + 42f));
 
@@ -97,6 +98,7 @@ namespace ParryRL
                 var pos = new Vector2(i * (slotOuter + Spacing), 42f);
                 _slots[defs[i].action] = CreateSlot(bar, pos, defs[i].key, defs[i].glyph);
             }
+            if (heal) _slots[PlayerAction.Heal] = CreateSlot(bar, new Vector2(defs.Length * (slotOuter + Spacing), 42f), "W", "+");
         }
 
         public void Bind(PlayerParty party, SkillGauge gauge, PlayerDefense defense, PlayerCombat combat)
@@ -113,6 +115,7 @@ namespace ParryRL
             _slots[PlayerAction.Skill2].state = () => SkillState(2);
             _slots[PlayerAction.Defend].state = DefendState;
             _slots[PlayerAction.Weapon].state = WeaponState;
+            if (_slots.TryGetValue(PlayerAction.Heal, out var healSlot)) healSlot.state = HealState;
 
             _combat.ActionUsed += a => Pulse(a);
             _combat.ActionDenied += a => Deny(a);
@@ -120,8 +123,8 @@ namespace ParryRL
             _defense.ActivateDenied += () => Deny(PlayerAction.Defend);
         }
 
-        private void Pulse(PlayerAction a) => _slots[a].pulse = 1f;
-        private void Deny(PlayerAction a) => _slots[a].shake = 1f;
+        private void Pulse(PlayerAction a) { if (_slots.TryGetValue(a, out var s)) s.pulse = 1f; }
+        private void Deny(PlayerAction a) { if (_slots.TryGetValue(a, out var s)) s.shake = 1f; }
 
         // ───────────── 슬롯별 상태 ─────────────
 
@@ -165,6 +168,25 @@ namespace ParryRL
                 blocked = _defense.State == DefenseState.Active && !_defense.SucceededThisActive,
                 cooldownLeft = slot == 1 ? _combat.Skill1CooldownLeft : _combat.Skill2CooldownLeft,
                 cooldownTotal = slot == 1 ? _combat.Skill1Cooldown : _combat.Skill2Cooldown,
+            };
+        }
+
+        // 도력 회복 슬롯: 코스트 배지는 지금 쓰면 들어갈 도력 (가진 도력과 10 중 작은 쪽), 시전 중엔 남은 시간
+        private SlotState HealState()
+        {
+            int gauge = _combat.HealGaugeNow;
+            return new SlotState
+            {
+                color = new Color(0.45f, 0.95f, 0.6f),
+                icon = Skill(10),
+                name = "회복",
+                cost = Mathf.Max(1, gauge),
+                affordable = gauge > 0,
+                blocked = _party.Hp >= _party.MaxHp,
+                cooldownLeft = _combat.HealCooldownLeft,
+                cooldownTotal = GameTuning.Current.healCooldown,
+                activeLeft = _combat.HealCastLeft,
+                activeTotal = GameTuning.Current.healCastTime,
             };
         }
 

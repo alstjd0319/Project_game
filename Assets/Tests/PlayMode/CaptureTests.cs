@@ -252,6 +252,10 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(1.5f);
             waves.JumpTo(1);
             yield return new WaitForSeconds(2.8f);
+            Object.FindAnyObjectByType<PlayerParty>().SetHp(40);
+            Object.FindAnyObjectByType<SkillGauge>().SetValue(8);
+            Object.FindAnyObjectByType<PlayerCombat>().TryHeal();
+            yield return new WaitForSeconds(0.3f);
             yield return Capture("wave_fight");              // 광장: 위쪽 "웨이브 1 · 남은 요괴", 몬스터
             waves.JumpTo(3);                                  // 탑 구역: 플레이어는 광장 → 왼쪽 큰 화살표, 표식
             yield return new WaitForSeconds(3.5f);
