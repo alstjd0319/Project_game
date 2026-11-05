@@ -33,11 +33,14 @@ namespace ParryRL
         /// <summary>(임시 테스트용) F2 = 보스방으로 바로.</summary>
         public const KeyCode DebugBossRoom = KeyCode.F2;
 
+        /// <summary>테스트가 방향키를 누른 것처럼 (−1 / 0 / +1).</summary>
+        public static float TestHorizontal;
+
         public static float Horizontal
         {
             get
             {
-                float h = 0f;
+                float h = TestHorizontal;
                 if (Input.GetKey(Left)) h -= 1f;
                 if (Input.GetKey(Right)) h += 1f;
                 return h;

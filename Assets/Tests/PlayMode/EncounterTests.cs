@@ -343,6 +343,23 @@ namespace ParryRL.Tests
             Assert.IsFalse(AttackTokens.Holds(ranged) && !ranged.IsWindingUp, "다 날아간 뒤엔 돌려준다");
         }
 
+        [UnityTest]
+        public IEnumerator 바닥_타일은_구멍_쪽으로_튀어나오지_않는다()
+        {
+            RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
+            yield return TestScene.LoadRun(RoomType.Normal);
+            yield return null;
+            yield return null;
+            var deco = Object.FindAnyObjectByType<FloorDecorator>();
+            foreach (var pit in Room.Layout.Pits)
+                foreach (var sr in deco.GetComponentsInChildren<SpriteRenderer>())
+                {
+                    if (sr.sprite == null || !(sr.sprite.name.Contains("_top_") || sr.sprite.name.Contains("_fill_"))) continue;
+                    bool inside = sr.bounds.min.x < pit.Right - 0.05f && sr.bounds.max.x > pit.Left + 0.05f;
+                    Assert.IsFalse(inside, $"{sr.sprite.name}이 구멍({pit.Left:0.0}~{pit.Right:0.0}) 안으로 들어왔다: {sr.bounds.min.x:0.00}~{sr.bounds.max.x:0.00}");
+                }
+        }
+
         /// <summary>몬스터를 플레이어 양옆 사거리 안으로 모은다 (모두가 바로 공격하려는 상황).</summary>
         private static IEnumerator GatherAroundPlayer(int count)
         {
