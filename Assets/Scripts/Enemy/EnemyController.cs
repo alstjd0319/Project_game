@@ -252,10 +252,58 @@ namespace ParryRL
         }
 
         // 꺼진 동안엔 Update가 돌지 않아 걷는 중 표시가 남지 않게
+        private void OnEnable() => Active.Add(this);
+
         private void OnDisable()
         {
             IsMoving = false;
             AttackTokens.Release(this);
+            Active.Remove(this);
+        }
+
+        // ── 몬스터끼리 겹치지 않게 (몸이 키네마틱이라 물리로는 서로 밀지 않는다) ──
+        private static readonly System.Collections.Generic.List<EnemyController> Active = new();
+        private static int _nextUid;
+        private readonly int _uid = ++_nextUid;
+
+        [Header("겹침 방지")]
+        [SerializeField, Tooltip("같은 높이의 몬스터끼리 이 비율(두 몸 폭 절반의 합 대비)보다 가까우면 서로 밀어낸다")] private float separationRatio = 0.9f;
+        [SerializeField, Tooltip("밀어내는 속도 (유닛/초)")] private float separationSpeed = 3f;
+
+        /// <summary>
+        /// 같은 높이에 선 몬스터와 너무 가까우면 조금씩 떨어진다. 한가할 때(공격 중이 아닐 때)만 — 공격을 시작하면 자리가 고정된다는 규칙은 그대로.
+        /// 똑같이 다가와 같은 거리에 멈추는 창귀들이 한 자리에 포개져 몇 마리인지 안 보이던 문제.
+        /// </summary>
+        private void Separate()
+        {
+            if (superArmor) return; // 보스는 밀리지 않는다
+            float x = transform.position.x, push = 0f;
+            foreach (var other in Active)
+            {
+                if (other == this || other.IsDead || other.superArmor) continue;
+                if (Mathf.Abs(other._feetY - _feetY) > 0.5f) continue; // 다른 층·떠 있는 높이가 다르면 겹쳐도 괜찮다
+                float min = (HalfWidth + other.HalfWidth) * separationRatio;
+                float dx = x - other.transform.position.x;
+                if (Mathf.Abs(dx) >= min) continue;
+                float side = Mathf.Abs(dx) > 0.001f ? Mathf.Sign(dx) : (_uid > other._uid ? 1f : -1f); // 정확히 같은 자리면 번호로 갈라선다
+                push += side * (min - Mathf.Abs(dx));
+            }
+            if (Mathf.Abs(push) < 0.001f) return;
+            float step = Mathf.Clamp(push, -separationSpeed * Time.deltaTime, separationSpeed * Time.deltaTime);
+            float half = HalfWidth;
+            float nx = Mathf.Clamp(x + step, _arenaMinX + half, _arenaMaxX - half);
+            if (Walks && !IsConfined && !GroundProbe.HasGround(nx + Mathf.Sign(step) * half, _feetY)) return; // 구멍 쪽으로는 밀려나지 않는다
+            SetPosition(new Vector2(nx, transform.position.y));
+        }
+
+        /// <summary>테스트: 지금 이 몬스터와 같은 높이에서 가장 가까운 다른 몬스터까지의 가로 거리.</summary>
+        public float NearestSameLevelGap()
+        {
+            float best = float.MaxValue;
+            foreach (var other in Active)
+                if (other != this && !other.IsDead && Mathf.Abs(other._feetY - _feetY) <= 0.5f)
+                    best = Mathf.Min(best, Mathf.Abs(other.transform.position.x - transform.position.x));
+            return best;
         }
 
         private void Update()
@@ -278,6 +326,7 @@ namespace ParryRL
             {
                 WaitingBelow = true;
                 Move();
+                Separate();
                 _cooldown = Mathf.Max(_cooldown - Time.deltaTime, 0f);
                 return;
             }
@@ -287,6 +336,7 @@ namespace ParryRL
                 _cooldown = 0f; // 내려왔다 — 사거리 안이면 바로 (예비 모션 = 반응시간은 그대로)
             }
             Move();
+            Separate();
             _cooldown -= Time.deltaTime;
             if (_cooldown <= 0f && InAttackRange() && !T.enemyPassive && Time.time >= _holdAttackUntil)
             {

@@ -250,5 +250,27 @@ namespace ParryRL.Tests
             yield return new WaitForSeconds(0.6f);
             Assert.AreEqual(0, Object.FindObjectsByType<EnemyAttack>().Length, "기절 중엔 공격이 안 나감");
         }
+
+        [UnityTest]
+        public IEnumerator 같은_자리에_모인_창귀들은_서로_떨어져_겹치지_않는다()
+        {
+            yield return TestScene.LoadPrototype();
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            GameTuning.Current.hideRanged = true;
+            GameTuning.Current.enemiesPerKind = 4;
+            yield return new WaitForSeconds(0.3f);
+            var melee = Object.FindObjectsByType<EnemyController>().Where(e => !e.IsDead && e.Kind == EnemyKind.Melee).ToArray();
+            Assert.AreEqual(4, melee.Length);
+            foreach (var e in melee) // 한 자리에 포갠다
+            {
+                var pos = new Vector3(6f, e.transform.position.y, 0f);
+                e.transform.position = pos;
+                e.GetComponent<Rigidbody2D>().position = pos;
+            }
+            yield return new WaitForSeconds(2f);
+            foreach (var e in melee)
+                Assert.GreaterOrEqual(e.NearestSameLevelGap(), e.HalfWidth * 2f * 0.85f, "몸 하나만큼은 떨어져 있다");
+        }
     }
 }
