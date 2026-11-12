@@ -44,6 +44,13 @@ namespace ParryRL
             return p;
         }
 
+        /// <summary>이 적은 맞히지 않고 지나간다 (연쇄 반격: 반격을 맞은 적 몸에서 튀어나오므로).</summary>
+        public PlayerProjectile Ignore(EnemyController enemy)
+        {
+            if (enemy != null) _pierced.Add(enemy);
+            return this;
+        }
+
         private void AttachArt(Vector2 size)
         {
             var clip = GameAssets.AttackFx != null ? GameAssets.AttackFx.talismanProjectile : null;
@@ -101,7 +108,7 @@ namespace ParryRL
                 DamageCalc.Apply(_baseDamage, _hit, enemy, Mathf.Sign(_direction.x));
                 Fx.Sparks(transform.position, _color, _hit.Heavy ? 10 : 6, 6f);
                 if (GameAssets.AttackFx != null) FxClip.PlayFit(GameAssets.AttackFx.talismanBurst, transform.position, new Vector2(1.5f, 1.5f));
-                if (!_hit.Pierce)
+                if (!_hit.Pierce && _hit.PierceIndex >= _hit.PierceCount)
                 {
                     Destroy(gameObject);
                     return true;

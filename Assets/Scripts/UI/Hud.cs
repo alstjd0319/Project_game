@@ -26,6 +26,7 @@ namespace ParryRL
         private SkillBar _skillBar;
         private TuningPanel _tuningPanel;
         private Text _runInfo;
+        private Text _upgrades;
         private RectTransform _currency;
         private Text _goldText, _soulText;
         // 보스 체력바 (화면 상단, 퍼센트)
@@ -170,6 +171,16 @@ namespace ParryRL
         private bool _goldIcon, _soulIcon;
 
         /// <summary>화면 위 방·웨이브 정보 글자 (테스트용).</summary>
+        /// <summary>웨이브 모드: 가진 강화 목록 (재화 줄 아래). 빈 문자열이면 숨김.</summary>
+        public static void SetUpgrades(string message)
+        {
+            if (_instance == null || _instance._upgrades == null) return;
+            _instance._upgrades.text = message;
+            _instance._upgrades.enabled = !string.IsNullOrEmpty(message);
+        }
+
+        public static string UpgradesText => _instance != null && _instance._upgrades != null ? _instance._upgrades.text : "";
+
         public static string RunInfoText => _instance != null && _instance._runInfo != null ? _instance._runInfo.text : "";
 
         public static void SetRunInfo(string message)
@@ -487,6 +498,12 @@ namespace ParryRL
             UiKit.Place(_runInfo.rectTransform, new Vector2(0.5f, 1f), new Vector2(-10f, -24f), new Vector2(760f, 80f));
             _runInfo.rectTransform.pivot = new Vector2(1f, 1f);
             _runInfo.enabled = false;
+            _upgrades = UiKit.Text("Upgrades", _root, 22, TextAnchor.UpperLeft);
+            _upgrades.color = new Color(0.82f, 0.78f, 0.95f);
+            _upgrades.horizontalOverflow = HorizontalWrapMode.Wrap;
+            UiKit.Place(_upgrades.rectTransform, new Vector2(0.5f, 1f), new Vector2(190f, -76f), new Vector2(720f, 70f));
+            _upgrades.rectTransform.pivot = new Vector2(0f, 1f);
+            _upgrades.enabled = false;
             BuildCurrencyRow();
 
             BuildBossBar();

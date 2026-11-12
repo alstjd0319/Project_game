@@ -135,8 +135,9 @@ namespace ParryRL
         public float MoveSkillCooldown => moveSkillCooldown;
         public int Skill1Cost => skill1Cost;
         public int Skill2Cost => skill2Cost;
-        public float Skill1Cooldown => skill1Cooldown;
-        public float Skill2Cooldown => skill2Cooldown;
+        /// <summary>D / F 쿨타임 (웨이브 강화 "숙련"이 줄인다).</summary>
+        public float Skill1Cooldown => skill1Cooldown * WaveUpgrades.SkillCooldownScale;
+        public float Skill2Cooldown => skill2Cooldown * WaveUpgrades.SkillCooldownScale;
         /// <summary>지금 든 무기의 D / F 남은 쿨타임 (봉과 부적은 쿨타임을 따로 센다).</summary>
         public float Skill1CooldownLeft => _skillCd[WeaponIndex, 0];
         public float Skill2CooldownLeft => _skillCd[WeaponIndex, 1];
@@ -352,13 +353,14 @@ namespace ParryRL
             var hit = NewHit(DamageSource.AttackSkill, false);
             // 평타는 몬스터 공격을 끊지 않는다(패링이 할 일): 부적 = 살짝 밀림만, 봉 1~3단 = 경직 없음 (3단 마무리의 경직·기절도 없앴다 — 사용자 요청)
             hit.Stagger = IsRanged ? HitStagger.Light : HitStagger.None;
+            if (IsRanged) hit.PierceCount = WaveUpgrades.PierceCount;
 
             if (IsRanged)
             {
                 // 화살: 앞쪽으로 직진 (유도 없음)
                 PlayerProjectile.Spawn(pos + new Vector2(dir * 0.4f, 0f), new Vector2(dir, 0f), null, false,
                     arrowSpeed, arrowRange, arrowDamage, hit,
-                    Color.Lerp(color, Color.white, 0.2f), hit.Pierce ? new Vector2(1.1f, 0.22f) : new Vector2(0.8f, 0.18f));
+                    Color.Lerp(color, Color.white, 0.2f), hit.Pierce || hit.PierceCount > 0 ? new Vector2(1.1f, 0.22f) : new Vector2(0.8f, 0.18f));
             }
             else
             {
@@ -472,7 +474,7 @@ namespace ParryRL
                 return false;
             }
 
-            _skillCd[WeaponIndex, slot == 1 ? 0 : 1] = slot == 1 ? skill1Cooldown : skill2Cooldown;
+            _skillCd[WeaponIndex, slot == 1 ? 0 : 1] = slot == 1 ? Skill1Cooldown : Skill2Cooldown;
             ActionUsed?.Invoke(action);
             // 스킬마다 다른 소리 (내려찍기는 휘두름만 먼저, 땅을 치는 쿵은 충격파가 나가는 순간 SlamSkill에서)
             Sfx.Play(slot == 1 ? (IsRanged ? SfxId.SkillFan : SfxId.SkillSweep) : (IsRanged ? SfxId.SkillSeal : SfxId.StaffSwing2));

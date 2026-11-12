@@ -14,6 +14,8 @@ namespace ParryRL
 
         /// <summary>웨이브 사이 숨 돌릴 틈 (테스트가 줄인다).</summary>
         public static float RestTime = 3f;
+        /// <summary>웨이브를 깨면 강화 3택 창을 띄운다 (규칙 테스트는 끄고, 강화 테스트가 켠다).</summary>
+        public static bool OfferUpgrades = true;
         private const float MarkerTime = 0.5f, HoldAfterSpawn = 1f;
 
         public Phase CurrentPhase { get; private set; } = Phase.Rest;
@@ -41,8 +43,11 @@ namespace ParryRL
             _spawner = FindAnyObjectByType<EnemySpawner>();
             var party = FindAnyObjectByType<PlayerParty>();
             if (party != null) _player = party.transform;
+            WaveUpgrades.Reset(); // 판 안 강화는 웨이브 판마다 새로
+            if (party != null && party.GetComponent<WaveUpgradeEffects>() == null) party.gameObject.AddComponent<WaveUpgradeEffects>();
             EnemyController.AnyDied += OnDied;
             gameObject.AddComponent<WaveIndicators>();
+            WaveUpgrades.Changed += ShowUpgrades;
             _timer = 1.2f;
             Refresh();
         }
@@ -51,6 +56,8 @@ namespace ParryRL
         {
             if (Instance == this) Instance = null;
             EnemyController.AnyDied -= OnDied;
+            WaveUpgrades.Changed -= ShowUpgrades;
+            Hud.SetUpgrades("");
             AttackTokens.ClearOverride();
         }
 
@@ -120,6 +127,12 @@ namespace ParryRL
             CurrentPhase = Phase.Rest;
             _timer = RestTime;
             Hud.Popup($"웨이브 {Wave} 돌파", Color.white, false);
+            // 강화 3택: 고르는 동안 게임이 멈추고(쉬는 시간도 멈춤), 고르면 쉬는 시간이 흐른다
+            if (OfferUpgrades)
+            {
+                var options = WaveUpgrades.Roll(3);
+                if (options.Count > 0) UpgradeChoicePanel.Open(options, $"웨이브 {Wave} 돌파 — 강화를 하나 고르세요", null);
+            }
         }
 
         // 보스는 평지가 필요하다. 소환·결계 규칙을 정하기 전까지는 플레이어를 광장으로 옮겨 그대로 싸운다 (임시)
@@ -232,6 +245,14 @@ namespace ParryRL
             if (cam == null) return true;
             var v = cam.WorldToViewportPoint(new Vector3(p.X, p.Height + 0.7f, 0f));
             return v.x >= 0f && v.x <= 1f && v.y >= 0f && v.y <= 1f;
+        }
+
+        private static void ShowUpgrades()
+        {
+            var parts = new List<string>();
+            foreach (var d in WaveUpgrades.All)
+                if (WaveUpgrades.Has(d.Id)) parts.Add($"{d.Name} {WaveUpgrades.Level(d.Id)}");
+            Hud.SetUpgrades(parts.Count == 0 ? "" : "강화  " + string.Join(" · ", parts));
         }
 
         private void Refresh()

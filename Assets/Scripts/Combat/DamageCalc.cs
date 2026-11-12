@@ -11,7 +11,7 @@ namespace ParryRL
     public enum HitStagger { Full, Light, None }
 
     /// <summary>플레이어 딜의 출처.</summary>
-    public enum DamageSource { Counter, AttackSkill, DashSlash }
+    public enum DamageSource { Counter, AttackSkill, DashSlash, Upgrade }
 
     /// <summary>
     /// 플레이어 공격 한 번의 정보. 발동 순간에 만들어 투사체·근접 박스가 들고 다니다가, 명중 순간 데미지를 계산한다.
@@ -30,6 +30,8 @@ namespace ParryRL
         public bool Pierce;
         /// <summary>원거리 무기로 쏜 공격 (공격력 배율이 근접과 다름).</summary>
         public bool Ranged;
+        /// <summary>꿰뚫는 적 수 (Pierce가 꺼져 있어도 이만큼은 뚫고 지나간다 — 웨이브 강화 "꿰뚫는 부적").</summary>
+        public int PierceCount;
         /// <summary>관통 순번 — 첫 적 0, 두 번째 적 1, …</summary>
         public int PierceIndex;
         /// <summary>맞은 몬스터의 경직 정도 (기본 Full).</summary>

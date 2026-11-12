@@ -268,6 +268,31 @@ namespace ParryRL.Tests
         }
 
         [UnityTest]
+        public IEnumerator 웨이브_강화_3택과_수호_부적()
+        {
+            RoomController.UseWaveMap = true;
+            WaveController.RestTime = 0.2f;
+            yield return TestScene.LoadRun();
+            GameTuning.Current.godMode = true;
+            GameTuning.Current.enemyPassive = true;
+            var waves = (WaveController)null;
+            yield return new WaitUntil(() => (waves = WaveController.Instance) != null);
+            waves.JumpTo(2);
+            yield return new WaitForSeconds(2.5f);
+            WaveUpgrades.Add(UpgradeId.ChainCounter);
+            WaveUpgrades.Add(UpgradeId.GuardTalismans);
+            UpgradeChoicePanel.Open(new[] { UpgradeId.CounterBurst, UpgradeId.ChainCounter, UpgradeId.GuardTalismans }, "웨이브 2 돌파 — 강화를 하나 고르세요", null);
+            yield return null;
+            yield return Capture("upgrade_choice");          // 카드 3장: 새로 얻음 / 1단계 → 2단계
+            yield return Capture("upgrade_choice_small", 640, 360);
+            UpgradeChoicePanel.Choose(2);                     // 수호 부적 2단계 (3장)
+            yield return new WaitForSeconds(0.6f);
+            yield return Capture("upgrade_guards");          // 몸 주위 부적 3장 + 위쪽 강화 목록
+            RoomController.UseWaveMap = false;
+            WaveController.RestTime = 3f;
+        }
+
+        [UnityTest]
         public IEnumerator 런_바닥_구멍과_추락_복귀()
         {
             RoomLayouts.ForcedIndex = RoomLayouts.Zigzag;
