@@ -94,16 +94,19 @@ namespace ParryRL
             float targetX = 0f;
             if (def != null && wave.CurrentPhase == WaveController.Phase.Fighting && !def.Boss)
             {
+                // 구역 화살표는 그 구역에 실제로 (화면 밖) 몬스터가 있을 때만 — 구역만 보고 띄우면 몬스터가 다 잡혔거나
+                // 다른 곳에서 나왔을 때도 빈 구역을 가리켰다 (사용자 지적, 2026-11-12)
                 float camX = _cam.transform.position.x, best = float.MaxValue;
                 bool inside = false;
                 foreach (int z in def.Zones)
                 {
                     var zone = WavePlan.ZoneList[z];
                     if (zone.Contains(camX)) inside = true;
+                    if (!HasOffscreenEnemy(wave, zone)) continue;
                     float d = Mathf.Abs(zone.CenterX - camX);
-                    if (d < best) { best = d; targetX = zone.CenterX; }
+                    if (d < best) { best = d; targetX = zone.CenterX; show = true; }
                 }
-                show = !inside;
+                if (inside) show = false;
             }
             _zoneArrow.enabled = show;
             _zoneLabel.enabled = show;
@@ -117,7 +120,17 @@ namespace ParryRL
             rt.anchoredPosition = Vector2.zero;
         }
 
-        private static bool Inside(Vector3 v) => v.x >= 0f && v.x <= 1f && v.y >= 0f && v.y <= 1f;
+        private bool HasOffscreenEnemy(WaveController wave, WaveZone zone)
+        {
+            foreach (var e in wave.Alive)
+                if (e != null && !e.IsDead && zone.Contains(e.transform.position.x) && !Inside(_cam.WorldToViewportPoint(e.transform.position)))
+                    return true;
+            return false;
+        }
+
+        // 몸 가운데가 화면 끝을 살짝 넘어도 몸이 보이면 화면 안으로 친다 (보이는 몬스터를 가리키는 화살표가 뜨지 않게)
+        private const float EdgeMargin = 0.03f;
+        private static bool Inside(Vector3 v) => v.z > 0f && v.x >= -EdgeMargin && v.x <= 1f + EdgeMargin && v.y >= -EdgeMargin && v.y <= 1f + EdgeMargin;
 
         /// <summary>화면 가운데에서 대상 쪽으로 뻗은 선이 가장자리와 만나는 곳에 대상을 가리키게 놓는다.</summary>
         private static void Place(RectTransform rt, Vector3 viewport, float size)

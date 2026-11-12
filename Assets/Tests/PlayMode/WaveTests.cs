@@ -138,6 +138,28 @@ namespace ParryRL.Tests
             Assert.AreEqual(1, RoomController.Instance.Gates.Count, "사당으로 나가는 문");
         }
 
+        private static bool InZones(WaveDef def, float x) => def.Zones.Any(z => x >= WavePlan.ZoneList[z].MinX - 1f && x <= WavePlan.ZoneList[z].MaxX + 1f);
+
+        [UnityTest]
+        public IEnumerator 몬스터는_이번_웨이브_구역에서만_나온다()
+        {
+            yield return LoadWave();
+            yield return WaitUntil(() => Waves.Wave == 1);
+            foreach (int wave in new[] { 3, 5 })
+            {
+                Waves.JumpTo(wave);
+                var seen = new System.Collections.Generic.HashSet<EnemyController>();
+                for (float t = 0f; t < 4f; t += Time.deltaTime)
+                {
+                    foreach (var e in Enemies())
+                        if (seen.Add(e)) Assert.IsTrue(InZones(Waves.Def, e.transform.position.x), $"웨이브 {wave}: x={e.transform.position.x:0.0}는 {Waves.Def.ZoneName} 밖{(e.IsElite ? " (엘리트)" : "")}");
+                    yield return null;
+                }
+                Assert.Greater(seen.Count, 3);
+                if (wave == 5) Assert.IsTrue(seen.Any(e => e.IsElite), "엘리트도 구역 안에서");
+            }
+        }
+
         [UnityTest]
         public IEnumerator 화면_밖_몬스터와_활성_구역을_가장자리에_표시한다()
         {
@@ -150,6 +172,35 @@ namespace ParryRL.Tests
             Assert.Greater(marks.ShownCount, 0, "화면 밖 몬스터 표식");
             Assert.LessOrEqual(marks.ShownCount, 5, "가까운 순서로 5개까지");
             Assert.IsTrue(marks.ZoneArrowShown, "활성 구역 방향 화살표");
+        }
+
+        [UnityTest]
+        public IEnumerator 활성_구역에_몬스터가_없으면_구역_화살표를_띄우지_않는다()
+        {
+            yield return LoadWave();
+            yield return WaitUntil(() => Waves.Wave == 1);
+            Waves.JumpTo(3); // 탑 구역 — 플레이어는 광장
+            yield return WaitUntil(() => Enemies().Length >= Waves.Def.Concurrent, 10f); // 동시 수가 차면 더 안 나온다
+            var marks = Object.FindAnyObjectByType<WaveIndicators>();
+            yield return null;
+            Assert.IsTrue(marks.ZoneArrowShown, "탑 구역에 몬스터가 있으면 화살표");
+
+            // 몬스터를 전부 탑 구역 밖(계단산 구역, 화면 밖)으로 옮긴다 → 탑 구역은 비었다
+            float x = 30f;
+            foreach (var e in Enemies())
+            {
+                e.enabled = false;
+                var pos = new Vector3(x, e.transform.localScale.y * 0.5f, 0f);
+                x += 1.5f;
+                e.transform.position = pos;
+                e.GetComponent<Rigidbody2D>().position = pos;
+            }
+            Physics2D.SyncTransforms();
+            yield return null;
+            yield return null;
+            Assert.AreEqual(WaveController.Phase.Fighting, Waves.CurrentPhase);
+            Assert.IsFalse(marks.ZoneArrowShown, "빈 구역은 가리키지 않는다");
+            Assert.Greater(marks.ShownCount, 0, "실제 몬스터 쪽 표식은 그대로");
         }
 
         [UnityTest]

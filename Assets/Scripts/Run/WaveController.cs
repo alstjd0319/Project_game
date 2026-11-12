@@ -162,10 +162,16 @@ namespace ParryRL
             Spawned++;
             if (def.Elite && !_eliteDone)
             {
-                // 엘리트는 플레이어 앞 평평한 땅에 (구멍 건너편에 서 있지 않게)
+                // 엘리트도 이번 웨이브 구역의 바닥 지점에서 — 플레이어와 가장 가까운 곳 (예전엔 플레이어 앞 8칸이라 구역 밖에서 나올 수 있었다)
                 _eliteDone = true;
-                float dir = _player != null && _player.position.x > 0f ? -1f : 1f;
-                var elite = _spawner.SpawnEnemyAt(EnemyKind.Melee, (_player != null ? _player.position.x : 0f) + dir * 8f, 0f, true);
+                float px = _player != null ? _player.position.x : 0f;
+                var ground = new List<WaveSpawnPoint>();
+                foreach (int z in def.Zones)
+                    foreach (var p in WavePlan.Points(z, 0))
+                        if (!p.Platform.HasValue && Mathf.Abs(p.X - px) >= WavePlan.MinPlayerDistance + 2f) ground.Add(p);
+                float ex = ground.Count > 0 ? ground[0].X : px + 8f;
+                foreach (var p in ground) if (Mathf.Abs(p.X - px) < Mathf.Abs(ex - px)) ex = p.X;
+                var elite = _spawner.SpawnEnemyAt(EnemyKind.Melee, ex, 0f, true);
                 Register(elite, def, false);
                 return;
             }
@@ -176,11 +182,9 @@ namespace ParryRL
 
         private WaveSpawnPoint PickPoint(WaveDef def, EnemyKind kind)
         {
-            bool active = Random.value < WavePlan.ActiveZoneChance;
+            // 몬스터는 이번 웨이브 구역에서만 나온다 (예전엔 20%가 다른 구역에서 나와 "구역에 귀문이 열렸다"는 안내와 어긋났다 — 사용자 지적, 2026-11-12)
             var points = new List<WaveSpawnPoint>();
-            for (int z = 0; z < WavePlan.ZoneList.Length; z++)
-                if (System.Array.IndexOf(def.Zones, z) >= 0 == active) points.AddRange(WavePlan.Points(z, def.MaxLevel));
-            if (points.Count == 0) foreach (int z in def.Zones) points.AddRange(WavePlan.Points(z, def.MaxLevel));
+            foreach (int z in def.Zones) points.AddRange(WavePlan.Points(z, def.MaxLevel));
 
             // 플레이어 바로 옆 · 이미 몬스터가 서 있는 자리는 뺀다
             var free = points.FindAll(IsFree);

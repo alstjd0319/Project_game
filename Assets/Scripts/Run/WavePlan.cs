@@ -39,7 +39,6 @@ namespace ParryRL
         /// <summary>일반 몬스터 체력 배율: 수가 많은 대신 약하게 (창귀 100 → 60).</summary>
         public const float MinionHpScale = 0.6f;
         /// <summary>새 몬스터가 활성 구역에서 나올 비율 (나머지는 다른 구역 — 이동 중에도 싸움이 생기게).</summary>
-        public const float ActiveZoneChance = 0.8f;
         public const float SpawnInterval = 0.5f;
         public const float MinPlayerDistance = 3f;
 
